@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation"
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isFinished = pathname.includes("finished");
-  
+
   return (
     <div className="flex h-[100%] w-[100%] w-max-screen">
       <SidebarProvider>
@@ -17,7 +17,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <h1 className="text-lg font-semibold">BATTLE</h1>
-            {isFinished ?
+            {!isFinished ?
               <div className="flex gap-2 justify-self-end">
               <Button className='text-black border-black border-2 cursor-pointer bg-transparent hover:bg-gray-200'>
                 Run
