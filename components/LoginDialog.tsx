@@ -18,31 +18,13 @@ interface LoginDialogProps {
 export function LoginDialog({ children }: LoginDialogProps) {
   const { data: session, isPending } = useSession();
 
-  const handleSignIn = () => {
-    const width = 600;
-    const height = 600;
-    const left = window.innerWidth / 2 - width / 2;
-    const top = window.innerHeight / 2 - height / 2;
-
-    const popup = window.open(
-      `/api/auth/google`, // This will be the route that redirects to Google
-      "_blank",
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
-
-    const a = window.addEventListener("message", (event) => {
-      if (event.source === popup) {
-        if (event.data.success) {
-          // Handle successful sign-in
-          console.log("Sign-in successful:", event.data.session);
-          window.location.reload(); // Or update the session in the client
-        } else {
-          // Handle failed sign-in
-          console.error("Sign-in error:", event.data.error);
-        }
-        popup?.close();
-      }
-    });
+  const handleSignIn = async () => {
+    try {
+      console.log("Attempting Google sign-in...");
+      await signIn();
+    } catch (error) {
+      console.error("Sign-in error:", error);
+    }
   };
 
   const handleSignOut = () => {
