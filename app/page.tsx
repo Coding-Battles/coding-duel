@@ -7,8 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 import { LoginDialog } from "@/components/LoginDialog";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Hero Section */}
@@ -34,6 +37,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 className="bg-white text-black text-lg px-8 py-6 hover:bg-gray-400"
+                onClick={() => router.push("/Queue")}
               >
                 Start Playing Free
               </Button>
