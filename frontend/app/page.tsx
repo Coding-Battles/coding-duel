@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
-<<<<<<< HEAD:frontend/app/page.tsx
+import { LoginDialog } from "@/components/LoginDialog";
+import { useRouter } from "next/navigation";
 import { signIn, useSession } from "@/lib/auth-client";
 
 export default function HomePage() {
   const { data: session } = useSession();
+  const router = useRouter();  
 
   // Log session data for testing
   if (session) {
@@ -24,13 +26,6 @@ export default function HomePage() {
       console.error("Sign-in error:", error);
     }
   };
-=======
-import { LoginDialog } from "@/components/LoginDialog";
-import { useRouter } from "next/navigation";
-
-export default function HomePage() {
-  const router = useRouter();
->>>>>>> QueueUpPageBasic:app/page.tsx
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
