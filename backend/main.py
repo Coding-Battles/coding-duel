@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+<<<<<<< HEAD
 import socketio
 from pydantic import BaseModel, Field, ValidationError
 from typing import Optional
@@ -7,11 +8,19 @@ from typing import Optional
 app = FastAPI()
 
 # Create Socket.IO server
+=======
+
+import pydantic
+import socketio
+
+app = FastAPI()
+>>>>>>> streamline-login
 sio = socketio.AsyncServer(
     cors_allowed_origins="*",
     async_mode='asgi'
 )
 
+<<<<<<< HEAD
 # Combine them
 socket_app = socketio.ASGIApp(sio, app)
 
@@ -102,3 +111,8 @@ async def disconnect(sid):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(socket_app, host="0.0.0.0", port=8000)
+=======
+socket_app = socketio.ASGIApp(sio, app) ## Combine FastAPI and Socket.IO apps
+
+
+>>>>>>> streamline-login

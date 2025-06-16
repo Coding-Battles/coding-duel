@@ -6,9 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
-import { LoginDialog } from "@/components/LoginDialog";
+import { signIn, useSession } from "@/lib/auth-client";
 
 export default function HomePage() {
+  const { data: session } = useSession();
+
+  // Log session data for testing
+  if (session) {
+    console.log("User session data:", session);
+  }
+
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch (error) {
+      console.error("Sign-in error:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Hero Section */}
@@ -38,14 +53,15 @@ export default function HomePage() {
                 Start Playing Free
               </Button>
 
-              <LoginDialog>
+              {!session && (
                 <Button
+                  onClick={handleSignIn}
                   size="lg"
                   className="bg-white text-black text-lg px-8 py-6 hover:bg-gray-400"
                 >
                   Sign In with Google
                 </Button>
-              </LoginDialog>
+              )}
             </div>
 
             <div className="flex justify-center gap-8 pt-8 text-sm text-gray-400">
