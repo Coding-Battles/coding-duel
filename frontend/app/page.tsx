@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
-import { signIn, useSession } from "@/lib/auth-client";
+import { signInWithGoogle, useSession } from "@/lib/auth-client";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -18,7 +18,7 @@ export default function HomePage() {
 
   const handleSignIn = async () => {
     try {
-      await signIn();
+      await signInWithGoogle();
     } catch (error) {
       console.error("Sign-in error:", error);
     }
