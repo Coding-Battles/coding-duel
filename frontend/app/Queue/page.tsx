@@ -7,11 +7,7 @@ import { useEffect, useState } from "react";
 import { FileQuestion } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function QueueLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function QueueLayout() {
   const context = useGameContext();
   const [key, setKey] = useState(0); //used to loop the type animation
   const [timer, setTimer] = useState(0);
@@ -106,7 +102,7 @@ export default function QueueLayout({
                       .type('<span style="color: orange;">Player Found!</span>')
                       .pause(2000)
                       .exec(() => {
-                        router.push('/InGame');
+                        router.push('/Queue/InGame');
                       });
                     return instance;
                   }}
