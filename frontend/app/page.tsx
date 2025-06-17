@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 import { signInWithGoogle, useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const { data: session } = useSession();
