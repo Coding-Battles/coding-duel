@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { signIn, signOut, useSession } from "@/lib/auth-client";
+import { signInWithGoogle, signOut, useSession } from "@/lib/auth-client";
 import { ReactNode } from "react";
 
 interface LoginDialogProps {
@@ -21,7 +21,7 @@ export function LoginDialog({ children }: LoginDialogProps) {
   const handleSignIn = async () => {
     try {
       console.log("Attempting Google sign-in...");
-      await signIn();
+      await signInWithGoogle();
     } catch (error) {
       console.error("Sign-in error:", error);
     }

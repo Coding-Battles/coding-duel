@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
-import { LoginDialog } from "@/components/LoginDialog";
-import { useRouter } from "next/navigation";
-import { signIn, useSession } from "@/lib/auth-client";
+import { signInWithGoogle, useSession } from "@/lib/auth-client";
 
 export default function HomePage() {
   const { data: session } = useSession();
-  const router = useRouter();  
+  const router = useRouter();
 
   // Log session data for testing
   if (session) {
@@ -21,7 +19,7 @@ export default function HomePage() {
 
   const handleSignIn = async () => {
     try {
-      await signIn();
+      await signInWithGoogle();
     } catch (error) {
       console.error("Sign-in error:", error);
     }
