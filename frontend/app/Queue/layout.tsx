@@ -20,13 +20,14 @@ export default function QueueLayout({
   const [loadingState, setLoadingState] = useState<boolean>(true);
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:3001");
+    socketRef.current = io("http://localhost:8000");
 
     socketRef.current.on("connect", () => {
       console.log("Connected to the server");
       setLoadingState(false)
     })
   }, [])
+  
   return (
     <GameContext.Provider value={{ socket: socketRef.current, loading: loadingState }}>
       <div className="flex h-[100%] w-[100%] items-center justify-center">
