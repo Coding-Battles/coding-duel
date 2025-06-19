@@ -5,6 +5,7 @@ import { toggleTheme } from '@/app/actions/toggleTheme';
 import { useRouter } from 'next/navigation';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { set } from 'better-auth';
 
 export function NightModeButton() {
   const [isPending, startTransition] = useTransition();
@@ -24,6 +25,7 @@ export function NightModeButton() {
   const handleClick = () => {
     startTransition(async () => {
       await toggleTheme();         // Server sets cookie
+      setLocalTheme((prev) => (prev === 'dark' ? 'light' : 'dark')); // Update local state
       router.refresh();            // SSR re-renders with new cookie
     });
   };
@@ -32,7 +34,7 @@ export function NightModeButton() {
     <button
       onClick={handleClick}
       disabled={isPending}
-      className="w-6 h-6 rounded-full fixed bottom-2 right-2 z-40"
+      className="w-6 h-6 rounded-full fixed bottom-2 right-2 z-40 cursor-pointer"
     >
       {theme === 'dark' ? (
         <Moon className="text-gray-400" />
