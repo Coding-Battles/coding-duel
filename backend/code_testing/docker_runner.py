@@ -193,57 +193,6 @@ def run_code_in_docker(
                 pass
 
 
-def execute_code_with_test_cases(
-    code: str, language: str, test_cases: list, timeout: int = 5, docker_client=None
-):
-    """Execute code with custom test cases using Docker."""
-    from backend.api.submission import TestCaseResult  # Avoid circular import at top
-
-    test_results = []
-    total_passed = 0
-    total_failed = 0
-
-    if not docker_client:
-        import docker
-
-        docker_client = docker.from_env()
-
-    for test_case in test_cases:
-        result = run_code_in_docker(
-            code,
-            language,
-            test_case.get("input", {}),
-            timeout,
-            docker_client=docker_client,
-        )
-        expected_output = test_case.get("expected_output")
-        actual_output = result.get("output")
-        passed = result["success"] and actual_output == expected_output
-        if passed:
-            total_passed += 1
-        else:
-            total_failed += 1
-        test_results.append(
-            TestCaseResult(
-                input=test_case.get("input", {}),
-                expected_output=expected_output,
-                actual_output=(
-                    str(actual_output) if actual_output is not None else None
-                ),
-                passed=passed,
-                error=result.get("error"),
-                execution_time=result.get("execution_time"),
-            )
-        )
-    return {
-        "success": total_failed == 0,
-        "test_results": test_results,
-        "total_passed": total_passed,
-        "total_failed": total_failed,
-        "error": None,
-    }
-
-
 # Test it
 if __name__ == "__main__":
     test_code = """def solution(nums, target):

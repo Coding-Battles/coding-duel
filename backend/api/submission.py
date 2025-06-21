@@ -91,6 +91,28 @@ class TestCaseResult(BaseModel):
     execution_time: Optional[float]
 
 
+class CodeExecutionRequest(BaseModel):
+    code: str
+    language: str
+    question_name: str  # Changed from test_cases to question_name
+    timeout: Optional[int] = 5
+
+
+class CodeExecutionResponse(BaseModel):
+    success: bool
+    test_results: List[TestCaseResult]
+    total_passed: int
+    total_failed: int
+    error: Optional[str]
+
+
+class DockerRunRequest(BaseModel):
+    code: str
+    language: str
+    test_input: dict
+    timeout: int = 5
+
+
 LANGUAGE_CONFIG = {
     "python": {
         "image": "python:3.9-slim",
@@ -232,44 +254,103 @@ async def submit_code(submission: CodeSubmission):
         raise HTTPException(status_code=500, detail=f"Error running tests: {str(e)}")
 
 
-class CodeExecutionRequest(BaseModel):
-    code: str
-    language: str
-    test_cases: List[Dict[str, Any]]
-    timeout: Optional[int] = 5
-
-
-class CodeExecutionResponse(BaseModel):
-    success: bool
-    test_results: List[TestCaseResult]
-    total_passed: int
-    total_failed: int
-    error: Optional[str]
-
-
 @app.post("/execute", response_model=CodeExecutionResponse)
 async def execute_code(request: CodeExecutionRequest):
-    """Execute code with custom test cases."""
+    """Execute code with test cases loaded from file based on question name."""
     if not docker_available:
         raise HTTPException(
             status_code=503,
             detail="Docker is not available. Please install and start Docker Desktop.",
         )
+
     try:
         if request.language not in LANGUAGE_CONFIG:
             raise HTTPException(
                 status_code=400, detail=f"Unsupported language: {request.language}"
             )
-        # Use the new function from docker_runner
-        result = execute_code_with_test_cases(
-            code=request.code,
-            language=request.language,
-            test_cases=request.test_cases,
-            timeout=request.timeout or 5,
+
+        # Load test cases from JSON file based on question name
+        test_file_path = f"backend/tests/{request.question_name}.json"
+        try:
+            with open(test_file_path, "r") as f:
+                test_cases = json.load(f)
+        except FileNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Test file not found for question: {request.question_name}",
+            )
+
+        # Run each test case using run_code_in_docker directly
+        test_results = []
+        total_passed = 0
+        total_failed = 0
+
+        for test_case in test_cases:
+            try:
+                # Run the code in docker directly - no need for executor
+                docker_result = run_code_in_docker(
+                    request.code,
+                    request.language,
+                    test_case["input"],
+                    request.timeout,
+                )
+
+                # Parse the result
+                expected = test_case["expected"]
+                actual_output = docker_result.get("output")
+                passed = (
+                    docker_result.get("success", False) and actual_output == expected
+                )
+
+                test_result = TestCaseResult(
+                    input=test_case["input"],
+                    expected_output=expected,
+                    actual_output=(
+                        str(actual_output) if actual_output is not None else None
+                    ),
+                    passed=passed,
+                    error=docker_result.get("error"),
+                    execution_time=docker_result.get("execution_time"),
+                )
+
+                test_results.append(test_result)
+
+                if passed:
+                    total_passed += 1
+                else:
+                    total_failed += 1
+
+            except Exception as e:
+                # Handle individual test case failure
+                test_result = TestCaseResult(
+                    input=test_case["input"],
+                    expected_output=test_case["expected"],
+                    actual_output=None,
+                    passed=False,
+                    error=str(e),
+                    execution_time=None,
+                )
+                test_results.append(test_result)
+                total_failed += 1
+
+        return CodeExecutionResponse(
+            success=total_failed == 0,
+            test_results=test_results,
+            total_passed=total_passed,
+            total_failed=total_failed,
+            error=None,
         )
-        return CodeExecutionResponse(**result)
+
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error executing code: {str(e)}")
+        return CodeExecutionResponse(
+            success=False,
+            test_results=[],
+            total_passed=0,
+            total_failed=0,
+            error=f"Error executing code: {str(e)}",
+        )
 
 
 @app.post("/analyze-complexity", response_model=TimeComplexityResponse)
@@ -290,13 +371,6 @@ async def health_check():
         "docker_available": docker_available,
         "docker_status": "connected" if docker_available else "not connected",
     }
-
-
-class DockerRunRequest(BaseModel):
-    code: str
-    language: str
-    test_input: dict
-    timeout: int = 5
 
 
 @app.post("/docker-run")
