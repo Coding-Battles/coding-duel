@@ -1,11 +1,19 @@
-import React from "react";
+"use client";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 import GoogleOneTap from "@/components/GoogleOneTap";
+import { useSession } from "@/lib/auth-client";
+
 export default function HomePage() {
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    console.log("User session data:", session);
+  }, [session]);
   return (
     <>
       <GoogleOneTap />

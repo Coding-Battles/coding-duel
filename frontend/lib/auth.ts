@@ -22,6 +22,8 @@ export const auth = betterAuth({
 
   plugins: [
     nextCookies(),
-    oneTap(),
+    oneTap({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+    }),
   ],
 });
