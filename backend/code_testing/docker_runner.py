@@ -2,6 +2,7 @@ import os
 import tempfile
 import json
 import docker
+from typing import List, Dict, Any, Optional
 
 # Simple language config - add this to your file
 LANGUAGE_CONFIG = {

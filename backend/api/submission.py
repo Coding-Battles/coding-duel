@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 from backend.code_testing.ai_complexity_analyzer import analyze_time_complexity_ai
 from backend.code_testing.docker_runner import (
     run_code_in_docker,
-    execute_code_with_test_cases,
 )
 from fastapi import Body
 
@@ -41,22 +40,6 @@ app = FastAPI()
 
 # Debug: Check if API key is loaded
 groq_api_key = os.getenv("GROQ_API_KEY")
-if not groq_api_key:
-    print("WARNING: GROQ_API_KEY not found in environment variables")
-else:
-    print(f"GROQ API key loaded: {groq_api_key[:8]}...{groq_api_key[-4:]}")
-
-client = Groq(api_key=groq_api_key)
-
-# Initialize Docker client with error handling
-try:
-    docker_client = docker.from_env()
-    docker_available = True
-    print("Docker connected successfully")
-except docker.errors.DockerException as e:
-    docker_available = False
-    print(f"Warning: Docker not available - {e}")
-    print("Code execution features will not work without Docker")
 
 executor = ThreadPoolExecutor(max_workers=5)
 
