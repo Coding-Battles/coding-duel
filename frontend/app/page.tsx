@@ -6,12 +6,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 import GoogleOneTap from "@/components/GoogleOneTap";
+import { authClient, getSession, useSession } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
+export default async function HomePage() {
+  // const { data: session } = useSession();
+  // console.log("Session data:", session);
 
-export default function HomePage() {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+  console.log("Session data:", await session);
   return (
     <>
-      <GoogleOneTap />
+      {session && 
+      <Link href="/profile" className="fixed top-4 right-4 p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition z-50">
+        <img
+          src={session.user.image || "/default-avatar.png"}
+          alt="User Avatar"
+          className="w-8 h-8 rounded-full"
+        />
+      </Link>}
+      {!session && <GoogleOneTap />}
       <div className="min-h-screen bg-gray-950 text-white">
         {/* Hero Section */}
         <section className="min-h-screen flex items-center justify-center relative px-6 pt-20">

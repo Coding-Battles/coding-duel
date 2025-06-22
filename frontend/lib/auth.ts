@@ -5,8 +5,12 @@ import { Pool } from "pg";
 
 export const auth = betterAuth({
   database: new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.NEXT_PUBLIC_DATABASE_URL,
   }),
+
+  advanced: {
+    cookiePrefix: "better-auth",
+  },
 
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
@@ -15,8 +19,8 @@ export const auth = betterAuth({
 
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET as string,
     },
   },
 
