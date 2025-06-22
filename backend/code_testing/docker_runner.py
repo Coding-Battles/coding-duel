@@ -4,6 +4,9 @@ import json
 import docker
 from typing import List, Dict, Any, Optional
 
+# Import Pydantic models
+from backend.models.submission import DockerRunRequest
+
 # Simple language config - add this to your file
 LANGUAGE_CONFIG = {
     "python": {
@@ -62,22 +65,20 @@ if __name__ == "__main__":
 }
 
 
-def run_code_in_docker(
-    code: str, language: str, test_input: dict, timeout: int, docker_client=None
-):
-    """Run code in a Docker container and return the result."""
+def run_code_in_docker(request: DockerRunRequest, docker_client=None):
+    """Run code in a Docker container and return the result as a dict."""
 
     if not docker_client:
         docker_client = docker.from_env()
 
-    config = LANGUAGE_CONFIG.get(language)
+    config = LANGUAGE_CONFIG.get(request.language)
     if not config:
-        raise ValueError(f"Unsupported language: {language}")
+        raise ValueError(f"Unsupported language: {request.language}")
 
     container = None
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
-            wrapped_code = config["wrapper_template"].format(code=code)
+            wrapped_code = config["wrapper_template"].format(code=request.code)
 
             code_file = os.path.join(temp_dir, f"solution{config['file_extension']}")
             with open(code_file, "w") as f:
@@ -86,7 +87,7 @@ def run_code_in_docker(
             # Write input to JSON file instead of command line
             input_file = os.path.join(temp_dir, "input.json")
             with open(input_file, "w") as f:
-                json.dump(test_input, f)
+                json.dump(request.test_input, f)
 
             run_command = config["run_command"].format(
                 filename=f"solution{config['file_extension']}"
@@ -108,7 +109,7 @@ def run_code_in_docker(
 
             # Wait for container to finish
             try:
-                result = container.wait(timeout=timeout)
+                result = container.wait(timeout=request.timeout)
             except Exception as e:
                 try:
                     container.kill()
@@ -196,18 +197,14 @@ def run_code_in_docker(
 
 # Test it
 if __name__ == "__main__":
-    test_code = """def solution(nums, target):
-    lookup = {}
-    for i, num in enumerate(nums):
-        if target - num in lookup:
-            return [lookup[target - num], i]
-        lookup[num] = i"""
+    from backend.models.submission import DockerRunRequest
 
-    result = run_code_in_docker(
-        code=test_code,
+    test_request = DockerRunRequest(
+        code="""def solution(nums, target):\n    lookup = {}\n    for i, num in enumerate(nums):\n        if target - num in lookup:\n            return [lookup[target - num], i]\n        lookup[num] = i""",
         language="python",
         test_input={"nums": [2, 7, 11, 15], "target": 9},
         timeout=5,
     )
 
+    result = run_code_in_docker(test_request)
     print(json.dumps(result, indent=2))

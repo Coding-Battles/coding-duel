@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from groq import Groq
 import os
@@ -14,6 +13,14 @@ from backend.code_testing.docker_runner import (
     run_code_in_docker,
 )
 from fastapi import Body
+from backend.models.submission import (
+    TimeComplexity,
+    TimeComplexityResponse,
+    TestCaseResult,
+    RunTestCasesRequest,
+    RunTestCasesResponse,
+    DockerRunRequest,
+)
 
 # Load environment variables from .env file
 # Try multiple possible locations
@@ -58,58 +65,6 @@ except docker.errors.DockerException as e:
     print("Code execution features will not work without Docker")
 
 executor = ThreadPoolExecutor(max_workers=5)
-
-
-class TimeComplexity(BaseModel):
-    code: str
-
-
-class TimeComplexityResponse(BaseModel):
-    time_complexity: str
-
-
-class CodeSubmission(BaseModel):
-    question_name: str
-    code: str
-    language: str
-
-
-class SubmissionResult(BaseModel):
-    is_correct: bool
-    passed: int
-    total: int
-    failed_tests: List[Dict[str, Any]]
-
-
-class TestCaseResult(BaseModel):
-    input: Dict[str, Any]
-    expected_output: Any
-    actual_output: Optional[str]
-    passed: bool
-    error: Optional[str]
-    execution_time: Optional[float]
-
-
-class CodeExecutionRequest(BaseModel):
-    code: str
-    language: str
-    question_name: str  # Changed from test_cases to question_name
-    timeout: Optional[int] = 5
-
-
-class CodeExecutionResponse(BaseModel):
-    success: bool
-    test_results: List[TestCaseResult]
-    total_passed: int
-    total_failed: int
-    error: Optional[str]
-
-
-class DockerRunRequest(BaseModel):
-    code: str
-    language: str
-    test_input: dict
-    timeout: int = 5
 
 
 LANGUAGE_CONFIG = {
@@ -183,78 +138,8 @@ console.log(JSON.stringify({{
 }
 
 
-@app.post("/submit", response_model=SubmissionResult)
-async def submit_code(submission: CodeSubmission):
-    """Submit code for a specific question and run all tests."""
-    if not docker_available:
-        raise HTTPException(
-            status_code=503,
-            detail="Docker is not available. Please install and start Docker Desktop.",
-        )
-
-    try:
-        # Load test cases from JSON file
-        test_file_path = f"backend/tests/{submission.question_name}.json"
-        with open(test_file_path, "r") as f:
-            test_cases = json.load(f)
-
-        # Run all test cases
-        loop = asyncio.get_event_loop()
-        tasks = []
-
-        for test_case in test_cases:
-            task = loop.run_in_executor(
-                executor,
-                run_code_in_docker,
-                submission.code,
-                submission.language,
-                test_case["input"],
-                5,  # timeout
-            )
-            tasks.append((task, test_case))
-
-        # Collect results
-        passed = 0
-        failed = 0
-        failed_tests = []
-
-        for task, test_case in tasks:
-            result = await task
-
-            expected = test_case["expected"]
-            actual = result.get("output")
-
-            if result["success"] and actual == expected:
-                passed += 1
-            else:
-                failed += 1
-                failed_tests.append(
-                    {
-                        "input": test_case["input"],
-                        "expected": expected,
-                        "actual": actual,
-                        "error": result.get("error"),
-                    }
-                )
-
-        return SubmissionResult(
-            is_correct=failed == 0,
-            passed=passed,
-            total=len(test_cases),
-            failed_tests=failed_tests,
-        )
-
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Test file not found for question: {submission.question_name}",
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error running tests: {str(e)}")
-
-
-@app.post("/execute", response_model=CodeExecutionResponse)
-async def execute_code(request: CodeExecutionRequest):
+@app.post("/run-test-cases", response_model=RunTestCasesResponse)
+async def run_test_cases(request: RunTestCasesRequest):
     """Execute code with test cases loaded from file based on question name."""
     if not docker_available:
         raise HTTPException(
@@ -279,19 +164,20 @@ async def execute_code(request: CodeExecutionRequest):
                 detail=f"Test file not found for question: {request.question_name}",
             )
 
-        # Run each test case using run_code_in_docker directly
         test_results = []
         total_passed = 0
         total_failed = 0
 
         for test_case in test_cases:
             try:
-                # Run the code in docker directly - no need for executor
+                # Run the code in docker using run_code_in_docker
                 docker_result = run_code_in_docker(
-                    request.code,
-                    request.language,
-                    test_case["input"],
-                    request.timeout,
+                    DockerRunRequest(
+                        code=request.code,
+                        language=request.language,
+                        test_input=test_case["input"],
+                        timeout=request.timeout,
+                    )
                 )
 
                 # Parse the result
@@ -332,7 +218,7 @@ async def execute_code(request: CodeExecutionRequest):
                 test_results.append(test_result)
                 total_failed += 1
 
-        return CodeExecutionResponse(
+        return RunTestCasesResponse(
             success=total_failed == 0,
             test_results=test_results,
             total_passed=total_passed,
@@ -343,7 +229,7 @@ async def execute_code(request: CodeExecutionRequest):
     except HTTPException:
         raise
     except Exception as e:
-        return CodeExecutionResponse(
+        return RunTestCasesResponse(
             success=False,
             test_results=[],
             total_passed=0,
@@ -376,12 +262,7 @@ async def health_check():
 async def docker_run(request: DockerRunRequest = Body(...)):
     """Run code in Docker using the extracted utility."""
     try:
-        result = run_code_in_docker(
-            code=request.code,
-            language=request.language,
-            test_input=request.test_input,
-            timeout=request.timeout,
-        )
+        result = run_code_in_docker(request)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
