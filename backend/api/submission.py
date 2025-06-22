@@ -21,6 +21,7 @@ from backend.models.submission import (
     RunTestCasesResponse,
     DockerRunRequest,
 )
+from backend.code_testing.language_config import LANGUAGE_CONFIG
 
 # Load environment variables from .env file
 # Try multiple possible locations
@@ -67,75 +68,32 @@ except docker.errors.DockerException as e:
 executor = ThreadPoolExecutor(max_workers=5)
 
 
-LANGUAGE_CONFIG = {
-    "python": {
-        "image": "python:3.9-slim",
-        "file_extension": ".py",
-        "run_command": "python {filename}",
-        "wrapper_template": """
-import sys
-import json
-import time
+def normalize_answer(answer):
+    """Normalize answer to handle different formats (list vs string)."""
+    if isinstance(answer, str):
+        # Handle string format like "[0, 1]"
+        try:
+            import ast
 
-def main():
-    # User code starts here
-{code}
-    # User code ends here
+            return ast.literal_eval(answer)
+        except:
+            return answer
+    return answer
 
-if __name__ == "__main__":
-    input_data = json.loads(sys.argv[1])
-    start_time = time.time()
-    
-    # Create variables from input
-    for key, value in input_data.items():
-        globals()[key] = value
-    
-    # Execute the solution function (assuming it's named 'solution' or the first function defined)
-    result = None
-    for name, obj in globals().items():
-        if callable(obj) and not name.startswith('__'):
-            result = obj(**input_data)
-            break
-    
-    end_time = time.time()
-    execution_time = (end_time - start_time) * 1000
-    
-    print(json.dumps({
-        "result": result,
-        "execution_time": execution_time
-    }))
-""",
-    },
-    "javascript": {
-        "image": "node:16-slim",
-        "file_extension": ".js",
-        "run_command": "node {filename}",
-        "wrapper_template": """
-const inputData = JSON.parse(process.argv[2]);
-const startTime = process.hrtime.bigint();
 
-// User code starts here
-{code}
-// User code ends here
+def check_answer_in_expected(actual, expected_list):
+    """Check if the actual answer matches any of the expected answers."""
+    actual_normalized = normalize_answer(actual)
 
-const functionNames = Object.keys(global).filter(key => typeof global[key] === 'function');
-let result = null;
+    # If expected is a single answer (old format), convert to list
+    if not isinstance(expected_list[0], list):
+        expected_list = [expected_list]
 
-if (functionNames.length > 0) {{
-    const mainFunction = global[functionNames[0]];
-    result = mainFunction(...Object.values(inputData));
-}}
+    for expected in expected_list:
+        if actual_normalized == expected:
+            return True
 
-const endTime = process.hrtime.bigint();
-const executionTime = Number(endTime - startTime) / 1000000;
-
-console.log(JSON.stringify({{
-    result: result,
-    execution_time: executionTime
-}}));
-""",
-    },
-}
+    return False
 
 
 @app.post("/run-test-cases", response_model=RunTestCasesResponse)
@@ -183,9 +141,12 @@ async def run_test_cases(request: RunTestCasesRequest):
                 # Parse the result
                 expected = test_case["expected"]
                 actual_output = docker_result.get("output")
-                passed = (
-                    docker_result.get("success", False) and actual_output == expected
-                )
+
+                # Check if actual output matches any of the expected answers
+                if docker_result.get("success", False):
+                    passed = check_answer_in_expected(actual_output, expected)
+                else:
+                    passed = False
 
                 test_result = TestCaseResult(
                     input=test_case["input"],

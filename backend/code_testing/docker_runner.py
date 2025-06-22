@@ -6,63 +6,63 @@ from typing import List, Dict, Any, Optional
 
 # Import Pydantic models
 from backend.models.submission import DockerRunRequest
+from backend.code_testing.language_config import LANGUAGE_CONFIG
 
-# Simple language config - add this to your file
-LANGUAGE_CONFIG = {
-    "python": {
-        "image": "python:3.9-slim",
-        "file_extension": ".py",
-        "wrapper_template": """import json
-import sys
-import time
-import os
+# Language config imported from language_config.py
 
-# User's code goes here
-{code}
 
-def solution_wrapper():
-    try:
-        start_time = time.time()
+def extract_java_imports_and_methods(code):
+    """Extract import statements and method definitions from Java code."""
+    lines = code.split('\n')
+    imports = []
+    methods = []
+    in_class = False
+    brace_count = 0
+    
+    for line in lines:
+        stripped = line.strip()
         
-        # Read input from file instead of command line
-        try:
-            with open('/code/input.json', 'r') as f:
-                test_input = json.load(f)
-        except FileNotFoundError:
-            test_input = {{}}
+        # Extract imports
+        if stripped.startswith('import ') and stripped.endswith(';'):
+            imports.append(line)
+            continue
+            
+        # Detect class declaration
+        if stripped.startswith('class ') or stripped.startswith('public class '):
+            in_class = True
+            brace_count = 0
+            continue
         
-        # Call solution function
-        if callable(globals().get('solution')):
-            if isinstance(test_input, dict):
-                result = solution(**test_input)
-            else:
-                result = solution(test_input)
+        # Handle class body content
+        if in_class:
+            # Count braces
+            open_braces = line.count('{')
+            close_braces = line.count('}')
+            
+            # Skip empty opening brace line of class only if it's the first line
+            if stripped == '{' and brace_count == 0:
+                brace_count = 1
+                continue
+            
+            # Check if we should include this line (before updating brace count)
+            # Include if we're already inside the class, or if this line starts a method/field
+            should_include = brace_count > 0 or (brace_count == 0 and open_braces > 0)
+            
+            # Update brace count
+            brace_count += open_braces - close_braces
+            
+            # Include lines that were inside the class
+            if should_include:
+                methods.append(line)
+            
+            # If we've reached the end of the class (brace_count is now 0), stop
+            if brace_count == 0:
+                break
         else:
-            result = "No solution function found"
-        
-        end_time = time.time()
-        
-        output = {{
-            "result": result,
-            "execution_time": end_time - start_time
-        }}
-        
-        print(json.dumps(output))
-        
-    except Exception as e:
-        output = {{
-            "result": None,
-            "execution_time": None,
-            "error": str(e)
-        }}
-        print(json.dumps(output))
-
-if __name__ == "__main__":
-    solution_wrapper()
-""",
-        "run_command": "python {filename}",
-    }
-}
+            # Code outside class
+            methods.append(line)
+    
+    return '\n'.join(imports), '\n'.join(methods)
 
 
 def run_code_in_docker(request: DockerRunRequest, docker_client=None):
@@ -78,32 +78,66 @@ def run_code_in_docker(request: DockerRunRequest, docker_client=None):
     container = None
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
-            wrapped_code = config["wrapper_template"].format(code=request.code)
+            # Handle Java imports separately
+            if request.language == "java":
+                imports, clean_code = extract_java_imports_and_methods(request.code)
+                wrapped_code = config["wrapper_template"].format(
+                    code=clean_code, 
+                    imports=imports
+                )
+            else:
+                wrapped_code = config["wrapper_template"].format(code=request.code)
 
-            code_file = os.path.join(temp_dir, f"solution{config['file_extension']}")
+            # Determine filename based on language
+            if request.language == "java":
+                code_file = os.path.join(temp_dir, "Solution.java")
+            else:
+                code_file = os.path.join(temp_dir, f"solution{config['file_extension']}")
+            
             with open(code_file, "w") as f:
                 f.write(wrapped_code)
 
-            # Write input to JSON file instead of command line
-            input_file = os.path.join(temp_dir, "input.json")
-            with open(input_file, "w") as f:
-                json.dump(request.test_input, f)
+            # Write input to JSON file (not needed for current templates)
+            # All languages now use command line JSON input
 
-            run_command = config["run_command"].format(
-                filename=f"solution{config['file_extension']}"
-            )
-
-            print(f"Running command: {run_command}")  # Debug output
+            # Build command sequence
+            commands = []
+            
+            # Add compilation step if needed
+            if "compile_command" in config:
+                compile_cmd = config["compile_command"].format(
+                    filename=os.path.basename(code_file)
+                )
+                commands.append(compile_cmd)
+            
+            # Add run command
+            if request.language == "java":
+                run_command = config["run_command"]
+            else:
+                run_command = config["run_command"].format(
+                    filename=os.path.basename(code_file)
+                )
+            
+            # Pass input as command line argument for all languages
+            input_json = json.dumps(request.test_input).replace('"', '\\"')
+            run_command += f' "{input_json}"'
+            
+            commands.append(run_command)
+            
+            # Combine all commands
+            full_command = " && ".join(commands)
+            
+            print(f"Running command: {full_command}")  # Debug output
 
             # Create and start container
             container = docker_client.containers.run(
                 config["image"],
-                command=f"/bin/sh -c '{run_command}'",
-                volumes={temp_dir: {"bind": "/code", "mode": "ro"}},
+                command=f"/bin/sh -c '{full_command}'",
+                volumes={temp_dir: {"bind": "/code", "mode": "rw"}},  # Changed to rw for compilation
                 working_dir="/code",
                 detach=True,
-                mem_limit="128m",
-                nano_cpus=500000000,
+                mem_limit="256m",  # Increased for compilation
+                nano_cpus=1000000000,  # Increased for compilation
                 remove=False,
             )
 
