@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+
+from fastapi import FastAPI, UploadFile, HTTPException, File
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ValidationError
 import socketio
 import uuid
@@ -8,6 +10,13 @@ import os
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import sys
+from dotenv import load_dotenv
+import databases
+
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+database = databases.Database(DATABASE_URL)
 
 app = FastAPI()
 
@@ -19,7 +28,21 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-sio = socketio.AsyncServer(cors_allowed_origins="*", async_mode="asgi")
+@app.on_event("startup")
+async def startup():
+    await database.connect()
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+sio = socketio.AsyncServer(
+    cors_allowed_origins="*",
+    async_mode='asgi'
+)
 
 socket_app = socketio.ASGIApp(sio, app)
 
@@ -170,6 +193,26 @@ def run_code_in_docker(
         shutil.rmtree(temp_dir, ignore_errors=True)  # Clean up the temporary directory
 
     return {"output": output, "error": error}
+
+@app.post("/image/{player_id}")
+async def change_image(player_id: str, image: UploadFile = File(...)):
+    # Save file
+    os.makedirs("uploads", exist_ok=True)
+    filename = f"player_{player_id}_{image.filename}"
+    file_path = f"uploads/{filename}"
+    public_url = f"http://localhost:8000/uploads/{filename}"
+
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(image.file, f)
+
+    # Update DB using raw SQL
+    query = 'UPDATE "user" SET image = :image_url WHERE id = :id'
+    values = {"image_url": public_url, "id": player_id}
+    await database.execute(query=query, values=values)
+
+    return {"message": "Image updated", "path": file_path}
+
+
 
 
 if __name__ == "__main__":

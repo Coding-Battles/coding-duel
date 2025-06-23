@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import {NightModeButton} from "@/components/NightModeButton";
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+import {auth} from "@/lib/auth";
+import { authClient, useSession } from "@/lib/auth-client";
+import { useEffect } from "react";
 
 
 
@@ -29,7 +32,6 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const theme = cookieStore.get('theme')?.value || 'light';
 
-  console.log("Current theme from cookie:", theme);
 
   return (
     <html lang="en" className={theme === 'dark' ? 'dark' : ''}>

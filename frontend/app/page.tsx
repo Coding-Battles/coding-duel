@@ -8,7 +8,19 @@ import GoogleOneTap from "@/components/GoogleOneTap";
 export default function HomePage() {
   return (
     <>
-      <GoogleOneTap />
+      {session && (
+        <Link
+          href="/profile"
+          className="fixed top-4 right-4 p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition z-50"
+        >
+          <img
+            src={session.user.image || "/default-avatar.png"}
+            alt="User Avatar"
+            className="w-8 h-8 rounded-full"
+          />
+        </Link>
+      )}
+      {!session && <GoogleOneTap />}
       <div className="min-h-screen bg-gray-950 text-white">
         {/* Hero Section */}
         <section className="min-h-screen flex items-center justify-center relative px-6 pt-20">
