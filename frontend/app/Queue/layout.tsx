@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import {io, Socket} from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
 const GameContext = createContext<GameContextType | null>(null);
 
@@ -24,14 +24,16 @@ export default function QueueLayout({
 
     socketRef.current.on("connect", () => {
       console.log("Connected to the server");
-      setLoadingState(false)
-    })
-  }, [])
-  
+      setLoadingState(false);
+    });
+  }, []);
+
   return (
-    <GameContext.Provider value={{ socket: socketRef.current, loading: loadingState }}>
+    <GameContext.Provider
+      value={{ socket: socketRef.current, loading: loadingState }}
+    >
       <div className="flex h-[100%] w-[100%] items-center justify-center">
-          {children}
+        {children}
       </div>
     </GameContext.Provider>
   );

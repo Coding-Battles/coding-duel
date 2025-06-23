@@ -2,9 +2,10 @@
 
 LANGUAGE_CONFIG = {
     "python": {
-        "image": "python:3.9-slim",
+        "image": "python:3.9-alpine",
         "file_extension": ".py",
         "run_command": "python {filename}",
+        "mem_limit": "64m",
         "wrapper_template": """
 import sys
 import json
@@ -61,9 +62,10 @@ if __name__ == "__main__":
 """,
     },
     "javascript": {
-        "image": "node:16-slim",
+        "image": "node:16-alpine",
         "file_extension": ".js",
         "run_command": "node {filename}",
+        "mem_limit": "64m",
         "wrapper_template": """
 const inputData = JSON.parse(process.argv[2]);
 const startTime = process.hrtime.bigint();
@@ -95,10 +97,11 @@ console.log(JSON.stringify({{
 """,
     },
     "cpp": {
-        "image": "gcc:9",
+        "image": "gcc:latest",
         "file_extension": ".cpp",
-        "compile_command": "g++ -std=c++17 -o solution {filename}",
+        "compile_command": "g++ -std=c++17 -O2 -o solution {filename}",
         "run_command": "./solution",
+        "mem_limit": "128m",
         "wrapper_template": """
 #include <iostream>
 #include <string>
@@ -134,18 +137,18 @@ private:
         pos++; // skip opening quote
         string result;
         while (pos < json.length() && json[pos] != '"') {{
-            if (json[pos] == '\\') {{
+            if (json[pos] == '\\\\') {{
                 pos++;
                 if (pos >= json.length()) throw runtime_error("Unterminated string");
                 switch (json[pos]) {{
                     case '"': result += '"'; break;
-                    case '\\': result += '\\'; break;
+                    case '\\\\': result += '\\\\'; break;
                     case '/': result += '/'; break;
-                    case 'b': result += '\b'; break;
-                    case 'f': result += '\f'; break;
-                    case 'n': result += '\n'; break;
-                    case 'r': result += '\r'; break;
-                    case 't': result += '\t'; break;
+                    case 'b': result += '\\b'; break;
+                    case 'f': result += '\\f'; break;
+                    case 'n': result += '\\n'; break;
+                    case 'r': result += '\\r'; break;
+                    case 't': result += '\\t'; break;
                     default: result += json[pos]; break;
                 }}
             }} else {{
@@ -220,7 +223,14 @@ public:
             pos++;
             skipWhitespace();
             
-            vector<int> value = parseIntArray();
+            vector<int> value;
+            if (json[pos] == '[') {{
+                // Parse array
+                value = parseIntArray();
+            }} else {{
+                // Parse single integer
+                value.push_back(parseInt());
+            }}
             result[key] = value;
             skipWhitespace();
             
@@ -269,17 +279,14 @@ int main(int argc, char* argv[]) {{
         // Call solution function - only accept exact function name "solution"
         // User must implement a function named exactly "solution"
         
-        // Call solution function based on input pattern
-        if (inputData.count("nums") && inputData.count("target")) {{
-            // Two parameter pattern (e.g., Two Sum)
-            vector<int> nums = inputData["nums"];
-            int target = inputData["target"][0]; // target is usually a single value
-            result = solution(nums, target);
-        }} else if (inputData.count("nums")) {{
-            // Single array input
-            vector<int> nums = inputData["nums"];
-            result = solution(nums);
-        }}
+        // Call solution function with standard two parameters
+        vector<int> nums = inputData["nums"];
+        vector<int> targetVec = inputData["target"];
+        int target = targetVec.empty() ? 0 : targetVec[0];
+        
+        // Create Solution instance and call solution method
+        Solution sol;
+        result = sol.solution(nums, target);
         
         auto end = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
@@ -301,112 +308,17 @@ int main(int argc, char* argv[]) {{
     },
     "java": {
         "image": "openjdk:11-jdk-slim",
-        "file_extension": ".java",
-        "compile_command": "javac Solution.java",
-        "run_command": "java Main",
+        "file_extension": ".java", 
+        "compile_command": "javac -Xlint:none Solution.java",
+        "run_command": "java -Xms8m -Xmx32m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 Main",
+        "mem_limit": "128m",
         "wrapper_template": """
 import java.util.*;
-import java.lang.reflect.Method;
 {imports}
 
 {code}
 
 class Main {{
-    public static String arrayToString(int[] arr) {{
-        if (arr == null) return "null";
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (int i = 0; i < arr.length; i++) {{
-            sb.append(arr[i]);
-            if (i < arr.length - 1) sb.append(",");
-        }}
-        sb.append("]");
-        return sb.toString();
-    }}
-    
-    public static String resultToJson(Object result, double executionTime) {{
-        String resultStr;
-        if (result instanceof int[]) {{
-            resultStr = arrayToString((int[])result);
-        }} else if (result instanceof String) {{
-            resultStr = "\\\"" + result + "\\\"";
-        }} else {{
-            resultStr = String.valueOf(result);
-        }}
-        return "{{\\\"result\\\": " + resultStr + ", \\\"execution_time\\\": " + executionTime + "}}";
-    }}
-    
-    public static Map<String, Object> parseInput(String jsonStr) {{
-        Map<String, Object> data = new HashMap<>();
-        
-        // Remove outer braces and whitespace
-        jsonStr = jsonStr.trim();
-        if (jsonStr.startsWith("{{")) jsonStr = jsonStr.substring(1);
-        if (jsonStr.endsWith("}}")) jsonStr = jsonStr.substring(0, jsonStr.length() - 1);
-        
-        // Split by commas, but respect nested structures
-        List<String> parts = new ArrayList<>();
-        int braceCount = 0;
-        int bracketCount = 0;
-        boolean inQuotes = false;
-        StringBuilder current = new StringBuilder();
-        
-        for (int i = 0; i < jsonStr.length(); i++) {{
-            char c = jsonStr.charAt(i);
-            
-            if (c == '\"' && (i == 0 || jsonStr.charAt(i-1) != '\\\\')) {{
-                inQuotes = !inQuotes;
-            }}
-            
-            if (!inQuotes) {{
-                if (c == '{{') braceCount++;
-                else if (c == '}}') braceCount--;
-                else if (c == '[') bracketCount++;
-                else if (c == ']') bracketCount--;
-                else if (c == ',' && braceCount == 0 && bracketCount == 0) {{
-                    parts.add(current.toString().trim());
-                    current = new StringBuilder();
-                    continue;
-                }}
-            }}
-            
-            current.append(c);
-        }}
-        parts.add(current.toString().trim());
-        
-        for (String part : parts) {{
-            part = part.trim();
-            if (part.isEmpty()) continue;
-            
-            String[] keyValue = part.split(":", 2);
-            if (keyValue.length != 2) continue;
-            
-            String key = keyValue[0].trim().replaceAll("\\\"", "");
-            String value = keyValue[1].trim();
-            
-            if (key.equals("nums") && value.startsWith("[") && value.endsWith("]")) {{
-                // Parse array
-                String arrayContent = value.substring(1, value.length() - 1).trim();
-                if (arrayContent.isEmpty()) {{
-                    data.put("nums", new int[0]);
-                }} else {{
-                    String[] numStrs = arrayContent.split(",");
-                    int[] nums = new int[numStrs.length];
-                    for (int i = 0; i < numStrs.length; i++) {{
-                        nums[i] = Integer.parseInt(numStrs[i].trim());
-                    }}
-                    data.put("nums", nums);
-                }}
-            }} else if (key.equals("target")) {{
-                data.put("target", Integer.parseInt(value));
-            }} else if (key.equals("s") && value.startsWith("\\\"") && value.endsWith("\\\"")) {{
-                data.put("s", value.substring(1, value.length() - 1));
-            }}
-        }}
-        
-        return data;
-    }}
-    
     public static void main(String[] args) {{
         if (args.length == 0) {{
             System.out.println("{{\\\"result\\\": \\\"No input provided\\\", \\\"execution_time\\\": 0}}");
@@ -416,89 +328,56 @@ class Main {{
         long startTime = System.nanoTime();
         
         try {{
+            // Parse JSON manually for speed
             String inputJson = args[0];
-            Map<String, Object> inputData = parseInput(inputJson);
+            String[] nums = null;
+            int target = 0;
             
-            Object result = null;
-            String error = null;
-            
-            // Create solution instance
-            Solution solutionInstance = new Solution();
-            
-            // Try to find and call solution method
-            int[] nums = (int[]) inputData.get("nums");
-            Integer target = (Integer) inputData.get("target");
-            String s = (String) inputData.get("s");
-            
-            Method solutionMethod = null;
-            Object[] methodArgs = null;
-            
-            // Debug: List all available methods
-            Method[] allMethods = solutionInstance.getClass().getDeclaredMethods();
-            System.err.println("DEBUG: Available methods in Solution class:");
-            for (Method m : allMethods) {{
-                System.err.println("  " + m.getName() + " with parameters: " + java.util.Arrays.toString(m.getParameterTypes()));
-            }}
-            
-            // Find method using reflection - only accept exact method name "solution"
-            try {{
-                if (nums != null && target != null) {{
-                    // Two parameter method - only accept "solution"
-                    try {{
-                        solutionMethod = solutionInstance.getClass().getDeclaredMethod("solution", int[].class, int.class);
-                        solutionMethod.setAccessible(true);
-                        methodArgs = new Object[]{{nums, target}};
-                    }} catch (NoSuchMethodException e) {{
-                        error = "Method 'solution' with signature (int[], int) not found";
-                    }}
-                }} else if (nums != null) {{
-                    // Single array parameter - only accept "solution"
-                    try {{
-                        solutionMethod = solutionInstance.getClass().getDeclaredMethod("solution", int[].class);
-                        solutionMethod.setAccessible(true);
-                        methodArgs = new Object[]{{nums}};
-                    }} catch (NoSuchMethodException e) {{
-                        error = "Method 'solution' with signature (int[]) not found";
-                    }}
-                }} else if (s != null) {{
-                    // String parameter - only accept "solution"
-                    try {{
-                        solutionMethod = solutionInstance.getClass().getDeclaredMethod("solution", String.class);
-                        solutionMethod.setAccessible(true);
-                        methodArgs = new Object[]{{s}};
-                    }} catch (NoSuchMethodException e) {{
-                        error = "Method 'solution' with signature (String) not found";
-                    }}
-                }} else {{
-                    error = "No suitable input parameters found";
+            // Quick JSON parsing for nums and target
+            int numsStart = inputJson.indexOf("[");
+            int numsEnd = inputJson.indexOf("]");
+            if (numsStart != -1 && numsEnd != -1) {{
+                String numsStr = inputJson.substring(numsStart + 1, numsEnd);
+                if (!numsStr.trim().isEmpty()) {{
+                    nums = numsStr.split(",");
                 }}
-                
-                if (solutionMethod != null && error == null) {{
-                    result = solutionMethod.invoke(solutionInstance, methodArgs);
-                }} else if (error == null) {{
-                    error = "No solution method found with matching signature";
-                }}
-            }} catch (Exception e) {{
-                error = "Error calling solution method: " + e.getMessage();
             }}
             
-            if (error != null) {{
-                result = error;
+            int targetStart = inputJson.indexOf("target") + 8;
+            if (targetStart > 7) {{
+                String targetStr = inputJson.substring(targetStart);
+                target = Integer.parseInt(targetStr.replaceAll("[^\\\\d-]", ""));
             }}
+            
+            // Convert to int array
+            int[] numArray = new int[nums != null ? nums.length : 0];
+            if (nums != null) {{
+                for (int i = 0; i < nums.length; i++) {{
+                    numArray[i] = Integer.parseInt(nums[i].trim());
+                }}
+            }}
+            
+            // Call solution
+            Solution sol = new Solution();
+            int[] result = sol.solution(numArray, target);
             
             long endTime = System.nanoTime();
             double executionTime = (endTime - startTime) / 1_000_000.0;
             
-            System.out.println(resultToJson(result, executionTime));
+            // Output result
+            System.out.print("{{\\\"result\\\": [");
+            for (int i = 0; i < result.length; i++) {{
+                System.out.print(result[i]);
+                if (i < result.length - 1) System.out.print(",");
+            }}
+            System.out.println("], \\\"execution_time\\\": " + executionTime + "}}");
             
         }} catch (Exception e) {{
             long endTime = System.nanoTime();
             double executionTime = (endTime - startTime) / 1_000_000.0;
-            
             System.out.println("{{\\\"result\\\": \\\"" + e.getMessage().replace("\\"", "\\\\\\"") + "\\\", \\\"execution_time\\\": " + executionTime + "}}");
         }}
     }}
-}}
-""",
+}}""",
     },
 }

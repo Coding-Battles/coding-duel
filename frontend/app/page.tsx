@@ -1,19 +1,11 @@
-"use client";
-import React, { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 import GoogleOneTap from "@/components/GoogleOneTap";
-import { useSession } from "@/lib/auth-client";
 
 export default function HomePage() {
-  const { data: session } = useSession();
-
-  useEffect(() => {
-    console.log("User session data:", session);
-  }, [session]);
   return (
     <>
       <GoogleOneTap />
@@ -38,7 +30,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-                <Link href="/Queue">
+                <Link href="/queue">
                   <Button
                     size="lg"
                     className="bg-white text-black text-lg px-8 py-6 hover:bg-gray-400"
