@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
 from groq import Groq
@@ -95,6 +96,15 @@ async def lifespan(_app: FastAPI):
 # FastAPI application with lifespan management
 app = FastAPI(lifespan=lifespan)
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 
 # Debug: Check if API key is loaded
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -118,9 +128,9 @@ except docker.errors.DockerException as e:
 executor = ThreadPoolExecutor(max_workers=5)
 
 
-@app.post("/run-test-cases", response_model=RunTestCasesResponse)
-async def run_test_cases(request: RunTestCasesRequest):
-    """Execute code with test cases loaded from file based on question name."""
+@app.post("/run-all-tests", response_model=RunTestCasesResponse)
+async def run_all_tests(request: RunTestCasesRequest):
+    """Execute code with ALL test cases loaded from file based on question name."""
     if not docker_available:
         raise HTTPException(
             status_code=503,
@@ -134,7 +144,27 @@ async def run_test_cases(request: RunTestCasesRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error in /run-test-cases: {str(e)}")
+        logger.error(f"Unexpected error in /run-all-tests: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@app.post("/run-sample-tests", response_model=RunTestCasesResponse)
+async def run_sample_tests(request: RunTestCasesRequest):
+    """Execute code with FIRST 3 test cases only for quick feedback during development."""
+    if not docker_available:
+        raise HTTPException(
+            status_code=503,
+            detail="Docker is not available. Please install and start Docker Desktop.",
+        )
+
+    try:
+        return TestExecutionService.execute_sample_test_cases(request)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error in /run-sample-tests: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 

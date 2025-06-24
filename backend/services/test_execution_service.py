@@ -313,3 +313,96 @@ class TestExecutionService:
                 total_failed=0,
                 error=f"Error executing code: {str(e)}",
             )
+
+    @staticmethod
+    def execute_sample_test_cases(request: RunTestCasesRequest) -> RunTestCasesResponse:
+        """Execute only the first 3 test cases for quick feedback during development."""
+        start_time = time.time()
+        logger.info(
+            f"🐛 [DEBUG] Starting SAMPLE test execution (first 3 tests) for {request.language} - {request.question_name}"
+        )
+
+        try:
+            # Validate language
+            step_time = time.time()
+            TestExecutionService.validate_language(request.language)
+            logger.info(
+                f"🐛 [DEBUG] Language validation took {(time.time() - step_time)*1000:.0f}ms"
+            )
+
+            # Load test cases
+            step_time = time.time()
+            all_test_cases = TestExecutionService.load_test_cases(request.question_name)
+            # Limit to first 3 test cases for sample execution
+            test_cases = all_test_cases[:3]
+            logger.info(
+                f"🐛 [DEBUG] Test file loading took {(time.time() - step_time)*1000:.0f}ms"
+            )
+            logger.info(
+                f"🐛 [DEBUG] Running SAMPLE execution with {len(test_cases)} test cases (out of {len(all_test_cases)} total)"
+            )
+
+            # Choose execution strategy based on language (same logic as full execution)
+            if request.language == "java":
+                try:
+                    test_results, total_passed, total_failed = (
+                        TestExecutionService.run_java_batch_execution(
+                            request.code, test_cases, request.timeout
+                        )
+                    )
+                except Exception:
+                    logger.info(
+                        f"🐛 [DEBUG] Falling back to individual test case execution for sample tests"
+                    )
+                    test_results, total_passed, total_failed = (
+                        TestExecutionService.run_individual_test_cases(
+                            request.code, request.language, test_cases, request.timeout
+                        )
+                    )
+            elif request.language == "cpp":
+                try:
+                    test_results, total_passed, total_failed = (
+                        TestExecutionService.run_cpp_batch_execution(
+                            request.code, test_cases, request.timeout
+                        )
+                    )
+                except Exception:
+                    logger.info(
+                        f"🐛 [DEBUG] Falling back to individual test case execution for sample tests"
+                    )
+                    test_results, total_passed, total_failed = (
+                        TestExecutionService.run_individual_test_cases(
+                            request.code, request.language, test_cases, request.timeout
+                        )
+                    )
+            else:
+                # For other languages, use individual execution
+                test_results, total_passed, total_failed = (
+                    TestExecutionService.run_individual_test_cases(
+                        request.code, request.language, test_cases, request.timeout
+                    )
+                )
+
+            total_time = (time.time() - start_time) * 1000
+            logger.info(f"🐛 [DEBUG] Total SAMPLE test execution time: {total_time:.0f}ms")
+
+            return RunTestCasesResponse(
+                success=total_failed == 0,
+                test_results=test_results,
+                total_passed=total_passed,
+                total_failed=total_failed,
+                error=None,
+            )
+
+        except Exception as e:
+            total_time = (time.time() - start_time) * 1000
+            logger.error(
+                f"🐛 [DEBUG] Exception in SAMPLE test execution after {total_time:.0f}ms: {str(e)}"
+            )
+            return RunTestCasesResponse(
+                success=False,
+                test_results=[],
+                total_passed=0,
+                total_failed=0,
+                error=f"Error executing code: {str(e)}",
+            )

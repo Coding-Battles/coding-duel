@@ -17,14 +17,17 @@ import React from "react";
 import { useGameContext } from "../layout";
 
 export default function InGamePage() {
-  const [selectedLanguage, setSelectedLanguage] = React.useState<Language>('python');
-  const [userCode, setUserCode] = React.useState<string>('');
+  const [selectedLanguage, setSelectedLanguage] =
+    React.useState<Language>("python");
+  const [userCode, setUserCode] = React.useState<string>("");
   const [questionData, setQuestionData] = React.useState<QuestionData | null>(
     null
   );
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [testResults, setTestResults] = React.useState<TestResultsData | undefined>(undefined);
+  const [testResults, setTestResults] = React.useState<
+    TestResultsData | undefined
+  >(undefined);
 
   const context = useGameContext();
   const router = useRouter();
@@ -106,10 +109,10 @@ export default function InGamePage() {
     }
   };
 
-  const runCode = async (code: string): Promise<TestResultsData> => {
+  const runSampleTests = async (code: string): Promise<TestResultsData> => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/test_code`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-sample-tests`,
         {
           method: "POST",
           headers: {
@@ -134,7 +137,42 @@ export default function InGamePage() {
         test_results: [],
         total_passed: 0,
         total_failed: 0,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+      setTestResults(errorResult);
+      return errorResult;
+    }
+  };
+
+  const runAllTests = async (code: string): Promise<TestResultsData> => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-all-tests`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code: code,
+            question_name: questionName,
+            language: selectedLanguage,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      console.log("Full test execution result:", result);
+      setTestResults(result);
+      return result;
+    } catch (error) {
+      console.error("Error running all tests:", error);
+      const errorResult: TestResultsData = {
+        success: false,
+        test_results: [],
+        total_passed: 0,
+        total_failed: 0,
+        error: error instanceof Error ? error.message : "Unknown error",
       };
       setTestResults(errorResult);
       return errorResult;
@@ -152,7 +190,7 @@ export default function InGamePage() {
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
             <div className="flex h-[100%] w-[100%]">
-              <div className="flex-1 w-full h-full">
+              <div className="flex-1 w-full h-full max-w-2xl">
                 <EditorWithTerminal
                   code={userCode}
                   onCodeChange={(value) => {
@@ -161,11 +199,11 @@ export default function InGamePage() {
                   }}
                   language={getLanguageConfig(selectedLanguage).monacoLanguage}
                   theme="vs-dark"
-                  onRunCode={runCode}
+                  onRunCode={runSampleTests}
                   selectedLanguage={selectedLanguage}
                   onLanguageChange={handleLanguageChange}
-                  onRun={() => runCode(userCode)}
-                  onSubmit={() => runCode(userCode)}
+                  onRun={() => runSampleTests(userCode)}
+                  onSubmit={() => runAllTests(userCode)}
                   testResults={testResults}
                 />
               </div>

@@ -30,6 +30,22 @@ export default function CodeEditor({
         value={value}
         theme={theme}
         onChange={onChange}
+        options={{
+          scrollBeyondLastLine: false,
+          scrollbar: {
+            vertical: 'auto',
+            horizontal: 'auto',
+          },
+          automaticLayout: true,
+          minimap: { enabled: false },
+          wordWrap: 'on',
+          fontSize: 14,
+          lineNumbers: 'on',
+          glyphMargin: false,
+          folding: true,
+          lineDecorationsWidth: 0,
+          lineNumbersMinChars: 3,
+        }}
       />
     </div>
   );

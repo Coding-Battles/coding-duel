@@ -73,9 +73,9 @@ export default function EditorWithTerminal({
         </div>
       </div>
 
-      {/* Editor and Terminal */}
-      <div className="flex flex-row flex-1 min-h-0">
-        <div className="flex-1 min-w-0">
+      {/* Editor and Test Results */}
+      <div className="flex flex-col flex-1 min-h-0">
+        <div className="h-[calc(100%-300px)] min-h-0">
           <CodeEditor
             value={code}
             onChange={onCodeChange}
@@ -84,7 +84,7 @@ export default function EditorWithTerminal({
             height="100%"
           />
         </div>
-        <div className="w-[400px] min-w-[200px] max-w-[600px] border-l border-gray-700 bg-black relative">
+        <div className="h-[300px] border-t border-gray-700 bg-black">
           <TestResults testResults={testResults} height="100%" />
         </div>
       </div>

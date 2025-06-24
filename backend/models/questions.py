@@ -76,9 +76,4 @@ class QuestionData(BaseModel):
     description_html: str
     examples_html: str
     constraints_html: str
-    follow_up_html: Optional[str] = None
     starter_code: StarterCode
-    test_cases: List[TestCase]
-    hints: List[str]
-    solution_approach: SolutionApproach
-    metadata: QuestionMetadata
