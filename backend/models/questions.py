@@ -74,6 +74,4 @@ class QuestionData(BaseModel):
     difficulty: str
     tags: List[str]
     description_html: str
-    examples_html: str
-    constraints_html: str
     starter_code: StarterCode

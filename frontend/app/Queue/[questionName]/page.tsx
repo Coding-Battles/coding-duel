@@ -1,20 +1,14 @@
 // This file was moved from in-game/page.tsx to [questionName]/page.tsx for dynamic routing.
 "use client";
-import { InGameSideBar } from "@/components/inGameSideBar";
-import { Button } from "@/components/ui/button";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { QuestionData } from "@/types/question";
 import EditorWithTerminal from "@/components/EditorWithTerminal";
 import { Language, getLanguageConfig } from "@/types/languages";
 import { TestResultsData } from "@/components/TestResults";
-import { Check } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import { useGameContext } from "../layout";
+import DuelInfo from "@/components/DuelInfo";
+import { Button } from "@/components/ui/button";
 
 export default function InGamePage() {
   const [selectedLanguage, setSelectedLanguage] =
@@ -28,6 +22,8 @@ export default function InGamePage() {
   const [testResults, setTestResults] = React.useState<
     TestResultsData | undefined
   >(undefined);
+  const [isRunning, setIsRunning] = React.useState(false);
+  const [hasResults, setHasResults] = React.useState(false);
 
   const context = useGameContext();
   const router = useRouter();
@@ -110,6 +106,9 @@ export default function InGamePage() {
   };
 
   const runSampleTests = async (code: string): Promise<TestResultsData> => {
+    setIsRunning(true);
+    setTestResults(undefined); // Clear previous results for immediate feedback
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-sample-tests`,
@@ -129,6 +128,7 @@ export default function InGamePage() {
       const result = await response.json();
       console.log("Test execution result:", result);
       setTestResults(result);
+      setHasResults(true);
       return result;
     } catch (error) {
       console.error("Error running tests:", error);
@@ -140,11 +140,17 @@ export default function InGamePage() {
         error: error instanceof Error ? error.message : "Unknown error",
       };
       setTestResults(errorResult);
+      setHasResults(true);
       return errorResult;
+    } finally {
+      setIsRunning(false);
     }
   };
 
   const runAllTests = async (code: string): Promise<TestResultsData> => {
+    setIsRunning(true);
+    setTestResults(undefined); // Clear previous results for immediate feedback
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-all-tests`,
@@ -164,6 +170,7 @@ export default function InGamePage() {
       const result = await response.json();
       console.log("Full test execution result:", result);
       setTestResults(result);
+      setHasResults(true);
       return result;
     } catch (error) {
       console.error("Error running all tests:", error);
@@ -175,42 +182,76 @@ export default function InGamePage() {
         error: error instanceof Error ? error.message : "Unknown error",
       };
       setTestResults(errorResult);
+      setHasResults(true);
       return errorResult;
+    } finally {
+      setIsRunning(false);
     }
   };
+
+  const handleCloseResults = () => {
+    setTestResults(undefined);
+    setHasResults(false);
+  };
+
   return (
     <div className="flex h-screen w-screen">
-      <SidebarProvider>
-        <InGameSideBar questionData={questionData} />
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <h1 className="text-lg font-semibold">BATTLE</h1>
-            <div />
-          </header>
-          <div className="flex flex-1 flex-col gap-4 p-4">
-            <div className="flex h-[100%] w-[100%]">
-              <div className="flex-1 w-full h-full max-w-2xl">
-                <EditorWithTerminal
-                  code={userCode}
-                  onCodeChange={(value) => {
-                    setUserCode(value || "");
-                    console.log("User code:", value);
-                  }}
-                  language={getLanguageConfig(selectedLanguage).monacoLanguage}
-                  theme="vs-dark"
-                  onRunCode={runSampleTests}
-                  selectedLanguage={selectedLanguage}
-                  onLanguageChange={handleLanguageChange}
-                  onRun={() => runSampleTests(userCode)}
-                  onSubmit={() => runAllTests(userCode)}
-                  testResults={testResults}
-                />
-              </div>
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="flex flex-1 flex-row h-screen h-full gap-4 p-4 items-start justify-start">
+        {/* Left panel - Question Description */}
+        <div className="w-80 min-w-[400px] h-[calc(100vh-2rem)] bg-white border border-gray-200 rounded-lg p-4 overflow-y-auto">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            {questionData?.title || "Loading..."}
+          </h2>
+          {questionData?.description_html ? (
+            <div
+              className="text-sm leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: questionData.description_html,
+              }}
+            />
+          ) : (
+            <div className="text-gray-500">Loading question description...</div>
+          )}
+        </div>
+
+        {/* Middle - Editor */}
+        <div className="flex-1 min-w-[400px] w-full h-[calc(100vh-2rem)]">
+          <EditorWithTerminal
+            code={userCode}
+            onCodeChange={(value) => {
+              setUserCode(value || "");
+              console.log("User code:", value);
+            }}
+            language={getLanguageConfig(selectedLanguage).monacoLanguage}
+            theme="vs-dark"
+            onRunCode={runSampleTests}
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={handleLanguageChange}
+            onRun={() => runSampleTests(userCode)}
+            onSubmit={() => runAllTests(userCode)}
+            testResults={testResults}
+            isRunning={isRunning}
+            hasResults={hasResults}
+            onCloseResults={handleCloseResults}
+            disableCopyPaste={true}
+          />
+        </div>
+
+        {/* Right panel */}
+        <div className="w-64 min-w-[300px] h-[calc(100vh-2rem)] justify-center items-center bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+          <DuelInfo />
+          <Button
+            variant="destructive"
+            className="mt-4"
+            onClick={() => {
+              // TODO: Replace with actual surrender logic
+              alert("You have surrendered!");
+            }}
+          >
+            Surrender
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
