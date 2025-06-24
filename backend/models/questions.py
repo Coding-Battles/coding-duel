@@ -39,3 +39,46 @@ class DockerRunRequest(BaseModel):
     language: str
     test_input: dict
     timeout: int = 5
+
+
+class TestCase(BaseModel):
+    input: Dict[str, Any]
+    expected_output: Any
+    is_hidden: bool
+
+
+class StarterCode(BaseModel):
+    python: str
+    javascript: str
+    java: str
+    cpp: str
+
+
+class SolutionApproach(BaseModel):
+    time_complexity: str
+    space_complexity: str
+    approach: str
+
+
+class QuestionMetadata(BaseModel):
+    acceptance_rate: str
+    total_accepted: str
+    total_submissions: str
+    created_at: str
+    last_updated: str
+
+
+class QuestionData(BaseModel):
+    id: str
+    title: str
+    difficulty: str
+    tags: List[str]
+    description_html: str
+    examples_html: str
+    constraints_html: str
+    follow_up_html: Optional[str] = None
+    starter_code: StarterCode
+    test_cases: List[TestCase]
+    hints: List[str]
+    solution_approach: SolutionApproach
+    metadata: QuestionMetadata

@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Editor } from "@monaco-editor/react";
 import { Check } from "lucide-react";
 import React from "react";
-import { useGameContext } from "../queue/layout";
+import { useGameContext } from "../layout";
 import { useRouter } from "next/navigation";
+import { QuestionSidebar } from "@/components/QuestionSidebar";
 
 export default function InGamePage() {
   const [userCode, setUserCode] = React.useState<string>(
@@ -13,16 +14,21 @@ export default function InGamePage() {
   const context = useGameContext();
   const router = useRouter();
 
+  React.useEffect(() => {
+    if (!context) {
+      router.push("/queue");
+    }
+  }, [context, router]);
+
   if (!context) {
-    router.push("/in-game");
-    return null; // Ensure the component returns null if context is not available
+    return <div>Loading...</div>;
   }
 
   const { socket, loading } = context;
 
   const runCode = async () => {
     try {
-      const response = await fetch("http://localhost:8000/run_code", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/run_code`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,8 +70,9 @@ export default function InGamePage() {
           console.log("User code:", value);
         }}
       />
-      <textarea className="h-[80%] w-[40%]" />
-      {/*FOR TERMINAL*/}
+      <div className="h-[80%] w-[40%]">
+        <QuestionSidebar questionName="two_sum" />
+      </div>
     </div>
   );
 }

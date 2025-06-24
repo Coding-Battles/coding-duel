@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useContext, useState } from "react";
-import { useGameContext } from "../queue/layout";
+import { useGameContext } from "../layout";
 import { useRouter } from "next/router";
 
 export default function Layout({ children }: { children: React.ReactNode }) {

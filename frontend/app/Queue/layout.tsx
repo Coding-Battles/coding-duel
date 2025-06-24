@@ -20,7 +20,7 @@ export default function QueueLayout({
   const [loadingState, setLoadingState] = useState<boolean>(true);
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:8000");
+    socketRef.current = io(process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000");
 
     socketRef.current.on("connect", () => {
       console.log("Connected to the server");

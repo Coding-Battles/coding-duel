@@ -103,7 +103,7 @@ export default function QueueLayout() {
                     .type('<span style="color: orange;">Player Found!</span>')
                     .pause(2000)
                     .exec(() => {
-                      router.push("/in-game");
+                      router.push("/queue/in-game");
                     });
                   return instance;
                 }}

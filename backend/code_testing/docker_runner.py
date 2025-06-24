@@ -5,7 +5,7 @@ import threading
 from typing import Dict, Any, Optional
 
 # Import Pydantic models
-from backend.models.submission import DockerRunRequest
+from backend.models.questions import DockerRunRequest
 from backend.code_testing.language_config import LANGUAGE_CONFIG
 
 # Global Docker client and persistent containers
@@ -24,31 +24,35 @@ def get_docker_client():
 def get_persistent_container(language: str):
     """Get or create a persistent container for the given language."""
     global _persistent_containers
-    
+
     with _container_lock:
         container_name = f"{language}-runner"
-        
+
         # Check if container exists and is running
         if container_name in _persistent_containers:
             try:
                 container = _persistent_containers[container_name]
                 container.reload()
-                if container.status == 'running':
-                    print(f"🐛 [DOCKER DEBUG] Reusing existing {language} container: {container.id[:12]}")
+                if container.status == "running":
+                    print(
+                        f"🐛 [DOCKER DEBUG] Reusing existing {language} container: {container.id[:12]}"
+                    )
                     return container
             except Exception as e:
                 print(f"🐛 [DOCKER DEBUG] Container {container_name} is dead: {e}")
                 # Container is dead, remove from cache
                 del _persistent_containers[container_name]
-        
+
         # Create new persistent container
-        print(f"🐛 [DOCKER DEBUG] Creating NEW {language} container - this should only happen at startup!")
+        print(
+            f"🐛 [DOCKER DEBUG] Creating NEW {language} container - this should only happen at startup!"
+        )
         config = LANGUAGE_CONFIG.get(language)
         if not config:
             raise ValueError(f"Unsupported language: {language}")
-        
+
         docker_client = get_docker_client()
-        
+
         # Remove existing container if it exists
         try:
             old_container = docker_client.containers.get(container_name)
@@ -56,9 +60,11 @@ def get_persistent_container(language: str):
             print(f"🐛 [DOCKER DEBUG] Removed old {container_name} container")
         except:
             pass
-        
+
         # Create new container
-        print(f"🐛 [DOCKER DEBUG] Starting new {language} container with image {config['image']}")
+        print(
+            f"🐛 [DOCKER DEBUG] Starting new {language} container with image {config['image']}"
+        )
         container = docker_client.containers.run(
             config["image"],
             command="sleep infinity",
@@ -71,19 +77,23 @@ def get_persistent_container(language: str):
             working_dir="/tmp",
             remove=False,
         )
-        
-        print(f"🐛 [DOCKER DEBUG] Created new {language} container: {container.id[:12]}")
+
+        print(
+            f"🐛 [DOCKER DEBUG] Created new {language} container: {container.id[:12]}"
+        )
         _persistent_containers[container_name] = container
         return container
 
 
-def run_code_in_docker(request: DockerRunRequest, docker_client=None, use_fast_runner=None):
+def run_code_in_docker(
+    request: DockerRunRequest, docker_client=None, use_fast_runner=None
+):
     """Run code using persistent containers for fast execution."""
     import time
-    
+
     start_time = time.time()
     print(f"🐛 [DOCKER DEBUG] Starting {request.language} execution")
-    
+
     try:
         config = LANGUAGE_CONFIG.get(request.language)
         if not config:
@@ -94,31 +104,29 @@ def run_code_in_docker(request: DockerRunRequest, docker_client=None, use_fast_r
         container = get_persistent_container(request.language)
         container_time = (time.time() - container_start) * 1000
         print(f"🐛 [DOCKER DEBUG] Getting container took {container_time:.0f}ms")
-        
+
         # Prepare code with wrapper template
-        wrapped_code = config["wrapper_template"].format(
-            code=request.code, imports=""
-        )
-        
+        wrapped_code = config["wrapper_template"].format(code=request.code, imports="")
+
         # Determine filename
         if request.language == "java":
             filename = "Solution.java"
         else:
             filename = f"solution{config['file_extension']}"
-        
+
         # Write code to container using docker exec
         file_start = time.time()
         import base64
-        encoded_code = base64.b64encode(wrapped_code.encode('utf-8')).decode('ascii')
-        
+
+        encoded_code = base64.b64encode(wrapped_code.encode("utf-8")).decode("ascii")
+
         # Create file in container
         create_result = container.exec_run(
-            f"sh -c 'echo {encoded_code} | base64 -d > /tmp/{filename}'",
-            workdir="/tmp"
+            f"sh -c 'echo {encoded_code} | base64 -d > /tmp/{filename}'", workdir="/tmp"
         )
         file_time = (time.time() - file_start) * 1000
         print(f"🐛 [DOCKER DEBUG] File creation took {file_time:.0f}ms")
-        
+
         if create_result.exit_code != 0:
             return {
                 "success": False,
@@ -126,52 +134,49 @@ def run_code_in_docker(request: DockerRunRequest, docker_client=None, use_fast_r
                 "execution_time": (time.time() - start_time) * 1000,
                 "error": f"Failed to create file: {create_result.output.decode('utf-8')}",
             }
-        
+
         # Build command sequence
         commands = []
-        
+
         # Add compilation step if needed
         if "compile_command" in config:
             compile_cmd = config["compile_command"].format(filename=filename)
             commands.append(compile_cmd)
-        
+
         # Add run command
         if request.language == "java":
             run_command = config["run_command"]
         else:
             run_command = config["run_command"].format(filename=filename)
-        
+
         # Pass input as command line argument
         input_json = json.dumps(request.test_input).replace('"', '\\"')
         run_command += f' "{input_json}"'
-        
+
         commands.append(run_command)
-        
+
         # Execute commands in container
         exec_start = time.time()
         full_command = " && ".join(commands)
         print(f"🐛 [DOCKER DEBUG] Executing: {full_command}")
-        
-        exec_result = container.exec_run(
-            f"sh -c '{full_command}'",
-            workdir="/tmp"
-        )
-        
+
+        exec_result = container.exec_run(f"sh -c '{full_command}'", workdir="/tmp")
+
         exec_time = (time.time() - exec_start) * 1000
         execution_time = (time.time() - start_time) * 1000
-        print(f"🐛 [DOCKER DEBUG] Command execution took {exec_time:.0f}ms, total time {execution_time:.0f}ms")
-        
+        print(
+            f"🐛 [DOCKER DEBUG] Command execution took {exec_time:.0f}ms, total time {execution_time:.0f}ms"
+        )
+
         if exec_result.exit_code == 0:
             try:
                 logs = exec_result.output.decode("utf-8")
-                
+
                 # Find JSON output line
                 output_lines = [
-                    line.strip()
-                    for line in logs.strip().split("\n")
-                    if line.strip()
+                    line.strip() for line in logs.strip().split("\n") if line.strip()
                 ]
-                
+
                 for line in reversed(output_lines):
                     try:
                         output_data = json.loads(line)
@@ -179,19 +184,21 @@ def run_code_in_docker(request: DockerRunRequest, docker_client=None, use_fast_r
                             return {
                                 "success": True,
                                 "output": output_data.get("result"),
-                                "execution_time": output_data.get("execution_time", execution_time),
+                                "execution_time": output_data.get(
+                                    "execution_time", execution_time
+                                ),
                                 "error": output_data.get("error"),
                             }
                     except json.JSONDecodeError:
                         continue
-                
+
                 return {
                     "success": False,
                     "output": None,
                     "execution_time": execution_time,
                     "error": f"Could not parse JSON output. Raw logs: {logs}",
                 }
-                
+
             except Exception as e:
                 return {
                     "success": False,
@@ -207,7 +214,7 @@ def run_code_in_docker(request: DockerRunRequest, docker_client=None, use_fast_r
                 "execution_time": execution_time,
                 "error": f"Execution failed: {logs}",
             }
-            
+
     except Exception as e:
         execution_time = (time.time() - start_time) * 1000
         return {
@@ -218,11 +225,10 @@ def run_code_in_docker(request: DockerRunRequest, docker_client=None, use_fast_r
         }
 
 
-
 def cleanup_persistent_containers():
     """Clean up all persistent containers."""
     global _persistent_containers
-    
+
     with _container_lock:
         for container_name, container in _persistent_containers.items():
             try:
@@ -230,16 +236,16 @@ def cleanup_persistent_containers():
                 print(f"Cleaned up container: {container_name}")
             except Exception as e:
                 print(f"Error cleaning up container {container_name}: {e}")
-        
+
         _persistent_containers.clear()
 
 
 # Test it
 if __name__ == "__main__":
-    from backend.models.submission import DockerRunRequest
+    from backend.models.questions import DockerRunRequest
 
     test_request = DockerRunRequest(
-        code='class Solution { public int[] solution(int[] nums, int target) { for (int i = 0; i < nums.length; i++) { for (int j = i + 1; j < nums.length; j++) { if (nums[i] + nums[j] == target) { return new int[]{i, j}; } } } return new int[]{}; } }',
+        code="class Solution { public int[] solution(int[] nums, int target) { for (int i = 0; i < nums.length; i++) { for (int j = i + 1; j < nums.length; j++) { if (nums[i] + nums[j] == target) { return new int[]{i, j}; } } } return new int[]{}; } }",
         language="java",
         test_input={"nums": [2, 7, 11, 15], "target": 9},
         timeout=5,
