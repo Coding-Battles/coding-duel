@@ -1,7 +1,8 @@
 import React from 'react';
-import { User, Calendar, Trophy, TrendingUp, Clock, CheckCircle, XCircle, Circle, Edit } from 'lucide-react';
+import { User, Calendar, Trophy, TrendingUp, Clock, CheckCircle, XCircle, Circle,ArrowLeft, ArrowLeftSquare } from 'lucide-react';
 import { ProfileBar } from './components/ProfileBar';
 import { UserStats } from '@/interfaces/UserStats';
+import Link from "next/link";
 
 interface Problem {
   id: number;
@@ -82,6 +83,9 @@ const LeetCodeProfile: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+      <Link href="/" className="text-blue-600 absolute top-2 left-2 w-8 h-8 hover:text-blue-300 transition-colors cursor-pointer">
+        <ArrowLeftSquare className="w-full h-full" />
+      </Link>
       {/* Header */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <ProfileBar/>

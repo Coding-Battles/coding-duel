@@ -4,8 +4,7 @@ import "./globals.css";
 import {NightModeButton} from "@/components/NightModeButton";
 import { cookies, headers } from 'next/headers';
 import {auth} from "@/lib/auth";
-import { authClient, useSession } from "@/lib/auth-client";
-import { useEffect } from "react";
+import { SessionProvider } from "@/components/SessionProvider";
 
 
 
@@ -24,6 +23,7 @@ export const metadata: Metadata = {
   description: "1v1 coding battles",
 };
 
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -32,6 +32,11 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const theme = cookieStore.get('theme')?.value || 'light';
 
+  const sessionData = await auth.api.getSession({
+    headers: await headers()
+  })
+
+  const sessionUser = sessionData?.user || null;
 
   return (
     <html lang="en" className={theme === 'dark' ? 'dark' : ''}>
@@ -39,7 +44,9 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NightModeButton/>
-        {children}
+        <SessionProvider sessionUser={sessionUser}>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

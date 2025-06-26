@@ -29,18 +29,12 @@ export default function QueueLayout() {
       setTimer((prev) => prev + 1);
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [context.socket]);
 
-  useEffect(() => {
-    if (timer === 10) {
-      //FOR TESTINTG ONLY
-      console.log("timer: ", timer);
-      setPlayerFound(true);
-    }
-  }, [timer]);
-
-  const { socket, loading } = context;
+  const { socket, loading, opponentImageURL, opponentName } = context;
   return (
     <div className="flex h-[100%] w-[100%] items-center justify-center flex-col">
       <Card className="mt-16 bg-gray-900 border-gray-800 shadow-2xl animate-float">
@@ -118,15 +112,19 @@ export default function QueueLayout() {
         <div className="flex flex-col items-center justify-center p-6 border-2 w-[170px] rounded-lg">
           <img
             src=""
-            alt="winnerImage"
+            alt="Player Image"
             className="w-24 h-24 mb-4 border-2 border-gray-300"
           />
           <h1 className="text-2xl font-bold">Username1</h1>
         </div>
 
         <div className="flex flex-col items-center justify-center p-6 border-2 rounded-lg w-[170px]">
-          {<FileQuestion className="w-8 h-8 text-gray-500" />}
-          <h1 className="text-2xl font-bold">Finding</h1>
+          {opponentImageURL ? 
+            <img src={opponentImageURL} alt="Opponent Image" className="w-24 h-24 mb-4 border-2 border-gray-300"/> 
+            : 
+            <FileQuestion className="w-8 h-8 text-gray-500" />
+          }
+          <h1 className="text-2xl font-bold">{opponentName? opponentName : "Findinge"}</h1>
         </div>
       </div>
     </div>
