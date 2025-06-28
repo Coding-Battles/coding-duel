@@ -11,10 +11,22 @@ import { QuestionData } from "@/types/question";
 import EditorWithTerminal from "@/components/EditorWithTerminal";
 import { Language, getLanguageConfig } from "@/types/languages";
 import { TestResultsData } from "@/components/TestResults";
-import { Check } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useGameContext } from "../layout";
+import { useSessionContext } from "@/components/SessionProvider";
+import { Socket } from "socket.io-client";
+import { Alert, AlertDescription, AlertTitle, StackableAlerts } from "@/components/ui/alert";
+import {motion} from "framer-motion";
+
+type OpponentSubmittedMessage = {
+  message: string;
+  opponent_id: string;
+  status: boolean;
+  total_tests: number | null;
+};
+
 
 export default function InGamePage() {
   const [selectedLanguage, setSelectedLanguage] =
@@ -29,18 +41,71 @@ export default function InGamePage() {
     TestResultsData | undefined
   >(undefined);
 
+  const socketRef = useRef<Socket | null>(null);
   const context = useGameContext();
   const router = useRouter();
   const params = useParams();
   const questionName = params?.questionName;
+  type AlertType = { id: string; message: string; variant?: string };
+  const [alerts, setAlerts] = React.useState<AlertType[]>([]);
 
-  React.useEffect(() => {
+  const session = context?.socket
+  const userSession = useSessionContext();
+
+  console.log("InGamePage session:", userSession);
+
+  console.log("id:", context?.anonymousId);
+  console.log("is anonymous:", context?.isAnonymous);
+
+  useEffect(() => {
+    if(!session) {
+      console.error("No session found, redirecting to queue");
+      router.push("/queue");
+      return;
+    } 
+
+    const handleOpponentSubmitted = (data: OpponentSubmittedMessage) => {
+      console.log("Opponent submitted data:", data);
+      setAlerts((prev) => [
+        ...prev,
+        {
+          id: `opponent-${Date.now()}-${Math.random()}`, // Generate unique ID
+          message: `Opponent ${data.opponent_id} submitted code: ${data.message}`,
+          variant: 'default'
+        }
+      ]);
+    };
+
+    const handleGameCompleted = (data: {message: string}) => {
+      console.log("Game completed data:", data);
+      setAlerts((prev) => [
+        ...prev,
+        {
+          id: `game-completed-${Date.now()}-${Math.random()}`, // Generate unique ID
+          message: `Game completed: ${data.message}`,
+          variant: 'destructive'
+        }
+      ]);
+    };
+
+    session.on("opponent_submitted", handleOpponentSubmitted);
+    session.on("game_completed", handleGameCompleted);
+
+      // Cleanup function
+    return () => {
+      session.off("opponent_submitted", handleOpponentSubmitted);
+      session.off("game_completed", handleGameCompleted);
+    };
+  }, [session])
+  
+
+ useEffect(() => {
     if (!context) {
       router.push("/queue");
     }
   }, [context, router]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchQuestion = async () => {
       try {
         setLoading(true);
@@ -68,7 +133,7 @@ export default function InGamePage() {
   }, [questionName]);
 
   // Set initial starter code when question data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (questionData && questionData.starter_code) {
       const starterCode = questionData.starter_code[selectedLanguage];
       if (starterCode) {
@@ -146,20 +211,29 @@ export default function InGamePage() {
 
   const runAllTests = async (code: string): Promise<TestResultsData> => {
     try {
+      const playerId = context.isAnonymous ? context.anonymousId : userSession?.id;
+      console.log("Request body:", {
+        player_id: playerId,
+        code,
+        question_name: questionName,
+        language: selectedLanguage,
+      });
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-all-tests`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/${context.gameId}/run-all-tests`, //have to pass in gameId so that the game room can be pinged 
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            player_id: playerId,
             code: code,
             question_name: questionName,
             language: selectedLanguage,
           }),
         }
       );
+
 
       const result = await response.json();
       console.log("Full test execution result:", result);
@@ -182,14 +256,16 @@ export default function InGamePage() {
     <div className="flex h-screen w-screen">
       <SidebarProvider>
         <InGameSideBar questionData={questionData} />
+        
         <SidebarInset>
-          <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4">
+          <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4 z-60">
             <SidebarTrigger className="-ml-1" />
             <h1 className="text-lg font-semibold">BATTLE</h1>
             <div className="text-xs">
               Time: <b></b>
             </div>
           </header>
+          <StackableAlerts alerts={alerts} setAlerts={setAlerts}/>
           <div className="flex flex-1 flex-col gap-4 p-4">
             <div className="flex h-[100%] w-[100%]">
               <div className="flex-1 w-full h-full max-w-2xl">

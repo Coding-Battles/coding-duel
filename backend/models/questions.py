@@ -20,6 +20,7 @@ class TestCaseResult(BaseModel):
 
 
 class RunTestCasesRequest(BaseModel):
+    player_id: str
     code: str
     language: str
     question_name: str  # Changed from test_cases to question_name

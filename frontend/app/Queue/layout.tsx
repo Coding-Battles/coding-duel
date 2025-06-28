@@ -12,9 +12,12 @@ type GameContextType = {
   loading: boolean;
   opponentName: string;
   opponentImageURL: string;
+  gameId: string;
+  isAnonymous?: boolean;
+  anonymousId?: string;
 };
 
-type MatchFoundData = {
+type MatchFoundData = { //data returned from backend
     game_id: string
     opponentName: string
     opponentImageURL: string | null
@@ -34,19 +37,23 @@ export default function QueueLayout({
   const router = useRouter();
   const [opponentName, setOpponentName] = useState<string>("");
   const [opponentImageURL, setOpponentImageURL] = useState<string | null>("");
+  const [gameId, setGameId] = useState<string>("");
+  const [anonymousId, setAnonymousId] = useState<string>("");
+  const isAnonymous = !session?.id; // Check if session ID is not present
 
-  useEffect(() => {
+  useEffect(() => { //HAANDLING ALL THE SOCKET LOGIC HERE
 
     console.log('useEffect triggered, session:', session);
     console.log('session?.id:', session?.id);
     console.log('socketRef.current:', socketRef.current);
     
-    if(!session?.id || (socketRef.current && socketRef.current.connected)) {
-    console.log('Early return - conditions:', {
-      hasSessionId: !!session?.id,
-      hasSocket: !!socketRef.current,
-      isConnected: socketRef.current?.connected
-    });
+    
+    if((session && !session?.id) || (socketRef.current && socketRef.current.connected)) {
+      console.log('Early return - conditions:', {
+        hasSessionId: !!session?.id,
+        hasSocket: !!socketRef.current,
+        isConnected: socketRef.current?.connected
+      });
       return;
     }
 
@@ -64,14 +71,28 @@ export default function QueueLayout({
     socketRef.current = socket;
     console.log('Connecting to server...: ', session?.id);
 
+    const newAnonymousId = "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now();
+
+    if(isAnonymous)
+    {
+      console.log('Setting anonymous ID:', newAnonymousId);
+      setAnonymousId(newAnonymousId);
+    }
+
     socket.on('connect', () => {
       console.log('Connected to server with SID:', socket.id);
         socket.emit("join_queue", {
           name: session?.name || "Guest",
           imageURL: session?.image || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
-          id: session?.id || "guest_" + Date.now(),
+          id: session?.id || newAnonymousId,
         });
     });
+
+    console.log('socket joined queue with data:', {
+          name: session?.name || "Guest",
+          imageURL: session?.image || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
+          id: session?.id || newAnonymousId,
+        })
 
     socket.on('disconnect', () => {
       console.log('Disconnected from server');
@@ -86,6 +107,7 @@ export default function QueueLayout({
       setTimeout(() => {
         setOpponentName(data.opponentName)
         setOpponentImageURL(data.opponentImageURL);
+        setGameId(data.game_id);
         router.push('/queue/' + data.question_name)
       }, 5000)
 
@@ -107,7 +129,7 @@ export default function QueueLayout({
 
   return (
     <GameContext.Provider
-      value={{ socket: socketRef.current, loading: loadingState, opponentName: opponentName, opponentImageURL: opponentImageURL ?? "" }}
+      value={{ socket: socketRef.current, loading: loadingState, opponentName: opponentName, opponentImageURL: opponentImageURL ?? "", gameId: gameId, isAnonymous: isAnonymous, anonymousId: anonymousId }}
     >
       <div className="flex h-[100%] w-[100%] items-center justify-center">
         {children}

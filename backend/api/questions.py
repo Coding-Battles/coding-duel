@@ -19,9 +19,39 @@ import uuid
 import shutil
 import random
 import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Set
 
 
 #--------------CLASSES AND MODELS--------------#
+
+@dataclass
+class GameState:
+    game_id: str
+    players: Dict[str, str] = field(default_factory=dict)  # player_id -> sid mapping
+    finished_players: Set[str] = field(default_factory=set)  # player_ids who finished
+    created_at: datetime = field(default_factory=datetime.now)
+    question_name: str = ""
+    
+    def is_player_finished(self, player_id: str) -> bool:
+        return player_id in self.finished_players
+    
+    def mark_player_finished(self, player_id: str):
+        self.finished_players.add(player_id)
+    
+    def get_unfinished_players(self) -> Set[str]:
+        return set(self.players.keys()) - self.finished_players
+    
+    def all_players_finished(self) -> bool:
+        return len(self.finished_players) == len(self.players)
+    
+    def get_opponent_id(self, player_id: str) -> Optional[str]:
+        """Get the opponent's player ID"""
+        player_ids = list(self.players.keys())
+        if len(player_ids) == 2 and player_id in player_ids:
+            return player_ids[0] if player_ids[1] == player_id else player_ids[1]
+        return None
 
 class Player(BaseModel):
     id: str  # This is the player's custom ID
@@ -129,6 +159,8 @@ app = FastAPI(lifespan=lifespan)
 DATABASE_URL = os.getenv("DATABASE_URL")
 database = databases.Database(DATABASE_URL)
 waiting_players: list[Player] = []
+game_states: Dict[str, GameState] = {}  # game_id -> GameState
+player_to_game: Dict[str, str] = {}  # player_id -> game_id mapping
 
 
 sio = socketio.AsyncServer(
@@ -164,6 +196,36 @@ async def disconnect(sid):
     global waiting_players
     # Remove player from queue if they disconnect
     waiting_players = [p for p in waiting_players if p.sid != sid]
+
+    # Remove player from game if they disconnect
+    player_id_to_remove = None
+    game_id_to_update = None
+    
+    for player_id, game_id in player_to_game.items():
+        if game_id in game_states and game_states[game_id].players.get(player_id) == sid:
+            player_id_to_remove = player_id
+            game_id_to_update = game_id
+            break
+    
+    if player_id_to_remove and game_id_to_update:
+        # Notify opponent that player disconnected
+        game_state = game_states[game_id_to_update]
+        opponent_id = game_state.get_opponent_id(player_id_to_remove)
+        
+        if opponent_id and opponent_id in game_state.players:
+            opponent_sid = game_state.players[opponent_id]
+            await sio.emit(
+                "opponent_disconnected", 
+                {"message": "Your opponent has disconnected"}, 
+                room=opponent_sid
+            )
+        
+        # Clean up mappings
+        del player_to_game[player_id_to_remove]
+        if game_id_to_update in game_states:
+            del game_states[game_id_to_update]
+    
+    logger.info(f"Client {sid} disconnected. Queue size: {len(waiting_players)}")
     logger.info(f"Client {sid} disconnected. Queue size: {len(waiting_players)}")
 
 @sio.event
@@ -188,21 +250,41 @@ async def join_queue(sid, data):
             with open("backend/data/questions.json", 'r') as f:
                 data = json.load(f)
 
-
             # Randomly select a question from the available questions
             question = random.choice(data["questions"])
             question_name = question["title"]  # → 'two-sum'
 
-            # Send match notification to both players using their socket IDs
-            match_response1 = MatchFoundResponse(game_id=game_id, opponent_Name=player2.name, opponentImageURL=player2.imageURL, question_name= question_name)
-            await sio.emit(
-                "match_found", match_response1.model_dump(), room=player1.sid
+            # Create game state
+            game_state = GameState(
+                game_id=game_id,
+                players={
+                    player1.id: player1.id,
+                    player2.id: player2.id
+                },
+                question_name=question_name
             )
+            game_states[game_id] = game_state
+            
+            # Map players to game
+            player_to_game[player1.id] = game_id
+            player_to_game[player2.id] = game_id
 
-            match_response2 = MatchFoundResponse(game_id=game_id, opponent_Name=player1.name, opponentImageURL=player2.imageURL, question_name= question_name)
-            await sio.emit(
-                "match_found", match_response2.model_dump(), room=player2.sid
+            # Send match notification to both players using their socket IDs
+            match_response1 = MatchFoundResponse(
+                game_id=game_id, 
+                opponent_Name=player2.name, 
+                opponentImageURL=player2.imageURL, 
+                question_name=question_name
             )
+            await sio.emit("match_found", match_response1.model_dump(), room=player1.sid)
+
+            match_response2 = MatchFoundResponse(
+                game_id=game_id, 
+                opponent_Name=player1.name, 
+                opponentImageURL=player1.imageURL, 
+                question_name=question_name
+            )
+            await sio.emit("match_found", match_response2.model_dump(), room=player2.sid)
 
             logger.info(f"Match found: {player1.name} vs {player2.name} in game {game_id}")
 
@@ -232,12 +314,81 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/run-all-tests", response_model=RunTestCasesResponse)
-async def run_all_tests(request: RunTestCasesRequest):
+@app.post("/{game_id}/run-all-tests", response_model=RunTestCasesResponse)
+async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     if not docker_available:
         raise HTTPException(status_code=503, detail="Docker is not available.")
-    try:
-        return TestExecutionService.execute_test_cases(request)
+    # Check if game exists
+    if game_id not in game_states:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    game_state = game_states[game_id]
+    player_id = request.player_id
+
+    logger.info(f"players in game {game_id}: {game_state.players}")
+
+    # Verify player is in this game
+    if player_id not in game_state.players:
+        raise HTTPException(status_code=403, detail="Player not in this game")
+    try: 
+        results = TestExecutionService.execute_test_cases(request)
+
+        # Get opponent info
+        opponent_id = game_state.get_opponent_id(player_id)
+
+
+        if(results.success):
+            game_state.mark_player_finished(player_id)
+            
+            if opponent_id:
+                # Emit to opponent only (don't expose full test results)
+                opponent_sid = game_state.players[opponent_id]
+                await sio.emit(
+                    "opponent_submitted", 
+                    {
+                        "message": "Your opponent has finished their tests!",
+                        "opponent_id": player_id,
+                        "status": results.success,
+                        "total_tests": results.total_passed + results.total_failed if hasattr(results, 'total_failed') else None
+                    }, 
+                    room=opponent_sid
+                )
+                
+                logger.info(f"Notified opponent {opponent_id} that {player_id} finished")
+        else:
+            logger.warning(f"{results.total_passed} out of {results.total_passed + results.total_failed} test cases passed.")
+            # Emit to opponent only (don't expose full test results)
+            opponent_sid = game_state.players[opponent_id]
+            await sio.emit(
+                "opponent_submitted", 
+                {
+                    "message": f"Your opponents code has passed {results.total_passed} out of {results.total_passed + results.total_failed} test cases.",
+                    "opponent_id": player_id,
+                    "status": results.success,
+                    "total_tests": results.total_passed + results.total_failed if hasattr(results, 'total_failed') else None
+                }, 
+                room=opponent_sid
+            )
+            
+            logger.info(f"Notified opponent {opponent_id} that {player_id} finished")
+
+        # If all players finished, emit game completion
+        if game_state.all_players_finished():
+            await sio.emit(
+                "game_completed",
+                {"message": "All players have finished!"},
+                room=game_id
+            )
+            logger.info(f"Game {game_id} completed - all players finished")
+
+        if results.success:
+            logger.info(f"All {results.total_passed} test cases passed successfully for player {player_id}.")
+        else:
+            total_failed = getattr(results, 'total_failed', 0)
+            logger.warning(f"{results.total_passed} out of {results.total_passed + total_failed} test cases passed for player {player_id}.")
+
+        return results
+    
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
