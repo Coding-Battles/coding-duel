@@ -19,6 +19,7 @@ import { useSessionContext } from "@/components/SessionProvider";
 import { Socket } from "socket.io-client";
 import { Alert, AlertDescription, AlertTitle, StackableAlerts } from "@/components/ui/alert";
 import {motion} from "framer-motion";
+import GameTimer from "@/components/GameTimer";
 
 type OpponentSubmittedMessage = {
   message: string;
@@ -48,6 +49,8 @@ export default function InGamePage() {
   const questionName = params?.questionName;
   type AlertType = { id: string; message: string; variant?: string };
   const [alerts, setAlerts] = React.useState<AlertType[]>([]);
+  const timeRef = useRef<number>(0);
+  const [gameFinished, setGameFinished] = React.useState(false);
 
   const session = context?.socket
   const userSession = useSessionContext();
@@ -78,6 +81,8 @@ export default function InGamePage() {
 
     const handleGameCompleted = (data: {message: string}) => {
       console.log("Game completed data:", data);
+      setGameFinished(true);
+
       setAlerts((prev) => [
         ...prev,
         {
@@ -187,6 +192,7 @@ export default function InGamePage() {
             code: code,
             question_name: questionName,
             language: selectedLanguage,
+            timer: timeRef.current,
           }),
         }
       );
@@ -203,6 +209,9 @@ export default function InGamePage() {
         total_passed: 0,
         total_failed: 0,
         error: error instanceof Error ? error.message : "Unknown error",
+        message: "",
+        code: "",
+        opponent_id: ""
       };
       setTestResults(errorResult);
       return errorResult;
@@ -214,9 +223,10 @@ export default function InGamePage() {
       const playerId = context.isAnonymous ? context.anonymousId : userSession?.id;
       console.log("Request body:", {
         player_id: playerId,
-        code,
+        code: code,
         question_name: questionName,
         language: selectedLanguage,
+        timer: timeRef.current
       });
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/${context.gameId}/run-all-tests`, //have to pass in gameId so that the game room can be pinged 
@@ -230,6 +240,7 @@ export default function InGamePage() {
             code: code,
             question_name: questionName,
             language: selectedLanguage,
+            timer: Math.floor(timeRef.current)
           }),
         }
       );
@@ -247,6 +258,9 @@ export default function InGamePage() {
         total_passed: 0,
         total_failed: 0,
         error: error instanceof Error ? error.message : "Unknown error",
+        message: "",
+        code: "",
+        opponent_id: ""
       };
       setTestResults(errorResult);
       return errorResult;
@@ -261,9 +275,7 @@ export default function InGamePage() {
           <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4 z-60">
             <SidebarTrigger className="-ml-1" />
             <h1 className="text-lg font-semibold">BATTLE</h1>
-            <div className="text-xs">
-              Time: <b></b>
-            </div>
+            {gameFinished ? <GameTimer timeRef={timeRef}/> : <span></span>}
           </header>
           <StackableAlerts alerts={alerts} setAlerts={setAlerts}/>
           <div className="flex flex-1 flex-col gap-4 p-4">

@@ -27,31 +27,37 @@ from typing import Set
 #--------------CLASSES AND MODELS--------------#
 
 @dataclass
+class PlayerInfo:
+    id: str
+    sid: str
+
+
+@dataclass
 class GameState:
     game_id: str
-    players: Dict[str, str] = field(default_factory=dict)  # player_id -> sid mapping
-    finished_players: Set[str] = field(default_factory=set)  # player_ids who finished
+    players: Dict[str, PlayerInfo] = field(default_factory=dict)  # player_id -> PlayerInfo
+    finished_players: Set[str] = field(default_factory=set)
     created_at: datetime = field(default_factory=datetime.now)
     question_name: str = ""
-    
+
     def is_player_finished(self, player_id: str) -> bool:
         return player_id in self.finished_players
-    
+
     def mark_player_finished(self, player_id: str):
         self.finished_players.add(player_id)
-    
+
     def get_unfinished_players(self) -> Set[str]:
         return set(self.players.keys()) - self.finished_players
-    
+
     def all_players_finished(self) -> bool:
         return len(self.finished_players) == len(self.players)
-    
+
     def get_opponent_id(self, player_id: str) -> Optional[str]:
-        """Get the opponent's player ID"""
         player_ids = list(self.players.keys())
         if len(player_ids) == 2 and player_id in player_ids:
             return player_ids[0] if player_ids[1] == player_id else player_ids[1]
         return None
+
 
 class Player(BaseModel):
     id: str  # This is the player's custom ID
@@ -108,6 +114,7 @@ from backend.models.questions import (
     RunTestCasesResponse,
     DockerRunRequest,
     QuestionData,
+    CodeTestResult
 )
 from backend.services.test_execution_service import TestExecutionService
 
@@ -202,10 +209,12 @@ async def disconnect(sid):
     game_id_to_update = None
     
     for player_id, game_id in player_to_game.items():
-        if game_id in game_states and game_states[game_id].players.get(player_id) == sid:
-            player_id_to_remove = player_id
-            game_id_to_update = game_id
-            break
+        if game_id in game_states:
+            game_state = game_states[game_id]
+            if player_id in game_state.players and game_state.players[player_id].sid == sid:
+                player_id_to_remove = player_id
+                game_id_to_update = game_id
+                break
     
     if player_id_to_remove and game_id_to_update:
         # Notify opponent that player disconnected
@@ -213,7 +222,7 @@ async def disconnect(sid):
         opponent_id = game_state.get_opponent_id(player_id_to_remove)
         
         if opponent_id and opponent_id in game_state.players:
-            opponent_sid = game_state.players[opponent_id]
+            opponent_sid = game_state.players[opponent_id].sid
             await sio.emit(
                 "opponent_disconnected", 
                 {"message": "Your opponent has disconnected"}, 
@@ -258,11 +267,12 @@ async def join_queue(sid, data):
             game_state = GameState(
                 game_id=game_id,
                 players={
-                    player1.id: player1.id,
-                    player2.id: player2.id
+                    player1.id: PlayerInfo(id=player1.id, sid=player1.sid),
+                    player2.id: PlayerInfo(id=player2.id, sid=player2.sid)
                 },
                 question_name=question_name
             )
+
             game_states[game_id] = game_state
             
             # Map players to game
@@ -314,7 +324,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/{game_id}/run-all-tests", response_model=RunTestCasesResponse)
+@app.post("/{game_id}/run-all-tests", response_model=CodeTestResult)
 async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     if not docker_available:
         raise HTTPException(status_code=503, detail="Docker is not available.")
@@ -331,42 +341,63 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     if player_id not in game_state.players:
         raise HTTPException(status_code=403, detail="Player not in this game")
     try: 
-        results = TestExecutionService.execute_test_cases(request)
+        test_results = TestExecutionService.execute_test_cases(request)
 
         # Get opponent info
         opponent_id = game_state.get_opponent_id(player_id)
 
+        complexity = "N/A"
 
-        if(results.success):
+        if(test_results.success):
             game_state.mark_player_finished(player_id)
             
             if opponent_id:
                 # Emit to opponent only (don't expose full test results)
-                opponent_sid = game_state.players[opponent_id]
+                opponent_player_info = game_state.players[opponent_id]
+                opponent_sid = opponent_player_info.sid
+                complexity = await analyze_time_complexity(TimeComplexity(code=request.code))
+                complexity = complexity.time_complexity if complexity and hasattr(complexity, 'time_complexity') else "N/A"
+                logger.info(f"Player {player_id} finished tests with complexity {complexity}, notifying opponent sid {opponent_sid}")
                 await sio.emit(
                     "opponent_submitted", 
-                    {
-                        "message": "Your opponent has finished their tests!",
-                        "opponent_id": player_id,
-                        "status": results.success,
-                        "total_tests": results.total_passed + results.total_failed if hasattr(results, 'total_failed') else None
-                    }, 
+                    CodeTestResult(
+                        message="Your opponent has finished their tests!",
+                        code=request.code,
+                        opponent_id=player_id,
+                        success=test_results.success,
+                        test_results= test_results.test_results,
+                        error=None,
+                        total_passed= test_results.total_passed,
+                        total_failed= test_results.total_failed if hasattr(test_results, 'total_failed') else 0,
+                        complexity=complexity,
+                        implement_time=request.timer,
+                        final_time= get_score(complexity, request.timer),
+                    ).model_dump(), 
                     room=opponent_sid
                 )
                 
                 logger.info(f"Notified opponent {opponent_id} that {player_id} finished")
         else:
-            logger.warning(f"{results.total_passed} out of {results.total_passed + results.total_failed} test cases passed.")
+            logger.warning(f"{test_results.total_passed} out of {test_results.total_passed + test_results.total_failed} test cases passed.")
             # Emit to opponent only (don't expose full test results)
-            opponent_sid = game_state.players[opponent_id]
+            if opponent_id:
+                opponent_player_info = game_state.players[opponent_id]
+                opponent_sid = opponent_player_info.sid
             await sio.emit(
                 "opponent_submitted", 
-                {
-                    "message": f"Your opponents code has passed {results.total_passed} out of {results.total_passed + results.total_failed} test cases.",
-                    "opponent_id": player_id,
-                    "status": results.success,
-                    "total_tests": results.total_passed + results.total_failed if hasattr(results, 'total_failed') else None
-                }, 
+                CodeTestResult(
+                    message=f"Your opponents code has passed {test_results.total_passed} out of {test_results.total_passed + test_results.total_failed} test cases.",
+                    code=request.code,
+                    opponent_id=player_id,
+                    success=test_results.success,
+                    test_results=test_results.test_results,
+                    error=None,
+                    total_passed=test_results.total_passed,
+                    total_failed=test_results.total_failed if hasattr(test_results, 'total_failed') else 0,
+                    complexity=complexity,
+                    implement_time=request.timer,
+                    final_time= 0  # No final time if tests failed,
+                ).model_dump(), 
                 room=opponent_sid
             )
             
@@ -381,11 +412,29 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             )
             logger.info(f"Game {game_id} completed - all players finished")
 
-        if results.success:
-            logger.info(f"All {results.total_passed} test cases passed successfully for player {player_id}.")
+        if test_results.success:
+            logger.info(f"All {test_results.total_passed} test cases passed successfully for player {player_id}.")
         else:
-            total_failed = getattr(results, 'total_failed', 0)
-            logger.warning(f"{results.total_passed} out of {results.total_passed + total_failed} test cases passed for player {player_id}.")
+            total_failed = getattr(test_results, 'total_failed', 0)
+            logger.warning(f"{test_results.total_passed} out of {test_results.total_passed + total_failed} test cases passed for player {player_id}.")
+
+        logger.info(f"Complexity analysis for player {player_id}: {complexity} timer {request.timer}ms")
+        finalTime = get_score(complexity, request.timer)
+        logger.info(f"Final time for player {player_id} is {finalTime}ms based on complexity {complexity} and implementation time {request.timer}ms")
+
+        results = CodeTestResult(
+            message="Test execution completed",
+            code=request.code,
+            opponent_id=opponent_id,
+            success=test_results.success,
+            test_results=test_results.test_results,
+            total_passed=test_results.total_passed,
+            total_failed=test_results.total_failed if hasattr(test_results, 'total_failed') else 0,
+            error=test_results.error,
+            complexity= complexity,  # Complexity will be sent separately to opponent
+            implement_time=request.timer,
+            final_time= finalTime
+        )
 
         return results
     
@@ -396,6 +445,24 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     except Exception as e:
         logger.error(f"Unexpected error in /run-all-tests: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
+def get_score(timeComplexity: str, implementTime: int) -> int:
+    """Convert time complexity string to a score."""
+    timeReduction = 0
+    if "O(1)" in timeComplexity:
+        timeReduction = 100
+    elif "O(log n)" in timeComplexity:
+        timeReduction = 90
+    elif "O(n)" in timeComplexity:
+        timeReduction = 80
+    elif "O(n log n)" in timeComplexity:
+        timeReduction = 70
+    elif "O(n^2)" in timeComplexity:
+        timeReduction = 60
+    else:
+        timeReduction = 50
+
+    return implementTime - timeReduction
 
 @app.post("/run-sample-tests", response_model=RunTestCasesResponse)
 async def run_sample_tests(request: RunTestCasesRequest):
