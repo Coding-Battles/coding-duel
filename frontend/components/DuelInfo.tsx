@@ -43,21 +43,6 @@ const DuelInfo = () => {
     }
   };
 
-  const getStatusEmoji = (status) => {
-    switch (status) {
-      case "typing":
-        return "💭";
-      case "running":
-        return "⚡";
-      case "submitted":
-        return "✅";
-      case "idle":
-        return "🤔";
-      default:
-        return "😴";
-    }
-  };
-
   return (
     <div className="w-full ">
       {/* Avatar */}
@@ -125,7 +110,7 @@ const DuelInfo = () => {
 
         {/* User Info */}
         <div className="flex items-center justify-center">
-          <span className="text-sm text-gray-600">W's: </span>
+          <span className="text-sm text-gray-600">W&apos;s: </span>
           <span className="text-sm font-medium">{opponentData.wins}</span>
         </div>
       </div>

@@ -1,45 +1,37 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
-import { toggleTheme } from '@/app/actions/toggleTheme';
-import { useRouter } from 'next/navigation';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { set } from 'better-auth';
+import { useEffect, useState } from 'react';
 
 export function NightModeButton() {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  const [theme, setLocalTheme] = useState<'light' | 'dark'>('light');
-
+  // Avoid hydration mismatch
   useEffect(() => {
-    const cookieTheme =
-      document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('theme='))?.split('=')[1] ?? 'light';
-
-    setLocalTheme(cookieTheme === 'dark' ? 'dark' : 'light');
+    setMounted(true);
   }, []);
 
-  const handleClick = () => {
-    startTransition(async () => {
-      await toggleTheme();         // Server sets cookie
-      setLocalTheme((prev) => (prev === 'dark' ? 'light' : 'dark')); // Update local state
-      router.refresh();            // SSR re-renders with new cookie
-    });
+  if (!mounted) {
+    return (
+      <div className="w-10 h-10 rounded-lg fixed top-4 right-4 z-50" />
+    );
+  }
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
     <button
-      onClick={handleClick}
-      disabled={isPending}
-      className="w-6 h-6 rounded-full fixed bottom-2 right-2 z-40 cursor-pointer"
+      onClick={toggleTheme}
+      className="w-10 h-10 rounded-lg fixed top-4 right-4 z-50 cursor-pointer bg-background/80 border border-border hover:bg-background hover:scale-105 transition-all duration-200 flex items-center justify-center backdrop-blur-sm"
     >
       {theme === 'dark' ? (
-        <Moon className="text-gray-400" />
+        <Moon className="text-foreground w-5 h-5" />
       ) : (
-        <Sun className="text-yellow-400" />
+        <Sun className="text-foreground w-5 h-5" />
       )}
     </button>
   );

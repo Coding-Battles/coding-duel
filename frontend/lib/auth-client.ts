@@ -1,32 +1,30 @@
 import { createAuthClient } from "better-auth/react";
-import { oneTapClient } from "better-auth/client/plugins";
-import { nextCookies } from "better-auth/next-js";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
-  plugins: [
-    oneTapClient({
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-      autoSelect: false,
-      cancelOnTapOutside: true,
-      context: "signin"
-    })
-  ]
 });
 
 export const signInWithGoogle = async () => {
   const data = await authClient.signIn.social({
     provider: "google",
+    callbackURL: window.location.origin,
   });
 
   return data;
 };
 
-export const initializeGoogleOneTap = async () => {
+export const updateUserProfile = async (profileData: { username?: string; selectedPfp?: number }) => {
   try {
-    await authClient.oneTap();
+    // Filter out undefined values
+    const updateData = Object.fromEntries(
+      Object.entries(profileData).filter(([, value]) => value !== undefined)
+    );
+    
+    const result = await authClient.updateUser(updateData);
+    return result;
   } catch (error) {
-    console.error('One Tap initialization error:', error);
+    console.error("Failed to update user profile:", error);
+    throw error;
   }
 };
 

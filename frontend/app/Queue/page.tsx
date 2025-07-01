@@ -23,7 +23,7 @@ export default function QueueLayout() {
       </div>
     );
   }
-  I;
+
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => prev + 1);

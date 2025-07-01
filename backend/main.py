@@ -1,9 +1,8 @@
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, HTTPException, File
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, ValidationError
-import socketio
-import uuid
+from pydantic import BaseModel
 import subprocess
 from pathlib import Path
 import os
@@ -12,13 +11,27 @@ import shutil
 import sys
 from dotenv import load_dotenv
 import databases
+from sockets.socket_app import create_socket_asgi_app
+from sockets.services.matchmaking_service import matchmaking_service
+from api import users
+from services.user_service import initialize_username_pool
 
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 database = databases.Database(DATABASE_URL)
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await database.connect()
+    # Initialize username pool for instant generation
+    await initialize_username_pool()
+    yield
+    # Shutdown
+    await database.disconnect()
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,107 +41,28 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-
-sio = socketio.AsyncServer(
-    cors_allowed_origins="*",
-    async_mode='asgi'
-)
-
-socket_app = socketio.ASGIApp(sio, app)
+# Include API routers
+app.include_router(users.router, prefix="/api")
 
 
-class Player(BaseModel):
-    id: str  # This is the player's custom ID
-    name: str
-    sid: str  # This is the socket connection ID
-
-
-class MatchFoundResponse(BaseModel):
-    game_id: str
-    opponent: str
-
-
-class QueueStatusResponse(BaseModel):
-    status: str
-    queue_size: int
-
-
-# Simple in-memory queue
-waiting_players: list[Player] = []
-
-
-@app.get("/", response_model=QueueStatusResponse)
+@app.get("/")
 def health_check():
-    return QueueStatusResponse(status="ok", queue_size=len(waiting_players))
-
-
-@sio.event
-async def connect(sid, environ):
-    print(f"Client {sid} connected")
-
-
-@sio.event
-async def disconnect(sid):
-    global waiting_players
-    # Remove player from queue if they disconnect
-    waiting_players = [p for p in waiting_players if p.sid != sid]
-    print(f"Client {sid} disconnected. Queue size: {len(waiting_players)}")
-
-
-@sio.event
-async def join_queue(sid, data):
-    try:
-        # Create player with both custom ID and socket ID
-        player_data = {**data, "sid": sid}
-        player = Player(**player_data)
-        waiting_players.append(player)
-        print(
-            f"Player {player.name} joined the queue. Total players in queue: {len(waiting_players)}"
-        )
-
-        # Check if we can form a match
-        if len(waiting_players) >= 2:
-            player1 = waiting_players.pop(0)  # First player
-            player2 = waiting_players.pop(0)  # Second player (current player)
-
-            game_id = f"game_{uuid.uuid4().hex[:12]}"
-
-            # Send match notification to both players using their socket IDs
-            match_response1 = MatchFoundResponse(game_id=game_id, opponent=player2.name)
-            await sio.emit(
-                "match_found", match_response1.model_dump(), room=player1.sid
-            )
-
-            match_response2 = MatchFoundResponse(game_id=game_id, opponent=player1.name)
-            await sio.emit(
-                "match_found", match_response2.model_dump(), room=player2.sid
-            )
-
-            print(f"Match found: {player1.name} vs {player2.name} in game {game_id}")
-        else:
-            status_response = QueueStatusResponse(
-                status="waiting", queue_size=len(waiting_players)
-            )
-            await sio.emit("queue_status", status_response.model_dump(), room=sid)
-
-    except ValidationError as e:
-        print(f"Validation error: {e}")
-        await sio.emit("error", {"message": "Invalid data"}, room=sid)
+    """Health check endpoint."""
+    queue_status = matchmaking_service.get_queue_status()
+    return {
+        "status": "ok", 
+        "queue_size": queue_status.queue_size,
+        "active_games": len(matchmaking_service.active_games)
+    }
 
 
 class CodeRequest(BaseModel):
     code: str
     input: str
+
 
 
 @app.post("/run_code")
@@ -215,7 +149,10 @@ async def change_image(player_id: str, image: UploadFile = File(...)):
 
 
 
+
 if __name__ == "__main__":
     import uvicorn
-
+    
+    # Create the combined FastAPI + Socket.IO app
+    socket_app = create_socket_asgi_app(app)
     uvicorn.run(socket_app, host="0.0.0.0", port=8000)
