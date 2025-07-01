@@ -28,4 +28,32 @@ export const updateUserProfile = async (profileData: { username?: string; select
   }
 };
 
+export const getUserProfile = async (): Promise<{ username?: string; selectedPfp?: number } | null> => {
+  try {
+    const session = await getSession();
+    console.log("Full session data:", session);
+    
+    if (!session?.data?.user) {
+      console.log("No session or user data found");
+      return null;
+    }
+    
+    console.log("User object:", session.data.user);
+    
+    // Extract profile data from user object
+    const user = session.data.user as { username?: string; selectedPfp?: number };
+    const { username, selectedPfp } = user;
+    
+    console.log("Extracted profile data:", { username, selectedPfp });
+    
+    return {
+      ...(username && { username }),
+      ...(selectedPfp !== undefined && { selectedPfp })
+    };
+  } catch (error) {
+    console.error("Failed to get user profile:", error);
+    return null;
+  }
+};
+
 export const { useSession, signOut, getSession } = authClient;
