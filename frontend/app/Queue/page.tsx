@@ -34,7 +34,7 @@ export default function QueueLayout() {
     };
   }, [context.socket]);
 
-  const { socket, loading, opponentImageURL, opponentName } = context;
+  const { socket, loading, opponent } = context;
   return (
     <div className="flex h-[100%] w-[100%] items-center justify-center flex-col">
       <Card className="mt-16 bg-gray-900 border-gray-800 shadow-2xl animate-float">
@@ -119,12 +119,12 @@ export default function QueueLayout() {
         </div>
 
         <div className="flex flex-col items-center justify-center p-6 border-2 rounded-lg w-[170px]">
-          {opponentImageURL ? 
-            <img src={opponentImageURL} alt="Opponent Image" className="w-24 h-24 mb-4 border-2 border-gray-300"/> 
+          {opponent.image_url ? 
+            <img src={opponent.image_url} alt="Opponent Image" className="w-24 h-24 mb-4 border-2 border-gray-300"/> 
             : 
             <FileQuestion className="w-8 h-8 text-gray-500" />
           }
-          <h1 className="text-2xl font-bold">{opponentName? opponentName : "Findinge"}</h1>
+          <h1 className="text-2xl font-bold">{opponent.name? opponent.name : "Finding"}</h1>
         </div>
       </div>
     </div>

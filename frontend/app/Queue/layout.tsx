@@ -7,11 +7,16 @@ import { io, Socket } from "socket.io-client";
 
 const GameContext = createContext<GameContextType | null>(null);
 
+type UserData = {
+    image_url: string;
+    name: string;
+}
+
 type GameContextType = {
   socket: Socket | null;
   loading: boolean;
-  opponentName: string;
-  opponentImageURL: string;
+  opponent: UserData;
+  user: UserData
   gameId: string;
   isAnonymous?: boolean;
   anonymousId?: string;
@@ -35,9 +40,12 @@ export default function QueueLayout({
 
   const session = useSessionContext();
   const router = useRouter();
-  const [opponentName, setOpponentName] = useState<string>("");
-  const [opponentImageURL, setOpponentImageURL] = useState<string | null>("");
+  const [opponentData, setOpponentData] = useState<UserData>({image_url: "",name: ""})
   const [gameId, setGameId] = useState<string>("");
+  const userDataRef = useRef<UserData>({
+    name: "",
+    image_url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
+  });
   const [anonymousId, setAnonymousId] = useState<string>("");
   const isAnonymous = !session?.id; // Check if session ID is not present
 
@@ -46,6 +54,7 @@ export default function QueueLayout({
     console.log('useEffect triggered, session:', session);
     console.log('session?.id:', session?.id);
     console.log('socketRef.current:', socketRef.current);
+
     
     
     if((session && !session?.id) || (socketRef.current && socketRef.current.connected)) {
@@ -77,6 +86,13 @@ export default function QueueLayout({
     {
       console.log('Setting anonymous ID:', newAnonymousId);
       setAnonymousId(newAnonymousId);
+      userDataRef.current.name = newAnonymousId
+    }
+    else
+    {
+      console.log('Setting user data from session:', session);
+      userDataRef.current.name = session?.name || "Guest";
+      userDataRef.current.image_url = session?.image || "https://www.gravatar.com/avatar/"
     }
 
     socket.on('connect', () => {
@@ -105,8 +121,10 @@ export default function QueueLayout({
     socket.on('match_found', (data : MatchFoundData) => {
       console.log('Match found!', data);
       setTimeout(() => {
-        setOpponentName(data.opponentName)
-        setOpponentImageURL(data.opponentImageURL);
+        setOpponentData({
+          name: data.opponentName,
+          image_url: data.opponentImageURL || "https://www.gravatar.com/avatar/"
+        })
         setGameId(data.game_id);
         router.push('/queue/' + data.question_name)
       }, 5000)
@@ -129,7 +147,7 @@ export default function QueueLayout({
 
   return (
     <GameContext.Provider
-      value={{ socket: socketRef.current, loading: loadingState, opponentName: opponentName, opponentImageURL: opponentImageURL ?? "", gameId: gameId, isAnonymous: isAnonymous, anonymousId: anonymousId }}
+      value={{ socket: socketRef.current, user: userDataRef.current, loading: loadingState, opponent: opponentData, gameId: gameId, isAnonymous: isAnonymous, anonymousId: anonymousId }}
     >
       <div className="flex h-[100%] w-[100%] items-center justify-center">
         {children}
@@ -141,3 +159,5 @@ export default function QueueLayout({
 export function useGameContext() {
   return useContext(GameContext);
 }
+
+export type {UserData}

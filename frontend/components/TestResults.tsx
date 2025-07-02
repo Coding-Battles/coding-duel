@@ -15,6 +15,7 @@ interface TestResultsData {
     message: string;
     code: string;
     opponent_id: string;
+    player_name: string;
     success: boolean;
     test_results: TestCase[];
     total_passed: number;

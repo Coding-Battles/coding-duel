@@ -20,13 +20,7 @@ import { Socket } from "socket.io-client";
 import { Alert, AlertDescription, AlertTitle, StackableAlerts } from "@/components/ui/alert";
 import {motion} from "framer-motion";
 import GameTimer from "@/components/GameTimer";
-
-type OpponentSubmittedMessage = {
-  message: string;
-  opponent_id: string;
-  status: boolean;
-  total_tests: number | null;
-};
+import FinishedPage from "@/components/FinishedPage";
 
 
 export default function InGamePage() {
@@ -41,8 +35,8 @@ export default function InGamePage() {
   const [testResults, setTestResults] = React.useState<
     TestResultsData | undefined
   >(undefined);
+  const opponentTestStatsRef = useRef<TestResultsData | undefined>(undefined);
 
-  const socketRef = useRef<Socket | null>(null);
   const context = useGameContext();
   const router = useRouter();
   const params = useParams();
@@ -67,7 +61,7 @@ export default function InGamePage() {
       return;
     } 
 
-    const handleOpponentSubmitted = (data: OpponentSubmittedMessage) => {
+    const handleOpponentSubmitted = (data: TestResultsData) => {
       console.log("Opponent submitted data:", data);
       setAlerts((prev) => [
         ...prev,
@@ -77,11 +71,12 @@ export default function InGamePage() {
           variant: 'default'
         }
       ]);
+      
+      opponentTestStatsRef.current = data;
     };
 
     const handleGameCompleted = (data: {message: string}) => {
       console.log("Game completed data:", data);
-      setGameFinished(true);
 
       setAlerts((prev) => [
         ...prev,
@@ -91,6 +86,13 @@ export default function InGamePage() {
           variant: 'destructive'
         }
       ]);
+
+      setTimeout(() => {
+        console.log("userSession:", userSession);
+        console.log("opponentTestStatsRef:", opponentTestStatsRef.current);
+        console.log("testResults:", testResults);
+        setGameFinished(true);
+      }, 5000)
     };
 
     session.on("opponent_submitted", handleOpponentSubmitted);
@@ -207,6 +209,7 @@ export default function InGamePage() {
         success: false,
         test_results: [],
         total_passed: 0,
+        player_name: "",
         total_failed: 0,
         error: error instanceof Error ? error.message : "Unknown error",
         message: "",
@@ -255,6 +258,7 @@ export default function InGamePage() {
       const errorResult: TestResultsData = {
         success: false,
         test_results: [],
+        player_name: "",
         total_passed: 0,
         total_failed: 0,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -275,10 +279,11 @@ export default function InGamePage() {
           <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4 z-60">
             <SidebarTrigger className="-ml-1" />
             <h1 className="text-lg font-semibold">BATTLE</h1>
-            {gameFinished ? <GameTimer timeRef={timeRef}/> : <span></span>}
+            {!gameFinished ? <GameTimer timeRef={timeRef}/> : <span></span>}
           </header>
           <StackableAlerts alerts={alerts} setAlerts={setAlerts}/>
-          <div className="flex flex-1 flex-col gap-4 p-4">
+          { !gameFinished ? 
+            <div className="flex flex-1 flex-col gap-4 p-4">
             <div className="flex h-[100%] w-[100%]">
               <div className="flex-1 w-full h-full max-w-2xl">
                 <EditorWithTerminal
@@ -299,6 +304,13 @@ export default function InGamePage() {
               </div>
             </div>
           </div>
+
+          :
+          (opponentTestStatsRef.current && testResults &&
+            <FinishedPage opponent={context.opponent} user={context.user} opponentStats={opponentTestStatsRef.current} userStats={testResults} />
+          )
+
+          }
         </SidebarInset>
       </SidebarProvider>
     </div>

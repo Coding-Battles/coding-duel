@@ -26,37 +26,6 @@ from typing import Set
 
 #--------------CLASSES AND MODELS--------------#
 
-@dataclass
-class PlayerInfo:
-    id: str
-    sid: str
-
-
-@dataclass
-class GameState:
-    game_id: str
-    players: Dict[str, PlayerInfo] = field(default_factory=dict)  # player_id -> PlayerInfo
-    finished_players: Set[str] = field(default_factory=set)
-    created_at: datetime = field(default_factory=datetime.now)
-    question_name: str = ""
-
-    def is_player_finished(self, player_id: str) -> bool:
-        return player_id in self.finished_players
-
-    def mark_player_finished(self, player_id: str):
-        self.finished_players.add(player_id)
-
-    def get_unfinished_players(self) -> Set[str]:
-        return set(self.players.keys()) - self.finished_players
-
-    def all_players_finished(self) -> bool:
-        return len(self.finished_players) == len(self.players)
-
-    def get_opponent_id(self, player_id: str) -> Optional[str]:
-        player_ids = list(self.players.keys())
-        if len(player_ids) == 2 and player_id in player_ids:
-            return player_ids[0] if player_ids[1] == player_id else player_ids[1]
-        return None
 
 
 class Player(BaseModel):
@@ -118,6 +87,57 @@ from backend.models.questions import (
 )
 from backend.services.test_execution_service import TestExecutionService
 
+@dataclass
+class PlayerInfo:
+    id: str
+    sid: str
+    name: str
+    game_stats: Optional[CodeTestResult] = field(default_factory=lambda: CodeTestResult(
+        message="",
+        code="",
+        player_name="",
+        opponent_id="",
+        success=False,
+        test_results=[],
+        total_passed=0,
+        total_failed=0,
+        error="",
+        complexity="",
+        implement_time=0,
+        final_time=20000
+    ))
+
+@dataclass
+class GameState:
+    game_id: str
+    players: Dict[str, PlayerInfo] = field(default_factory=dict)  # player_id -> PlayerInfo
+    finished_players: Set[str] = field(default_factory=set)
+    created_at: datetime = field(default_factory=datetime.now)
+    question_name: str = ""
+
+    def is_player_finished(self, player_id: str) -> bool:
+        return player_id in self.finished_players
+
+    def mark_player_finished(self, player_id: str):
+        self.finished_players.add(player_id)
+
+    def get_unfinished_players(self) -> Set[str]:
+        return set(self.players.keys()) - self.finished_players
+
+    def all_players_finished(self) -> bool:
+        return len(self.finished_players) == len(self.players)
+    
+    def get_player_name(self, player_id: str) -> Optional[str]:
+        if player_id in self.players:
+            return self.players[player_id].name
+        return None
+
+    def get_opponent_id(self, player_id: str) -> Optional[str]:
+        player_ids = list(self.players.keys())
+        if len(player_ids) == 2 and player_id in player_ids:
+            return player_ids[0] if player_ids[1] == player_id else player_ids[1]
+        return None
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -138,6 +158,18 @@ executor = ThreadPoolExecutor(max_workers=5)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # Startup
+    logger.info("🚀 Starting application...")
+    
+    # Connect to database first
+    try:
+        logger.info("📊 Connecting to database...")
+        await database.connect()
+        logger.info("✅ Database connected successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to connect to database: {e}")
+        raise
+
     logger.info("🚀 Initializing persistent containers for fast code execution...")
     try:
         from backend.code_testing.startup import pull_all_images, warm_up_containers
@@ -263,12 +295,14 @@ async def join_queue(sid, data):
             question = random.choice(data["questions"])
             question_name = question["title"]  # → 'two-sum'
 
+            logger.info(f"player1: {player1.name} vs player2: {player2.name} with question: {question_name}")
+
             # Create game state
             game_state = GameState(
                 game_id=game_id,
                 players={
-                    player1.id: PlayerInfo(id=player1.id, sid=player1.sid),
-                    player2.id: PlayerInfo(id=player2.id, sid=player2.sid)
+                    player1.id: PlayerInfo(id=player1.id, name=player1.name, sid=player1.sid),
+                    player2.id: PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid)
                 },
                 question_name=question_name
             )
@@ -345,6 +379,8 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
 
         # Get opponent info
         opponent_id = game_state.get_opponent_id(player_id)
+        opponent_player_info = None
+        opponent_sid = None
 
         complexity = "N/A"
 
@@ -353,16 +389,16 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             
             if opponent_id:
                 # Emit to opponent only (don't expose full test results)
-                opponent_player_info = game_state.players[opponent_id]
-                opponent_sid = opponent_player_info.sid
+                player_name = game_state.get_player_name(player_id)
+                opponent_sid = game_state.players[opponent_id].sid
                 complexity = await analyze_time_complexity(TimeComplexity(code=request.code))
                 complexity = complexity.time_complexity if complexity and hasattr(complexity, 'time_complexity') else "N/A"
-                logger.info(f"Player {player_id} finished tests with complexity {complexity}, notifying opponent sid {opponent_sid}")
-                await sio.emit(
-                    "opponent_submitted", 
-                    CodeTestResult(
+                logger.info(f"Player {player_name} finished tests with complexity {complexity}, notifying opponent sid {opponent_sid}")
+
+                test_result = CodeTestResult(
                         message="Your opponent has finished their tests!",
                         code=request.code,
+                        player_name=player_name,
                         opponent_id=player_id,
                         success=test_results.success,
                         test_results= test_results.test_results,
@@ -372,7 +408,12 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                         complexity=complexity,
                         implement_time=request.timer,
                         final_time= get_score(complexity, request.timer),
-                    ).model_dump(), 
+                    )
+                
+                game_state.players[player_id].game_stats = test_result
+                await sio.emit(
+                    "opponent_submitted", 
+                    test_result.model_dump(), 
                     room=opponent_sid
                 )
                 
@@ -383,6 +424,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             if opponent_id:
                 opponent_player_info = game_state.players[opponent_id]
                 opponent_sid = opponent_player_info.sid
+            
             await sio.emit(
                 "opponent_submitted", 
                 CodeTestResult(
@@ -390,6 +432,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                     code=request.code,
                     opponent_id=player_id,
                     success=test_results.success,
+                    player_name=opponent_player_info.name,
                     test_results=test_results.test_results,
                     error=None,
                     total_passed=test_results.total_passed,
@@ -405,6 +448,9 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
 
         # If all players finished, emit game completion
         if game_state.all_players_finished():
+            await save_game_to_history(
+                list(game_state.players.values())
+            )
             await sio.emit(
                 "game_completed",
                 {"message": "All players have finished!"},
@@ -426,6 +472,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             message="Test execution completed",
             code=request.code,
             opponent_id=opponent_id,
+            player_name= game_state.get_player_name(player_id),
             success=test_results.success,
             test_results=test_results.test_results,
             total_passed=test_results.total_passed,
@@ -445,6 +492,45 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     except Exception as e:
         logger.error(f"Unexpected error in /run-all-tests: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
+async def save_game_to_history(players: List[PlayerInfo]):
+    """Save game history to the database."""
+    try:
+        logger.info(f"Saving game history with {len(players)} players")
+
+        game_query = "INSERT INTO games DEFAULT VALUES RETURNING id"
+        result = await database.fetch_one(query=game_query)
+
+        if result:
+            db_game_id = result["id"]  # Access the returned ID
+            logger.info(f"Game history saved with DB ID: {db_game_id}")
+        else:
+            raise Exception("Failed to insert game record")
+        
+        participant_query = """
+        INSERT INTO game_participants (game_id, player_name, player_code, 
+                                    implement_time, time_complexity, final_time)
+        VALUES (:game_id, :player_name, :player_code, :implement_time, 
+                :time_complexity, :final_time)
+        """
+
+        for player in players:
+            logger.info(f"Saving stats for player {player.name} in game {db_game_id}")
+            player_stats = player.game_stats
+            if player_stats:
+                values = {
+                    "game_id": db_game_id,
+                    "player_name": player.name,
+                    "player_code": player_stats.code,
+                    "implement_time": player_stats.implement_time,
+                    "time_complexity": player_stats.complexity,
+                    "final_time": player_stats.final_time
+                }
+                await database.execute(query=participant_query, values=values)
+    except Exception as e:
+        logger.error(f"Database error while saving game history: {str(e)}")
+
+
     
 def get_score(timeComplexity: str, implementTime: int) -> int:
     """Convert time complexity string to a score."""
