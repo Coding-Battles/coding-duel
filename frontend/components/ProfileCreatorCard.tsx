@@ -1,8 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { updateUserProfile, useSession, signOut, getUserProfile } from "@/lib/auth-client";
+import {
+  updateUserProfile,
+  useSession,
+  signOut,
+  getUserProfile,
+} from "@/lib/auth-client";
 import GoogleSignInButton from "./GoogleSignInButton";
 
 interface GameSetupProps {
@@ -10,15 +15,9 @@ interface GameSetupProps {
 }
 
 const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
-  const router = useRouter();
   const { data: session } = useSession();
   const [username, setUsername] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
-  const [selectedDifficulties, setSelectedDifficulties] = useState({
-    easy: true,
-    medium: false,
-    hard: false,
-  });
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
     null
@@ -35,7 +34,6 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
     const state = {
       username,
       selectedAvatar,
-      selectedDifficulties,
       timestamp: Date.now(),
     };
     localStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
@@ -56,9 +54,6 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
           ) {
             setSelectedAvatar(state.selectedAvatar);
           }
-          if (state.selectedDifficulties) {
-            setSelectedDifficulties(state.selectedDifficulties);
-          }
         }
       }
     } catch (error) {
@@ -71,13 +66,16 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
     localStorage.removeItem(FORM_STATE_KEY);
   };
 
-  // Utility function for debouncing
-  const debounce = (func: (...args: any[]) => void, delay: number) => {
+  // Type-safe debounce utility function
+  const debounce = <T extends (...args: never[]) => void>(
+    func: T,
+    delay: number
+  ): T => {
     let timeoutId: NodeJS.Timeout;
-    return (...args: any[]) => {
+    return ((...args: Parameters<T>) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func(...args), delay);
-    };
+    }) as T;
   };
 
   // API utility functions
@@ -169,30 +167,10 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
   };
 
   // Debounced username checking
-  const debouncedUsernameCheck = useCallback(
-    debounce((username: string) => {
-      checkUsernameAvailability(username);
-    }, 500),
-    []
-  );
+  const debouncedUsernameCheck = debounce((username: string) => {
+    checkUsernameAvailability(username);
+  }, 500);
 
-  const difficulties = [
-    {
-      key: "easy" as const,
-      label: "EASY",
-      emoji: "😴",
-    },
-    {
-      key: "medium" as const,
-      label: "MEDIUM",
-      emoji: "🔥",
-    },
-    {
-      key: "hard" as const,
-      label: "HARD",
-      emoji: "💀",
-    },
-  ];
 
   const handleUsernameChange = (
     value: string,
@@ -225,22 +203,7 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
     setTimeout(saveFormState, 100);
   };
 
-  const handleDifficultySelect = (
-    difficulty: keyof typeof selectedDifficulties
-  ) => {
-    setSelectedDifficulties((prev) => ({
-      ...prev,
-      [difficulty]: !prev[difficulty],
-    }));
-    // Save to localStorage
-    setTimeout(saveFormState, 100);
-  };
 
-  const handleStartBattle = () => {
-    if (isReady) {
-      router.push("/queue");
-    }
-  };
 
   // Load form state on component mount
   useEffect(() => {
@@ -252,10 +215,13 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
     const loadUserProfile = async () => {
       if (session?.user) {
         try {
-          console.log("Loading profile for logged in user. Current state:", { username, selectedAvatar });
+          console.log("Loading profile for logged in user. Current state:", {
+            username,
+            selectedAvatar,
+          });
           const profileData = await getUserProfile();
           console.log("Retrieved profile data:", profileData);
-          
+
           if (profileData) {
             // Load username if current username is empty
             if (profileData.username && !username.trim()) {
@@ -263,9 +229,12 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
               setUsername(profileData.username);
               onProfileChange?.(profileData.username);
             }
-            
+
             // Load avatar if current avatar is null
-            if (profileData.selectedPfp !== undefined && selectedAvatar === null) {
+            if (
+              profileData.selectedPfp !== undefined &&
+              selectedAvatar === null
+            ) {
               console.log("Loading avatar:", profileData.selectedPfp);
               setSelectedAvatar(profileData.selectedPfp);
             }
@@ -307,23 +276,6 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
     handlePostAuthProfileUpdate();
   }, [session?.user, isUpdatingProfile]);
 
-  const getButtonText = () => {
-    if (!username.trim()) {
-      return "ENTER USERNAME";
-    }
-    if (selectedAvatar === null) {
-      return "SELECT FIGHTER";
-    }
-    if (!Object.values(selectedDifficulties).some(Boolean)) {
-      return "SELECT DIFFICULTY";
-    }
-    return "START BATTLE";
-  };
-
-  const isReady =
-    username.trim().length > 0 &&
-    selectedAvatar !== null &&
-    Object.values(selectedDifficulties).some(Boolean);
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -432,9 +384,11 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
                     ⚔️
                   </div>
                 )}
-                <img
+                <Image
                   src={`/avatars/${index}.png`}
                   alt={`Avatar ${index}`}
+                  width={100}
+                  height={100}
                   className={`w-full h-auto rounded object-cover bg-muted transition-all duration-200 ${
                     selectedAvatar === index ? "scale-115 drop-shadow-lg" : ""
                   }`}
@@ -444,84 +398,6 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
           </div>
         </div>
 
-        {/* Step 3: Pick Your Poison */}
-        <div className="mb-8">
-          <div className="text-center mb-4">
-            <h2 className="text-primary font-bold text-xl uppercase tracking-wide">
-              PICK YOUR POISON
-            </h2>
-          </div>
-          <div className="flex flex-col gap-4">
-            {/* Selection Count */}
-            <div className="text-center text-sm text-muted-foreground">
-              {Object.values(selectedDifficulties).filter(Boolean).length} of 3
-              difficulties selected
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              {difficulties.map((diff) => (
-                <button
-                  key={diff.key}
-                  onClick={() => handleDifficultySelect(diff.key)}
-                  className={`relative rounded-lg p-4 text-center cursor-pointer
-                             transition-all duration-200 hover:transform hover:-translate-y-0.5 min-h-[120px]
-                             ${
-                               selectedDifficulties[diff.key]
-                                 ? "border-2 border-transparent bg-gradient-to-br from-muted via-background to-muted shadow-xl shadow-primary/20 ring-2 ring-primary/30"
-                                 : "bg-gradient-to-br from-muted via-muted/80 to-muted border-2 border-border/50 shadow-lg hover:shadow-xl hover:from-muted/90 hover:to-muted/90 hover:border-border"
-                             }`}
-                  style={
-                    selectedDifficulties[diff.key]
-                      ? {
-                          background:
-                            "linear-gradient(135deg, hsl(var(--muted)), hsl(var(--background)), hsl(var(--muted))) padding-box, linear-gradient(to right, rgb(251 191 36), rgb(251 146 60), rgb(248 113 113)) border-box",
-                        }
-                      : {}
-                  }
-                >
-                  {/* Checkbox indicator */}
-                  <div className="absolute top-3 left-3">
-                    <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200
-                                    ${
-                                      selectedDifficulties[diff.key]
-                                        ? "bg-orange-500 border-orange-500 text-white"
-                                        : "border-muted-foreground bg-transparent"
-                                    }`}
-                    >
-                      {selectedDifficulties[diff.key] && (
-                        <span className="text-xs font-bold">✓</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <div className="text-3xl mb-2">{diff.emoji}</div>
-                    <div className="font-bold text-sm text-foreground">
-                      {diff.label}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Start Battle Button */}
-        <div>
-          <Button
-            onClick={handleStartBattle}
-            disabled={!isReady}
-            className={`w-full h-16 text-xl font-bold rounded-xl transition-all duration-300 uppercase tracking-wide
-                       ${
-                         isReady
-                           ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 shadow-lg shadow-primary/50"
-                           : "bg-muted text-muted-foreground cursor-not-allowed"
-                       }`}
-          >
-            {getButtonText()}
-          </Button>
-        </div>
 
         {/* Auth Section */}
         <div className="mt-8 pt-6 border-t border-border/50">
@@ -538,7 +414,7 @@ const GameSetup: React.FC<GameSetupProps> = ({ onProfileChange }) => {
                   Logout
                 </button>
               ) : (
-                <GoogleSignInButton 
+                <GoogleSignInButton
                   className="px-4 py-2 text-sm font-medium"
                   username={username}
                   selectedAvatar={selectedAvatar ?? undefined}
