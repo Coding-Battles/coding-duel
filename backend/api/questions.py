@@ -513,9 +513,9 @@ async def save_game_to_history(players: List[PlayerInfo]):
         
         participant_query = """
         INSERT INTO game_participants (game_id, player_name, player_code, 
-                                    implement_time, time_complexity, final_time)
+                                    implement_time, time_complexity, final_time, user_id)
         VALUES (:game_id, :player_name, :player_code, :implement_time, 
-                :time_complexity, :final_time)
+                :time_complexity, :final_time, :user_id)
         """
 
         store_game_id_query = """
@@ -534,7 +534,8 @@ async def save_game_to_history(players: List[PlayerInfo]):
                     "player_code": player_stats.code,
                     "implement_time": player_stats.implement_time,
                     "time_complexity": player_stats.complexity,
-                    "final_time": player_stats.final_time
+                    "final_time": player_stats.final_time,
+                    "user_id": player.id
                 }
                 await database.execute(query=participant_query, values=values)
             if(not player.anonymous):
@@ -657,6 +658,36 @@ async def get_question(question_name: str):
     except Exception as e:
         logger.error(f"Error loading question {question_name}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error loading question '{question_name}'")
+    
+@app.get("/user/{user_id}/game-history")
+async def get_user_game_history(user_id: str):
+    try:
+        query = """
+            SELECT g.id AS game_id,
+                    gp.user_id,
+                   g.created_at,
+                   gp.player_name,
+                   gp.implement_time,
+                   gp.time_complexity,
+                   gp.final_time,
+                     gp.player_code
+            FROM "user" u
+            CROSS JOIN LATERAL unnest(u.game_ids) AS user_game_id
+            JOIN games g ON g.id = user_game_id
+            JOIN game_participants gp ON gp.game_id = g.id
+            WHERE u.id = :user_id
+            ORDER BY g.created_at DESC
+        """
+        values = {"user_id": user_id}
+        results = await database.fetch_all(query=query, values=values)
+        
+        if not results:
+            return {"message": "No game history found for this user."}
+
+        return [dict(result) for result in results]
+    except Exception as e:
+        logger.error(f"Error fetching game history for user {user_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/image/{player_id}")
 async def change_image(player_id: str, image: UploadFile = File(...)):

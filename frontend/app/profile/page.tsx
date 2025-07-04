@@ -3,6 +3,7 @@ import { User, Calendar, Trophy, TrendingUp, Clock, CheckCircle, XCircle, Circle
 import { ProfileBar } from './components/ProfileBar';
 import { UserStats } from '@/interfaces/UserStats';
 import Link from "next/link";
+import { RecentSubmissionsList } from './components/RecentSubmissionsList';
 
 interface Problem {
   id: number;
@@ -60,26 +61,10 @@ const LeetCodeProfile: React.FC = () => {
     }
   ];
 
-  const getDifficultyColor = (difficulty: string): string => {
-    switch (difficulty) {
-      case 'Easy': return 'text-green-600 bg-green-100';
-      case 'Medium': return 'text-yellow-600 bg-yellow-100';
-      case 'Hard': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Solved': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'Attempted': return <XCircle className="w-4 h-4 text-red-600" />;
-      default: return <Circle className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  const progressPercentage = (solved: number, total: number = 1000): number => {
+  const WinRatePercentage = (solved: number, total: number = 1000): number => {
     return Math.round((solved / total) * 100);
   };
+
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
@@ -106,7 +91,7 @@ const LeetCodeProfile: React.FC = () => {
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-green-600 h-2 rounded-full" 
-                  style={{ width: `${progressPercentage(userStats.totalSolved)}%` }}
+                  style={{ width: `${WinRatePercentage(userStats.totalSolved)}%` }}
                 ></div>
               </div>
             </div>
@@ -147,30 +132,7 @@ const LeetCodeProfile: React.FC = () => {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Submissions</h2>
             
             <div className="space-y-3">
-              {recentSubmissions.map((problem) => (
-                <div key={problem.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {getStatusIcon(problem.status)}
-                      <div>
-                        <h3 className="font-medium text-gray-800">{problem.title}</h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(problem.difficulty)}`}>
-                            {problem.difficulty}
-                          </span>
-                          <span className="text-xs text-gray-500">{problem.category}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center space-x-1 text-sm text-gray-500">
-                        <Clock className="w-4 h-4" />
-                        <span>{problem.submittedAt}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              <RecentSubmissionsList />
             </div>
 
             <div className="mt-6 text-center">
@@ -184,5 +146,7 @@ const LeetCodeProfile: React.FC = () => {
     </div>
   );
 };
+
+export type {Problem}
 
 export default LeetCodeProfile;

@@ -5,17 +5,22 @@ import { authClient, getSession, useSession } from '@/lib/auth-client';
 import { Calendar, Edit, TrendingUp, User } from 'lucide-react'
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 
+interface ProfileBarProps {
+  id: string;
+}
+
+const userStats: UserStats = {
+  totalSolved: 342,
+  easySolved: 156,
+  mediumSolved: 142,
+  hardSolved: 44,
+  totalSubmissions: 1247,
+  acceptanceRate: 67.2,
+  ranking: 12543,
+  streak: 23
+};
+
 export const ProfileBar = () => {
-  const userStats: UserStats = {
-    totalSolved: 342,
-    easySolved: 156,
-    mediumSolved: 142,
-    hardSolved: 44,
-    totalSubmissions: 1247,
-    acceptanceRate: 67.2,
-    ranking: 12543,
-    streak: 23
-  };
 
   const {data: session} = useSession();
   console.log("Session data:", session);
