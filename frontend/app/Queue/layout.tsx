@@ -101,6 +101,7 @@ export default function QueueLayout({
           name: session?.name || "Guest",
           imageURL: session?.image || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
           id: session?.id || newAnonymousId,
+          anonymous: isAnonymous
         });
     });
 
@@ -108,6 +109,7 @@ export default function QueueLayout({
           name: session?.name || "Guest",
           imageURL: session?.image || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
           id: session?.id || newAnonymousId,
+          anonymous: isAnonymous
         })
 
     socket.on('disconnect', () => {

@@ -32,6 +32,7 @@ class Player(BaseModel):
     id: str  # This is the player's custom ID
     name: str
     imageURL: str
+    anonymous: bool = True  # Whether the player is anonymous or not
     sid: str  # This is the socket connection ID
 
 
@@ -92,6 +93,7 @@ class PlayerInfo:
     id: str
     sid: str
     name: str
+    anonymous: bool = True
     game_stats: Optional[CodeTestResult] = field(default_factory=lambda: CodeTestResult(
         message="",
         code="",
@@ -301,8 +303,8 @@ async def join_queue(sid, data):
             game_state = GameState(
                 game_id=game_id,
                 players={
-                    player1.id: PlayerInfo(id=player1.id, name=player1.name, sid=player1.sid),
-                    player2.id: PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid)
+                    player1.id: PlayerInfo(id=player1.id, name=player1.name, sid=player1.sid, anonymous=player1.anonymous),
+                    player2.id: PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid, anonymous=player2.anonymous)
                 },
                 question_name=question_name
             )
@@ -501,6 +503,8 @@ async def save_game_to_history(players: List[PlayerInfo]):
         game_query = "INSERT INTO games DEFAULT VALUES RETURNING id"
         result = await database.fetch_one(query=game_query)
 
+        db_game_id = None
+
         if result:
             db_game_id = result["id"]  # Access the returned ID
             logger.info(f"Game history saved with DB ID: {db_game_id}")
@@ -512,6 +516,12 @@ async def save_game_to_history(players: List[PlayerInfo]):
                                     implement_time, time_complexity, final_time)
         VALUES (:game_id, :player_name, :player_code, :implement_time, 
                 :time_complexity, :final_time)
+        """
+
+        store_game_id_query = """
+            UPDATE "user" 
+            SET game_ids = array_append(COALESCE(game_ids, ARRAY[]::INTEGER[]), :game_id)
+            WHERE id = :user_id;
         """
 
         for player in players:
@@ -527,6 +537,23 @@ async def save_game_to_history(players: List[PlayerInfo]):
                     "final_time": player_stats.final_time
                 }
                 await database.execute(query=participant_query, values=values)
+            if(not player.anonymous):
+                logger.info(f"Storing game ID {db_game_id} for player {player.id}")
+                try:
+                    values = {
+                        "game_id": db_game_id,
+                        "user_id": player.id
+                    }
+                    await database.execute(
+                        query=store_game_id_query,
+                        values=values
+                    )
+                except Exception as e:
+                    logger.error(f"Error storing game ID {db_game_id} for player {player.id}: {str(e)}")
+                
+
+
+    
     except Exception as e:
         logger.error(f"Database error while saving game history: {str(e)}")
 

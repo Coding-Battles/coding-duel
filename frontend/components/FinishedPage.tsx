@@ -66,7 +66,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
 
         <div className="flex flex-col items-center justify-center p-6 border-2 border-red-300 rounded-lg">
           <img
-            src={opponent.image_url}
+            src={loser.image_url}
             alt="winnerImage"
             className="w-24 h-24 mb-4 border-2 border-gray-300"
           />
