@@ -8,6 +8,7 @@ interface ProfileCreatorProps {
   onUsernameChange: (username: string) => void;
   selectedAvatar: number | null;
   onAvatarChange: (avatar: number) => void;
+  onComplete?: () => void;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   onUsernameChange,
   selectedAvatar,
   onAvatarChange,
+  onComplete,
   className = ""
 }) => {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
@@ -269,6 +271,24 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Next Button */}
+      {onComplete && (
+        <div className="mt-8 text-center">
+          <Button
+            onClick={onComplete}
+            disabled={!username.trim() || selectedAvatar === null}
+            className={`px-8 py-3 text-lg font-medium rounded-xl transition-all duration-300 uppercase tracking-wide
+                       ${
+                         username.trim() && selectedAvatar !== null
+                           ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 shadow-lg shadow-primary/50"
+                           : "bg-muted text-muted-foreground cursor-not-allowed"
+                       }`}
+          >
+            {!username.trim() ? "Enter Username" : selectedAvatar === null ? "Select Avatar" : "Next"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
