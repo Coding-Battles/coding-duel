@@ -51,9 +51,11 @@ const LeetCodeProfile: React.FC = () => {
     const {data: session} = useSession();
 
   const [loaded, setLoad] = React.useState<boolean>(false);
-  const [userGameHistory, setUserGameHistory] = React.useState<GameHistoryItem[]>([]);
+  const [userGameHistory, setUserGameHistory] = React.useState<GameHistoryItem[][]>([]);
   const [totalBattles, setTotalBattles] = React.useState<number>(0);
   const [totalWins, setTotalWins] = React.useState<number>(0);
+
+  const itemsPerPage = 5;
 
   const getUserGameHistory = async () => {
     fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${session?.user.id}/game-history`)
@@ -113,8 +115,16 @@ const LeetCodeProfile: React.FC = () => {
         });
       });
 
+      processedHistory.reverse();
+
       console.log("Processed Game History:", processedHistory);
-      setUserGameHistory(processedHistory);
+
+      const compressedList: GameHistoryItem[][] = [];
+      for (let i = 0; i < processedHistory.length; i += itemsPerPage) {
+        compressedList.push(processedHistory.slice(i, i + itemsPerPage));
+      }
+    
+      setUserGameHistory(compressedList);
       setTotalBattles(battles);
       setTotalWins(wins);
     })
@@ -186,6 +196,6 @@ const LeetCodeProfile: React.FC = () => {
   );
 };
 
-export type {Problem}
+export type {Problem, GameHistoryItem}
 
 export default LeetCodeProfile;

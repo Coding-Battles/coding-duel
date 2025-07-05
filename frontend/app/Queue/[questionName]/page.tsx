@@ -21,6 +21,9 @@ import { Alert, AlertDescription, AlertTitle, StackableAlerts } from "@/componen
 import {motion} from "framer-motion";
 import GameTimer from "@/components/GameTimer";
 import FinishedPage from "@/components/FinishedPage";
+import { dummyOpponent, dummyOpponentStats, dummyUser, dummyUserStats } from "@/components/dummyData/FinishedPageData";
+
+const TestFinishedPage = true;
 
 
 export default function InGamePage() {
@@ -56,7 +59,7 @@ export default function InGamePage() {
 
   useEffect(() => {
     if(!session) {
-      console.error("No session found, redirecting to queue");
+      console.log("No session found, redirecting to queue");
       router.push("/queue");
       return;
     } 
@@ -204,7 +207,7 @@ export default function InGamePage() {
       setTestResults(result);
       return result;
     } catch (error) {
-      console.error("Error running tests:", error);
+      console.log("Error running tests:", error);
       const errorResult: TestResultsData = {
         success: false,
         test_results: [],
@@ -254,7 +257,7 @@ export default function InGamePage() {
       setTestResults(result);
       return result;
     } catch (error) {
-      console.error("Error running all tests:", error);
+      console.log("Error running all tests:", error);
       const errorResult: TestResultsData = {
         success: false,
         test_results: [],
@@ -279,10 +282,10 @@ export default function InGamePage() {
           <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4 z-60">
             <SidebarTrigger className="-ml-1" />
             <h1 className="text-lg font-semibold">BATTLE</h1>
-            {!gameFinished ? <GameTimer timeRef={timeRef}/> : <span></span>}
+            {(!TestFinishedPage && !gameFinished) ? <GameTimer timeRef={timeRef}/> : <span></span>}
           </header>
           <StackableAlerts alerts={alerts} setAlerts={setAlerts}/>
-          { !gameFinished ? 
+          { (!TestFinishedPage && !gameFinished) ? 
             <div className="flex flex-1 flex-col gap-4 p-4">
             <div className="flex h-[100%] w-[100%]">
               <div className="flex-1 w-full h-full max-w-2xl">
@@ -306,8 +309,15 @@ export default function InGamePage() {
           </div>
 
           :
-          (opponentTestStatsRef.current && testResults &&
-            <FinishedPage opponent={context.opponent} user={context.user} opponentStats={opponentTestStatsRef.current} userStats={testResults} />
+                
+           (!TestFinishedPage ? 
+            (opponentTestStatsRef.current && testResults &&
+              <FinishedPage opponent={context.opponent} user={context.user} opponentStats={opponentTestStatsRef.current} userStats={testResults} />
+            )
+
+            :
+
+            <FinishedPage opponent={dummyOpponent} user={dummyUser} opponentStats={dummyOpponentStats} userStats={dummyUserStats} />
           )
 
           }
