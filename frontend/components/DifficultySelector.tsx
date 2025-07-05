@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "./ui/button";
 
 export interface DifficultyState {
   easy: boolean;
@@ -9,12 +10,14 @@ export interface DifficultyState {
 interface DifficultySelectorProps {
   selectedDifficulties: DifficultyState;
   onDifficultyChange: (difficulties: DifficultyState) => void;
+  onEditProfile?: () => void;
   className?: string;
 }
 
 const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   selectedDifficulties,
   onDifficultyChange,
+  onEditProfile,
   className = "",
 }) => {
   const difficulties = [
@@ -48,12 +51,24 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
       className={`bg-card rounded-3xl p-8 border border-border shadow-2xl relative ${className}`}
     >
       {/* Edit Profile Button */}
-      <button className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-orange-500 hover:from-orange-500/30 hover:to-amber-500/30 hover:border-orange-400 transition-all duration-200 text-sm font-medium group">
-        <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-        <span>Edit Profile</span>
-      </button>
+      {onEditProfile && (
+        <Button variant="outline" size="sm" className="absolute top-4 right-4" onClick={onEditProfile}>
+          <svg
+            className="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          Edit Profile
+        </Button>
+      )}
 
       {/* Step 3: Pick Your Poison */}
       <div className="mb-8">

@@ -2,17 +2,20 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
-import DifficultySelector, { DifficultyState } from "@/components/DifficultySelector";
+import DifficultySelector, {
+  DifficultyState,
+} from "@/components/DifficultySelector";
 import { Button } from "@/components/ui/button";
 
 export default function GameSetupPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  const [selectedDifficulties, setSelectedDifficulties] = useState<DifficultyState>({
-    easy: true,
-    medium: false,
-    hard: false,
-  });
+  const [selectedDifficulties, setSelectedDifficulties] =
+    useState<DifficultyState>({
+      easy: true,
+      medium: false,
+      hard: false,
+    });
 
   // Handle authentication redirect in useEffect to avoid render-time navigation
   useEffect(() => {
@@ -45,15 +48,14 @@ export default function GameSetupPage() {
     alert("Game finding functionality coming soon!");
   };
 
-  const hasSelectedDifficulty = Object.values(selectedDifficulties).some(Boolean);
+  const hasSelectedDifficulty =
+    Object.values(selectedDifficulties).some(Boolean);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="container mx-auto px-6 py-20">
         <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Game Setup
-          </h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Game Setup</h1>
           <p className="text-gray-300 text-lg">
             Choose your preferred difficulty levels
           </p>
@@ -63,13 +65,15 @@ export default function GameSetupPage() {
           <DifficultySelector
             selectedDifficulties={selectedDifficulties}
             onDifficultyChange={setSelectedDifficulties}
+            onEditProfile={() => router.push("/profile")}
           />
-          
+
           {/* Find Game Button */}
           <div className="mt-8 text-center">
             <Button
               onClick={handleFindGame}
               disabled={!hasSelectedDifficulty}
+              variant="default"
               className={`px-8 py-4 text-xl font-bold rounded-xl transition-all duration-300 uppercase tracking-wide
                          ${
                            hasSelectedDifficulty
@@ -79,16 +83,6 @@ export default function GameSetupPage() {
             >
               {hasSelectedDifficulty ? "Find Game" : "Select Difficulty"}
             </Button>
-          </div>
-          
-          {/* Back to Profile Button */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => router.push("/profile-setup")}
-              className="text-gray-400 hover:text-white transition-colors underline"
-            >
-              Back to Profile Setup
-            </button>
           </div>
         </div>
       </div>
