@@ -1,9 +1,31 @@
-import React from 'react';
+'use client'
+import React, { useEffect } from 'react';
 import { User, Calendar, Trophy, TrendingUp, Clock, CheckCircle, XCircle, Circle,ArrowLeft, ArrowLeftSquare } from 'lucide-react';
 import { ProfileBar } from './components/ProfileBar';
 import { UserStats } from '@/interfaces/UserStats';
 import Link from "next/link";
-import { RecentSubmissionsList } from './components/RecentSubmissionsList';
+
+import { useSession } from '@/lib/auth-client';
+import { UserStatsAndHistory } from './components/UserStatsAndHistory';
+
+type GameParticipant = {
+  game_id: number;
+  player_name: string;
+  player_code: string;
+  implement_time: string;
+  time_complexity: string;
+  final_time: string;
+  user_id: string;
+}
+
+type GameHistoryItem = {
+  game_id: number;
+  participants: GameParticipant[];
+  user_won: boolean;
+  result: "won" | "lost" | "tie";
+  user_time: number;
+  opponent_best_time: number;
+}
 
 interface Problem {
   id: number;
@@ -25,6 +47,88 @@ const LeetCodeProfile: React.FC = () => {
     ranking: 12543,
     streak: 23
   };
+
+    const {data: session} = useSession();
+
+  const [loaded, setLoad] = React.useState<boolean>(false);
+  const [userGameHistory, setUserGameHistory] = React.useState<GameHistoryItem[]>([]);
+  const [totalBattles, setTotalBattles] = React.useState<number>(0);
+  const [totalWins, setTotalWins] = React.useState<number>(0);
+
+  const getUserGameHistory = async () => {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${session?.user.id}/game-history`)
+    .then(response => response.json())
+    .then(data => {
+      console.log("User Game History:", data);
+      setLoad(true);
+      var battles = 0;
+      var wins = 0;
+
+      // Type the accumulator properly
+      const groupedHistory = data.reduce((acc: Record<number, GameParticipant[]>, curr: GameParticipant) => {
+        const {game_id} = curr;
+        if (!acc[game_id]) {
+          battles++;
+          acc[game_id] = [];
+        }
+        acc[game_id].push(curr);
+        return acc;
+      }, {} as Record<number, GameParticipant[]>);
+
+      // Convert grouped history to proper format
+      const processedHistory: GameHistoryItem[] = [];
+
+      Object.entries(groupedHistory).forEach(([gameId, participants]) => {
+        var userTime = 40000;
+        var lowestTimeFromOther = 30000;
+        var result: "won" | "lost" | "tie" = "lost";
+
+        const gameParticipants = participants as GameParticipant[];
+        gameParticipants.forEach((participant) => {
+          if(participant.user_id == session?.user.id) {
+            userTime = parseInt(participant.final_time);
+          } else {
+            if(parseInt(participant.final_time) < lowestTimeFromOther) {
+              lowestTimeFromOther = parseInt(participant.final_time);
+            }
+          }
+        });
+
+        if(userTime < lowestTimeFromOther) {
+          wins++;
+          result = "won";
+        } else if(userTime > lowestTimeFromOther) {
+          result = "lost";
+        } else {
+          result = "tie";
+        }
+
+        processedHistory.push({
+          game_id: parseInt(gameId),
+          participants: gameParticipants,
+          user_won: result === "won",
+          result: result,
+          user_time: userTime,
+          opponent_best_time: lowestTimeFromOther
+        });
+      });
+
+      console.log("Processed Game History:", processedHistory);
+      setUserGameHistory(processedHistory);
+      setTotalBattles(battles);
+      setTotalWins(wins);
+    })
+    .catch(error => {
+      console.error("Error fetching game history:", error);
+      setLoad(true);
+    });
+  }
+
+  useEffect(() => {
+    if (session) {
+      getUserGameHistory()
+    }
+  }, [session])
 
   const recentSubmissions: Problem[] = [
     {
@@ -61,10 +165,6 @@ const LeetCodeProfile: React.FC = () => {
     }
   ];
 
-  const WinRatePercentage = (solved: number, total: number = 1000): number => {
-    return Math.round((solved / total) * 100);
-  };
-
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
@@ -76,73 +176,12 @@ const LeetCodeProfile: React.FC = () => {
         <ProfileBar/>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Stats Panel */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Statistics</h2>
-            
-            {/* Total Solved */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Total Battles</span>
-                <span className="font-bold text-2xl text-gray-800">{userStats.totalSolved}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-600 h-2 rounded-full" 
-                  style={{ width: `${WinRatePercentage(userStats.totalSolved)}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Difficulty Breakdown */}
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between items-center">
-                <span className="text-green-600 font-medium">Easy</span>
-                <span className="font-semibold">{userStats.easySolved}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-yellow-600 font-medium">Medium</span>
-                <span className="font-semibold">{userStats.mediumSolved}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-red-600 font-medium">Hard</span>
-                <span className="font-semibold">{userStats.hardSolved}</span>
-              </div>
-            </div>
-
-            {/* Additional Stats */}
-            <div className="border-t pt-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Win Rate</span>
-                <span className="font-semibold text-green-600">{userStats.acceptanceRate}%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Submissions</span>
-                <span className="font-semibold">{userStats.totalSubmissions.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Submissions</h2>
-            
-            <div className="space-y-3">
-              <RecentSubmissionsList />
-            </div>
-
-            <div className="mt-6 text-center">
-              <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                View All Submissions
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <UserStatsAndHistory
+        userStats={userStats}
+        userGameHistory={userGameHistory}
+        totalBattles={totalBattles}
+        totalWins={totalWins}
+      />
     </div>
   );
 };
