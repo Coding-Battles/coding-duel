@@ -16,6 +16,7 @@ from sockets.services.matchmaking_service import matchmaking_service
 from api import users
 from services.user_service import initialize_username_pool
 
+
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")

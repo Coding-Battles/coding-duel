@@ -4,11 +4,23 @@ import { QuestionData } from "@/types/question";
 import EditorWithTerminal from "@/components/EditorWithTerminal";
 import { Language, getLanguageConfig } from "@/types/languages";
 import { TestResultsData } from "@/components/TestResults";
+import { AlertTriangle, Check } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useGameContext } from "../layout";
 import DuelInfo from "@/components/DuelInfo";
 import { Button } from "@/components/ui/button";
+import { useSessionContext } from "@/components/SessionProvider";
+import { Socket } from "socket.io-client";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  StackableAlerts,
+} from "@/components/ui/alert";
+import { motion } from "framer-motion";
+import GameTimer from "@/components/GameTimer";
+import FinishedPage from "@/components/FinishedPage";
 
 export default function InGamePage() {
   const [selectedLanguage, setSelectedLanguage] =
@@ -22,21 +34,83 @@ export default function InGamePage() {
   const [testResults, setTestResults] = React.useState<
     TestResultsData | undefined
   >(undefined);
-  const [isRunning, setIsRunning] = React.useState(false);
-  const [hasResults, setHasResults] = React.useState(false);
+  const opponentTestStatsRef = useRef<TestResultsData | undefined>(undefined);
 
   const context = useGameContext();
   const router = useRouter();
   const params = useParams();
   const questionName = params?.questionName;
+  type AlertType = { id: string; message: string; variant?: string };
+  const [alerts, setAlerts] = React.useState<AlertType[]>([]);
+  const timeRef = useRef<number>(0);
+  const [gameFinished, setGameFinished] = React.useState(false);
 
-  React.useEffect(() => {
+  const session = context?.socket;
+  const userSession = useSessionContext();
+
+  console.log("InGamePage session:", userSession);
+
+  console.log("id:", context?.anonymousId);
+  console.log("is anonymous:", context?.isAnonymous);
+
+  useEffect(() => {
+    if (!session) {
+      console.error("No session found, redirecting to queue");
+      router.push("/queue");
+      return;
+    }
+
+    const handleOpponentSubmitted = (data: TestResultsData) => {
+      console.log("Opponent submitted data:", data);
+      setAlerts((prev) => [
+        ...prev,
+        {
+          id: `opponent-${Date.now()}-${Math.random()}`, // Generate unique ID
+          message: `Opponent ${data.opponent_id} submitted code: ${data.message}`,
+          variant: "default",
+        },
+      ]);
+
+      opponentTestStatsRef.current = data;
+    };
+
+    const handleGameCompleted = (data: { message: string }) => {
+      console.log("Game completed data:", data);
+
+      setAlerts((prev) => [
+        ...prev,
+        {
+          id: `game-completed-${Date.now()}-${Math.random()}`, // Generate unique ID
+          message: `Game completed: ${data.message}`,
+          variant: "destructive",
+        },
+      ]);
+
+      setTimeout(() => {
+        console.log("userSession:", userSession);
+        console.log("opponentTestStatsRef:", opponentTestStatsRef.current);
+        console.log("testResults:", testResults);
+        setGameFinished(true);
+      }, 5000);
+    };
+
+    session.on("opponent_submitted", handleOpponentSubmitted);
+    session.on("game_completed", handleGameCompleted);
+
+    // Cleanup function
+    return () => {
+      session.off("opponent_submitted", handleOpponentSubmitted);
+      session.off("game_completed", handleGameCompleted);
+    };
+  }, [session]);
+
+  useEffect(() => {
     if (!context) {
       router.push("/queue");
     }
   }, [context, router]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchQuestion = async () => {
       try {
         setLoading(true);
@@ -64,7 +138,7 @@ export default function InGamePage() {
   }, [questionName]);
 
   // Set initial starter code when question data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (questionData && questionData.starter_code) {
       const starterCode = questionData.starter_code[selectedLanguage];
       if (starterCode) {
@@ -121,6 +195,7 @@ export default function InGamePage() {
             code: code,
             question_name: questionName,
             language: selectedLanguage,
+            timer: timeRef.current,
           }),
         }
       );
@@ -136,8 +211,12 @@ export default function InGamePage() {
         success: false,
         test_results: [],
         total_passed: 0,
+        player_name: "",
         total_failed: 0,
         error: error instanceof Error ? error.message : "Unknown error",
+        message: "",
+        code: "",
+        opponent_id: "",
       };
       setTestResults(errorResult);
       setHasResults(true);
@@ -152,17 +231,29 @@ export default function InGamePage() {
     setTestResults(undefined); // Clear previous results for immediate feedback
 
     try {
+      const playerId = context.isAnonymous
+        ? context.anonymousId
+        : userSession?.id;
+      console.log("Request body:", {
+        player_id: playerId,
+        code: code,
+        question_name: questionName,
+        language: selectedLanguage,
+        timer: timeRef.current,
+      });
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-all-tests`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/${context.gameId}/run-all-tests`, //have to pass in gameId so that the game room can be pinged
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            player_id: playerId,
             code: code,
             question_name: questionName,
             language: selectedLanguage,
+            timer: Math.floor(timeRef.current),
           }),
         }
       );
@@ -177,9 +268,13 @@ export default function InGamePage() {
       const errorResult: TestResultsData = {
         success: false,
         test_results: [],
+        player_name: "",
         total_passed: 0,
         total_failed: 0,
         error: error instanceof Error ? error.message : "Unknown error",
+        message: "",
+        code: "",
+        opponent_id: "",
       };
       setTestResults(errorResult);
       setHasResults(true);
@@ -196,62 +291,53 @@ export default function InGamePage() {
 
   return (
     <div className="flex h-screen w-screen">
-      <div className="flex flex-1 flex-row h-screen h-full gap-4 p-4 items-start justify-start">
-        {/* Left panel - Question Description */}
-        <div className="w-80 min-w-[400px] h-[calc(100vh-2rem)] bg-white border border-gray-200 rounded-lg p-4 overflow-y-auto">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            {questionData?.title || "Loading..."}
-          </h2>
-          {questionData?.description_html ? (
-            <div
-              className="text-sm leading-relaxed"
-              dangerouslySetInnerHTML={{
-                __html: questionData.description_html,
-              }}
-            />
+      <SidebarProvider>
+        <InGameSideBar questionData={questionData} />
+
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 justify-between items-center gap-2 border-b px-4 z-60">
+            <SidebarTrigger className="-ml-1" />
+            <h1 className="text-lg font-semibold">BATTLE</h1>
+            {!gameFinished ? <GameTimer timeRef={timeRef} /> : <span></span>}
+          </header>
+          <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
+          {!gameFinished ? (
+            <div className="flex flex-1 flex-col gap-4 p-4">
+              <div className="flex h-[100%] w-[100%]">
+                <div className="flex-1 w-full h-full max-w-2xl">
+                  <EditorWithTerminal
+                    code={userCode}
+                    onCodeChange={(value) => {
+                      setUserCode(value || "");
+                      console.log("User code:", value);
+                    }}
+                    language={
+                      getLanguageConfig(selectedLanguage).monacoLanguage
+                    }
+                    theme="vs-dark"
+                    onRunCode={runSampleTests}
+                    selectedLanguage={selectedLanguage}
+                    onLanguageChange={handleLanguageChange}
+                    onRun={() => runSampleTests(userCode)}
+                    onSubmit={() => runAllTests(userCode)}
+                    testResults={testResults}
+                  />
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="text-gray-500">Loading question description...</div>
+            opponentTestStatsRef.current &&
+            testResults && (
+              <FinishedPage
+                opponent={context.opponent}
+                user={context.user}
+                opponentStats={opponentTestStatsRef.current}
+                userStats={testResults}
+              />
+            )
           )}
-        </div>
-
-        {/* Middle - Editor */}
-        <div className="flex-1 min-w-[400px] w-full h-[calc(100vh-2rem)]">
-          <EditorWithTerminal
-            code={userCode}
-            onCodeChange={(value) => {
-              setUserCode(value || "");
-              console.log("User code:", value);
-            }}
-            language={getLanguageConfig(selectedLanguage).monacoLanguage}
-            theme="vs-dark"
-            onRunCode={runSampleTests}
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={handleLanguageChange}
-            onRun={() => runSampleTests(userCode)}
-            onSubmit={() => runAllTests(userCode)}
-            testResults={testResults}
-            isRunning={isRunning}
-            hasResults={hasResults}
-            onCloseResults={handleCloseResults}
-            disableCopyPaste={true}
-          />
-        </div>
-
-        {/* Right panel */}
-        <div className="w-64 min-w-[300px] h-[calc(100vh-2rem)] justify-center items-center bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <DuelInfo />
-          <Button
-            variant="destructive"
-            className="mt-4"
-            onClick={() => {
-              // TODO: Replace with actual surrender logic
-              alert("You have surrendered!");
-            }}
-          >
-            Surrender
-          </Button>
-        </div>
-      </div>
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   );
 }

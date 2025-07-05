@@ -18,12 +18,36 @@ class TestCaseResult(BaseModel):
     error: Optional[str]
     execution_time: Optional[float]
 
+class CodeTestResult(BaseModel):
+    message: str
+    code: str
+    opponent_id: str
+    player_name: str
+    success: bool
+    test_results: List[TestCaseResult]
+    total_passed: int
+    total_failed: int
+    error: Optional[str]
+    complexity: Optional[str]
+    implement_time: Optional[int]
+    final_time: Optional[int]
+
+class PlayerFinalStats(BaseModel):
+    player_name: str
+    player_id: str
+    implement_time: int
+    time_complexity: str
+    final_time: int
+
+
 
 class RunTestCasesRequest(BaseModel):
+    player_id: str
     code: str
     language: str
     question_name: str  # Changed from test_cases to question_name
     timeout: Optional[int] = 5
+    timer: int
 
 
 class RunTestCasesResponse(BaseModel):

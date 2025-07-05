@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white relative overflow-hidden">
       {/* Subtle Matrix-inspired Background Pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-20"
         style={{
           backgroundImage: `
@@ -15,8 +15,8 @@ export default function HomePage() {
             linear-gradient(90deg, transparent 50px, rgba(34, 197, 94, 0.03) 51px, rgba(34, 197, 94, 0.03) 52px, transparent 53px),
             linear-gradient(180deg, transparent 50px, rgba(59, 130, 246, 0.03) 51px, rgba(59, 130, 246, 0.03) 52px, transparent 53px)
           `,
-          backgroundSize: '60px 60px, 120px 120px, 80px 80px',
-          backgroundPosition: '0 0, 30px 30px, 10px 10px'
+          backgroundSize: "60px 60px, 120px 120px, 80px 80px",
+          backgroundPosition: "0 0, 30px 30px, 10px 10px",
         }}
       />
       {/* Above-the-fold Hero Section - Server Rendered */}

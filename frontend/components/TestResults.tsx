@@ -14,12 +14,20 @@ interface TestCase {
 }
 
 interface TestResultsData {
-  success: boolean;
-  test_results: TestCase[];
-  total_passed: number;
-  total_failed: number;
-  error?: string;
+    message: string;
+    code: string;
+    opponent_id: string;
+    player_name: string;
+    success: boolean;
+    test_results: TestCase[];
+    total_passed: number;
+    total_failed: number;
+    error?: string;
+    complexity?: string;
+    implement_time?: number;
+    final_time?: number;
 }
+
 
 interface TestResultsProps {
   testResults?: TestResultsData;
