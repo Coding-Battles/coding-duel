@@ -111,7 +111,7 @@ export default function QueueLayout() {
       <div className="flex gap-8 mt-[100px]">
         <div className="flex flex-col items-center justify-center p-6 border-2 w-[170px] rounded-lg">
           <img
-            src=""
+            src={context.user.image_url || undefined}
             alt="Player Image"
             className="w-24 h-24 mb-4 border-2 border-gray-300"
           />

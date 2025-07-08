@@ -2,7 +2,9 @@
 import { useSession } from '@/lib/auth-client';
 import { Session } from 'better-auth';
 import { CheckCircle, Circle, Clock, Loader, XCircle } from 'lucide-react';
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import ExpandedGameResults from './ExpandedGameResults';
+import { GameHistoryItem } from '../page';
 
 interface UserStatsAndHistoryProps {
   userStats: {
@@ -13,13 +15,7 @@ interface UserStatsAndHistoryProps {
     totalSubmissions: number;
     acceptanceRate: number;
   };
-  userGameHistory: {
-    game_id: number;
-    result: string;
-    participants: { player_name: string; user_id: string; image_url?: string }[];
-    user_time: number;
-    opponent_best_time: number;
-  }[];
+  userGameHistory: GameHistoryItem[][];
   totalBattles: number;
   totalWins: number;
 }
@@ -47,6 +43,16 @@ const WinRatePercentage = (solved: number, total: number = 1000): number => {
 };
 
 export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} : UserStatsAndHistoryProps) => {
+
+  const [expandedGames, setExpandedGame] = useState<boolean[]>(Array(userGameHistory.length).fill(false));
+  const [selectedIndex, setSelectedIndex] = useState<number>(1);
+  const onClickExpand = (index: number) => {
+    setExpandedGame((prev) => {
+      const newState = [...prev]; // Create a copy of the previous state
+      newState[index] = !newState[index]; // Update the specific index
+      return newState; // Return the updated state
+    });
+  }
 
   return (
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -105,8 +111,9 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
       <div className="space-y-3">
         {userGameHistory.length > 0 && (
           <>
-            {userGameHistory.map((game) => (
-              <div key={game.game_id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            {userGameHistory[selectedIndex].map((game, index) => (
+              <div key={game.game_id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors h-auto">
+                <div className='w-full absolute h-[70px] bg-transparent cursor-pointer' onClick={() => onClickExpand(index)} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {getStatusIcon(game.result)}
@@ -135,11 +142,32 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
                     </div>
                   </div>
                 </div>
+
+                {expandedGames[index] && <ExpandedGameResults game={game} />}
               </div>
             ))}
           </>
         )}
       </div>
+      </div>
+
+      <div className='flex justify-center gap-4 mt-4'>
+        {userGameHistory.map((_, index) => (
+          <button
+            key={index}
+            className={`px-3 py-1 text-sm font-medium transition-colors cursor-pointer ${
+              selectedIndex === index
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+            onClick={() => {
+              setSelectedIndex(index);
+              setExpandedGame(Array(userGameHistory[index].length).fill(false));
+            }}
+          >
+            {index + 1}
+          </button>
+        ))}
       </div>
     </div>
   </div>
