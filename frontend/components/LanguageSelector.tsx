@@ -1,7 +1,6 @@
 "use client";
 
 import { Language, SUPPORTED_LANGUAGES } from "@/types/languages";
-import { COLORS } from "@/constants/colors";
 import {
   Select,
   SelectContent,
@@ -28,13 +27,13 @@ export default function LanguageSelector({
       <SelectTrigger
         className={`${className} text-white border-white-600 hover:bg-gray-700 focus:ring-blue-500 focus:border-blue-500 data-[state=open]:text-white focus:text-white [&_svg]:text-white [&_svg]:opacity-100`}
         size="sm"
-        style={{ backgroundColor: COLORS.primary }}
+        className="bg-primary"
       >
         <SelectValue />
       </SelectTrigger>
       <SelectContent
         className="text-white border-white-600"
-        style={{ backgroundColor: COLORS.primary }}
+        className="bg-primary"
       >
         {languages.map((language) => (
           <SelectItem

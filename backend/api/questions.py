@@ -295,7 +295,9 @@ async def join_queue(sid, data):
 
             # Randomly select a question from the available questions
             question = random.choice(data["questions"])
-            question_name = question["title"]  # → 'two-sum'
+            question_name = question["slug"]  # Use slug for both loading files and URLs
+            question_slug = question["slug"]  # Use slug for URLs
+            question_title = question["title"]  # Human-readable title for display
 
             logger.info(f"player1: {player1.name} vs player2: {player2.name} with question: {question_name}")
 
@@ -320,7 +322,7 @@ async def join_queue(sid, data):
                 game_id=game_id, 
                 opponent_Name=player2.name, 
                 opponentImageURL=player2.imageURL, 
-                question_name=question_name
+                question_name=question_slug  # Send slug for URL navigation
             )
             await sio.emit("match_found", match_response1.model_dump(), room=player1.sid)
 
@@ -328,7 +330,7 @@ async def join_queue(sid, data):
                 game_id=game_id, 
                 opponent_Name=player1.name, 
                 opponentImageURL=player1.imageURL, 
-                question_name=question_name
+                question_name=question_slug  # Send slug for URL navigation
             )
             await sio.emit("match_found", match_response2.model_dump(), room=player2.sid)
 
@@ -643,21 +645,28 @@ async def debug_run():
         logger.error(f"🔋 [DEBUG] debug-run failed after {total_time:.0f}ms: {str(e)}")
         return {"success": False, "error": str(e), "total_time_ms": total_time}
 
-@app.get("/get-question/{question_name}", response_model=QuestionData)
-async def get_question(question_name: str):
+def get_file_name_from_slug(slug: str) -> str:
+    """Return slug as file name since they are now the same."""
+    return slug
+
+@app.get("/get-question/{question_slug}", response_model=QuestionData)
+async def get_question(question_slug: str):
     try:
-        question_file_path = Path(f"backend/data/question-data/{question_name}.json")
+        # Map slug to file_name
+        file_name = get_file_name_from_slug(question_slug)
+        question_file_path = Path(f"backend/data/question-data/{file_name}.json")
+        
         if not question_file_path.exists():
-            raise HTTPException(status_code=404, detail=f"Question '{question_name}' not found")
+            raise HTTPException(status_code=404, detail=f"Question '{question_slug}' not found")
         with open(question_file_path, "r", encoding="utf-8") as file:
             question_data = json.load(file)
         return QuestionData(**question_data)
     except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in question file {question_name}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Invalid question data format for '{question_name}'")
+        logger.error(f"Invalid JSON in question file {question_slug}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Invalid question data format for '{question_slug}'")
     except Exception as e:
-        logger.error(f"Error loading question {question_name}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error loading question '{question_name}'")
+        logger.error(f"Error loading question {question_slug}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error loading question '{question_slug}'")
     
 @app.get("/user/{user_id}/game-history")
 async def get_user_game_history(user_id: str):

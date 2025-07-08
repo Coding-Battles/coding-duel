@@ -7,7 +7,6 @@ import LanguageSelector from "./LanguageSelector";
 import { Button } from "@/components/ui/button";
 import { Language } from "@/types/languages";
 import { Check, Play, Loader2 } from "lucide-react";
-import { COLORS } from "@/constants/colors";
 
 interface EditorWithTerminalProps {
   code?: string;
@@ -50,8 +49,7 @@ export default function EditorWithTerminal({
     >
       {/* Editor Header Bar */}
       <div
-        className="flex items-center justify-between border-b border-slate-600/50 px-4 py-3 min-h-[48px] shadow-md"
-        style={{ backgroundColor: COLORS.primary }}
+        className="flex items-center justify-between border-b border-slate-600/50 px-4 py-3 min-h-[48px] shadow-md bg-primary"
       >
         <div className="flex items-center gap-3">
           {onLanguageChange && (

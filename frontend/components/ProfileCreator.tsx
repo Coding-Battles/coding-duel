@@ -2,12 +2,16 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import ImageUploader from "./ImageUploader";
 
 interface ProfileCreatorProps {
   username: string;
   onUsernameChange: (username: string) => void;
   selectedAvatar: number | null;
   onAvatarChange: (avatar: number) => void;
+  customAvatar?: string | null;
+  onCustomAvatarChange?: (avatarUrl: string | null) => void;
+  userId?: string;
   onComplete?: () => void;
   className?: string;
 }
@@ -17,6 +21,9 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   onUsernameChange,
   selectedAvatar,
   onAvatarChange,
+  customAvatar,
+  onCustomAvatarChange,
+  userId,
   onComplete,
   className = ""
 }) => {
@@ -153,6 +160,28 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
 
   const handleAvatarSelect = (index: number) => {
     onAvatarChange(index);
+    // Clear custom avatar when selecting default avatar
+    if (onCustomAvatarChange) {
+      onCustomAvatarChange(null);
+    }
+  };
+
+  const handleCustomAvatarSelect = () => {
+    // Select custom avatar (works with or without uploaded avatar)
+    onAvatarChange(-1); // Use -1 to indicate custom avatar selected
+  };
+
+  const handleCustomAvatarUpload = (avatarUrl: string) => {
+    if (onCustomAvatarChange) {
+      onCustomAvatarChange(avatarUrl);
+    }
+    // Automatically select custom avatar when uploading
+    onAvatarChange(-1); // Use -1 to indicate custom avatar selected
+  };
+
+  const handleCustomAvatarError = (error: string) => {
+    console.error("Avatar upload error:", error);
+    // You might want to show a toast or error message here
   };
 
   return (
@@ -236,7 +265,8 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
             CHOOSE YOUR FIGHTER
           </h2>
         </div>
-        <div className="grid grid-cols-6 gap-3">
+        <div className="grid grid-cols-7 gap-3 mb-4">
+          {/* Default Avatars */}
           {Array.from({ length: 6 }, (_, index) => (
             <button
               key={index}
@@ -269,6 +299,28 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
               />
             </button>
           ))}
+          
+          {/* Custom Avatar Upload Option - Last position */}
+          <div
+            onClick={handleCustomAvatarSelect}
+            className={`relative rounded-lg p-1 text-center cursor-pointer overflow-hidden
+                       transition-all duration-200 hover:transform hover:-translate-y-1
+                       ${
+                         selectedAvatar === -1
+                           ? "bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 shadow-xl shadow-orange-500/70 -translate-y-1 ring-4 ring-yellow-300 scale-105"
+                           : "bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 hover:shadow-lg hover:shadow-slate-500/30"
+                       }`}
+          >
+            <ImageUploader
+              currentImageUrl={customAvatar || undefined}
+              onUploadSuccess={handleCustomAvatarUpload}
+              onUploadError={handleCustomAvatarError}
+              size="lg"
+              userId={userId}
+              alt="Custom avatar"
+              className={selectedAvatar === -1 ? "scale-115 drop-shadow-lg" : ""}
+            />
+          </div>
         </div>
       </div>
 
@@ -277,15 +329,19 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
         <div className="mt-8 text-center">
           <Button
             onClick={onComplete}
-            disabled={!username.trim() || selectedAvatar === null}
+            disabled={!username.trim() || (selectedAvatar === null && !customAvatar)}
             className={`px-8 py-3 text-lg font-medium rounded-xl transition-all duration-300 uppercase tracking-wide
                        ${
-                         username.trim() && selectedAvatar !== null
+                         username.trim() && (selectedAvatar !== null || customAvatar)
                            ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 shadow-lg shadow-primary/50"
                            : "bg-muted text-muted-foreground cursor-not-allowed"
                        }`}
           >
-            {!username.trim() ? "Enter Username" : selectedAvatar === null ? "Select Avatar" : "Next"}
+            {!username.trim() 
+              ? "Enter Username" 
+              : (selectedAvatar === null && !customAvatar) 
+                ? "Select Avatar" 
+                : "Next"}
           </Button>
         </div>
       )}

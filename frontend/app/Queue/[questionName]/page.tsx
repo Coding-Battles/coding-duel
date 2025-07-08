@@ -4,23 +4,17 @@ import { QuestionData } from "@/types/question";
 import EditorWithTerminal from "@/components/EditorWithTerminal";
 import { Language, getLanguageConfig } from "@/types/languages";
 import { TestResultsData } from "@/components/TestResults";
-import { AlertTriangle, Check } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef } from "react";
 import { useGameContext } from "../layout";
-import DuelInfo from "@/components/DuelInfo";
-import { Button } from "@/components/ui/button";
-import { useSessionContext } from "@/components/SessionProvider";
-import { Socket } from "socket.io-client";
+import { useSession } from "@/lib/auth-client";
 import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
   StackableAlerts,
 } from "@/components/ui/alert";
-import { motion } from "framer-motion";
 import GameTimer from "@/components/GameTimer";
 import FinishedPage from "@/components/FinishedPage";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { InGameSideBar } from "@/components/inGameSideBar";
 
 export default function InGamePage() {
   const [selectedLanguage, setSelectedLanguage] =
@@ -44,9 +38,11 @@ export default function InGamePage() {
   const [alerts, setAlerts] = React.useState<AlertType[]>([]);
   const timeRef = useRef<number>(0);
   const [gameFinished, setGameFinished] = React.useState(false);
+  const [isRunning, setIsRunning] = React.useState(false);
+  const [hasResults, setHasResults] = React.useState(false);
 
   const session = context?.socket;
-  const userSession = useSessionContext();
+  const { data: userSession } = useSession();
 
   console.log("InGamePage session:", userSession);
 
@@ -114,7 +110,7 @@ export default function InGamePage() {
     const fetchQuestion = async () => {
       try {
         setLoading(true);
-        if (!questionName) throw new Error("No question id in URL");
+        if (!questionName) throw new Error("No question name found in URL. Please check the URL and try again.");
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/get-question/${questionName}`
         );
@@ -184,6 +180,10 @@ export default function InGamePage() {
     setTestResults(undefined); // Clear previous results for immediate feedback
 
     try {
+      if (!questionName) {
+        throw new Error("Question name not found in URL");
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-sample-tests`,
         {
@@ -233,7 +233,16 @@ export default function InGamePage() {
     try {
       const playerId = context.isAnonymous
         ? context.anonymousId
-        : userSession?.id;
+        : userSession?.user?.id;
+      
+      if (!playerId) {
+        throw new Error("Player ID not found. Please refresh and try again.");
+      }
+      
+      if (!context.gameId) {
+        throw new Error("Game ID not found. Please return to the queue.");
+      }
+      
       console.log("Request body:", {
         player_id: playerId,
         code: code,

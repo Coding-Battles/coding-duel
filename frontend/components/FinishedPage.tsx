@@ -4,34 +4,36 @@
 import { User } from "better-auth";
 import React, { useEffect } from "react";
 import { TestResultsData } from "./TestResults";
-import { UserData } from "@/app/queue/layout";
+import { OpponentData } from "@/app/queue/layout";
+import { getAvatarUrl } from "@/lib/auth-client";
 
+
+interface CustomUser extends User {
+  username?: string;
+  selectedPfp?: number;
+}
 
 interface FinishedPageProps {
-  opponent: UserData,
-  user: UserData,
+  opponent: OpponentData,
+  user: CustomUser | null,
   opponentStats: TestResultsData,
   userStats: TestResultsData;
 }
 
 const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageProps) => {
-  var winner = user
-  var winnerStats = userStats;
-  var loser = opponent;
-  var loserStats = opponentStats;
-  if(userStats.final_time && opponentStats.final_time){
-    winner = userStats.final_time < opponentStats.final_time ? user : opponent;
-    loser = userStats.final_time < opponentStats.final_time ? opponent : user;
-    winnerStats = userStats.final_time < opponentStats.final_time ? userStats : opponentStats;
-    loserStats = userStats.final_time < opponentStats.final_time ? opponentStats : userStats;
-  }
+  const userWon = userStats.final_time && opponentStats.final_time ? 
+    userStats.final_time < opponentStats.final_time : true;
+  
+  const winnerStats = userWon ? userStats : opponentStats;
+  const loserStats = userWon ? opponentStats : userStats;
+  const winnerImage = userWon ? getAvatarUrl(user) : opponent.image_url;
+  const loserImage = userWon ? opponent.image_url : getAvatarUrl(user);
 
   useEffect(() => {
-    console.log("Winner:", winner);
-    console.log("Loser:", loser);
+    console.log("User won:", userWon);
     console.log("Winner Stats:", winnerStats);
     console.log("Loser Stats:", loserStats);
-  }, [])
+  }, [userWon, winnerStats, loserStats])
   
   return (
     <div className="flex flex-col items-center justify-center h-[100%] w-[100%]">
@@ -56,7 +58,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
       <div className="flex gap-4 mt-[100px]">
         <div className="flex flex-col items-center justify-center p-6 border-2 border-green-300 rounded-lg">
           <img
-            src={winner.image_url}
+            src={winnerImage}
             alt="winnerImage"
             className="w-24 h-24 mb-4 border-2 border-gray-300"
           />
@@ -66,8 +68,8 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
 
         <div className="flex flex-col items-center justify-center p-6 border-2 border-red-300 rounded-lg">
           <img
-            src={loser.image_url}
-            alt="winnerImage"
+            src={loserImage}
+            alt="loserImage"
             className="w-24 h-24 mb-4 border-2 border-gray-300"
           />
           <span className="text-xs font-bold">{loserStats.player_name}</span>

@@ -10,6 +10,7 @@ export default function ProfileSetupPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
+  const [customAvatar, setCustomAvatar] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Handle authentication redirect in useEffect to avoid render-time navigation
@@ -37,14 +38,14 @@ export default function ProfileSetupPage() {
   }
 
   const handleComplete = async () => {
-    if (!username.trim() || selectedAvatar === null) return;
+    if (!username.trim() || (selectedAvatar === null && !customAvatar)) return;
 
     setIsSaving(true);
     try {
       // Save profile data
       await updateUserProfile({
         username: username.trim(),
-        selectedPfp: selectedAvatar
+        selectedPfp: selectedAvatar ?? undefined
       });
 
       console.log("Profile saved successfully");
@@ -77,6 +78,9 @@ export default function ProfileSetupPage() {
             onUsernameChange={setUsername}
             selectedAvatar={selectedAvatar}
             onAvatarChange={setSelectedAvatar}
+            customAvatar={customAvatar}
+            onCustomAvatarChange={setCustomAvatar}
+            userId={session?.user?.id}
             onComplete={isSaving ? undefined : handleComplete}
           />
           

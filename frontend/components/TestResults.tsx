@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Loader2, X } from "lucide-react";
-import { COLORS } from "@/constants/colors";
 
 interface TestCase {
   input: Record<string, unknown>;
@@ -68,7 +67,7 @@ export default function TestResults({
           <span className="text-white text-sm font-semibold flex items-center gap-2">
             <div
               className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: COLORS.primary }}
+              className="bg-primary"
             ></div>
             Test Results
           </span>
@@ -78,7 +77,7 @@ export default function TestResults({
             <Loader2
               size={24}
               className="animate-spin"
-              style={{ color: COLORS.primary }}
+              className="text-primary"
             />
             <span className="text-lg font-medium">Running tests...</span>
           </div>
@@ -132,7 +131,7 @@ export default function TestResults({
     <div className={` ${className}`}>
       <div
         className="flex items-center justify-between px-4 py-3 border-b border-slate-600/30"
-        style={{ backgroundColor: COLORS.primary }}
+        className="bg-primary"
       >
         <span className="text-white text-sm font-semibold flex items-center gap-2">
           <div
@@ -155,7 +154,7 @@ export default function TestResults({
 
       <div
         className="p-4 space-y-4"
-        style={{ backgroundColor: COLORS.primary }}
+        className="bg-primary"
       >
         {error && (
           <div className="text-red-400 text-sm bg-red-900/20 p-3 rounded border border-red-800">
@@ -182,7 +181,7 @@ export default function TestResults({
                 <span className="text-slate-400">Input: </span>
                 <span 
                   className="font-mono bg-slate-900/50 px-2 py-1 rounded"
-                  style={{ color: COLORS.primary, opacity: 0.8 }}
+                  className="text-primary/80"
                 >
                   {JSON.stringify(test_results[selectedTest].input)}
                 </span>
@@ -263,7 +262,7 @@ export default function TestResults({
             <span className="text-slate-300">... and </span>
             <span
               className="font-semibold"
-              style={{ color: COLORS.primary, opacity: 0.8 }}
+              className="text-primary/80"
             >
               {test_results.length - 3}
             </span>

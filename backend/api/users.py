@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
-from services.user_service import (
+from backend.services.user_service import (
     is_username_taken,
     get_next_available_username,
     generate_ai_username,

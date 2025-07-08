@@ -149,9 +149,16 @@ def run_code_in_docker(
         else:
             run_command = config["run_command"].format(filename=filename)
 
-        # Pass input as command line argument
-        input_json = json.dumps(request.test_input).replace('"', '\\"')
-        run_command += f' "{input_json}"'
+        # Pass arguments based on language
+        if request.language in ["python", "javascript"]:
+            # For Python and JavaScript, pass function name and input as separate arguments
+            function_name = getattr(request, 'function_name', 'solution')
+            input_json = json.dumps(request.test_input).replace('"', '\\"')
+            run_command += f' "{function_name}" "{input_json}"'
+        else:
+            # For other languages (Java, C++), pass input as single argument
+            input_json = json.dumps(request.test_input).replace('"', '\\"')
+            run_command += f' "{input_json}"'
 
         commands.append(run_command)
 

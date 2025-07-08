@@ -16,32 +16,34 @@ import time
 # User code ends here
 
 if __name__ == "__main__":
-    input_data = json.loads(sys.argv[1])
+    if len(sys.argv) < 3:
+        print(json.dumps({{"result": "Missing arguments: function_name and input_data", "execution_time": 0}}))
+        sys.exit(1)
+        
+    function_name = sys.argv[1]
+    input_data = json.loads(sys.argv[2])
     start_time = time.time()
     
-    # Find the solution function
     result = None
     error = None
     
     try:
-        # Look for solution function - only accept exact name "solution"
-        solution_func = None
-        
-        if 'solution' in globals() and callable(globals()['solution']):
-            solution_func = globals()['solution']
-        
-        if solution_func:
-            # Call the function with the input data as arguments
+        # Look for Solution class
+        if 'Solution' in globals() and hasattr(globals()['Solution'], function_name):
+            solution_instance = globals()['Solution']()
+            solution_method = getattr(solution_instance, function_name)
+            
+            # Call the method with the input data as arguments
             # Try both ways: as keyword arguments and as positional arguments
             try:
-                result = solution_func(**input_data)
+                result = solution_method(**input_data)
             except TypeError:
                 # If keyword arguments don't work, try positional arguments
-                # This handles cases where the function expects (nums, target) instead of (nums=..., target=...)
+                # This handles cases where the method expects (nums, target) instead of (nums=..., target=...)
                 args = list(input_data.values())
-                result = solution_func(*args)
+                result = solution_method(*args)
         else:
-            error = "No solution function found"
+            error = f"No Solution class found or method '{function_name}' not found in Solution class"
             
     except Exception as e:
         error = str(e)
@@ -67,7 +69,13 @@ if __name__ == "__main__":
         "run_command": "node {filename}",
         "mem_limit": "64m",
         "wrapper_template": """
-const inputData = JSON.parse(process.argv[2]);
+if (process.argv.length < 4) {{
+    console.log(JSON.stringify({{result: "Missing arguments: function_name and input_data", execution_time: 0}}));
+    process.exit(1);
+}}
+
+const functionName = process.argv[2];
+const inputData = JSON.parse(process.argv[3]);
 const startTime = process.hrtime.bigint();
 
 // User code starts here
@@ -76,12 +84,13 @@ const startTime = process.hrtime.bigint();
 
 let result = null;
 
-// Call the solution function
+// Call the solution method on Solution class
 try {{
-    if (typeof solution === 'function') {{
-        result = solution(...Object.values(inputData));
+    if (typeof Solution === 'function' && typeof Solution.prototype[functionName] === 'function') {{
+        const solutionInstance = new Solution();
+        result = solutionInstance[functionName](...Object.values(inputData));
     }} else {{
-        result = "No solution function found";
+        result = `No Solution class found or method '${{functionName}}' not found in Solution class`;
     }}
 }} catch (e) {{
     result = e.message;
@@ -97,7 +106,7 @@ console.log(JSON.stringify({{
 """,
     },
     "cpp": {
-        "image": "gcc:latest",
+        "image": "frolvlad/alpine-gcc",
         "file_extension": ".cpp",
         "compile_command": "g++ -std=c++17 -O2 -o solution {filename}",
         "run_command": "./solution",

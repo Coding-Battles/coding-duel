@@ -57,3 +57,23 @@ export const getUserProfile = async (): Promise<{ username?: string; selectedPfp
 };
 
 export const { useSession, signOut, getSession } = authClient;
+
+// Avatar utility function
+export const getAvatarUrl = (user: { selectedPfp?: number; image?: string | null } | null | undefined): string => {
+  if (!user) {
+    return "/default-avatar.png";
+  }
+  
+  // Priority 1: Use selected default avatar if selectedPfp is set and valid
+  if (user.selectedPfp !== undefined && user.selectedPfp !== null && user.selectedPfp >= 0 && user.selectedPfp <= 5) {
+    return `/avatars/${user.selectedPfp}.png`;
+  }
+  
+  // Priority 2: Use uploaded image if available
+  if (user.image) {
+    return user.image;
+  }
+  
+  // Priority 3: Fallback to default avatar
+  return "/default-avatar.png";
+};

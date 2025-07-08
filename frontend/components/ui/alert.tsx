@@ -1,9 +1,9 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import {AnimatePresence, HTMLMotionProps, motion} from "motion/react"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { AnimatePresence, motion, HTMLMotionProps } from "framer-motion";
 
-import { cn } from "@/lib/utils"
-import { AlertTriangle } from "lucide-react"
+import { cn } from "@/lib/utils";
+import { AlertTriangle } from "lucide-react";
 
 const alertVariants = cva(
   "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
@@ -19,7 +19,7 @@ const alertVariants = cva(
       variant: "default",
     },
   }
-)
+);
 
 function Alert({
   className,
@@ -27,13 +27,17 @@ function Alert({
   id,
   setAlerts,
   ...props
-}: HTMLMotionProps<"div"> & VariantProps<typeof alertVariants> & {id : string, setAlerts?: React.Dispatch<React.SetStateAction<AlertType[]>>}) {
+}: HTMLMotionProps<"div"> &
+  VariantProps<typeof alertVariants> & {
+    id: string;
+    setAlerts?: React.Dispatch<React.SetStateAction<AlertType[]>>;
+  }) {
   const [show, setShow] = React.useState(true);
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      setShow(false)
+      setShow(false);
       if (setAlerts) {
-        setAlerts((prev) => prev.filter(alert => alert.id !== id));
+        setAlerts((prev) => prev.filter((alert) => alert.id !== id));
       }
     }, 2000);
     return () => clearTimeout(timer);
@@ -41,20 +45,20 @@ function Alert({
 
   return (
     <AnimatePresence>
-    {show &&
-      <motion.div
-      data-slot="alert"
-      role="alert"
-      className={cn(alertVariants({ variant }), className)}
-      {...props}
-      initial={{ opacity: 0, y: -50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      transition={{ duration: 0.5 }}
-    />
-  }
-  </AnimatePresence>
-  )
+      {show && (
+        <motion.div
+          data-slot="alert"
+          role="alert"
+          className={cn(alertVariants({ variant }), className)}
+          {...props}
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          transition={{ duration: 0.5 }}
+        />
+      )}
+    </AnimatePresence>
+  );
 }
 
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
@@ -67,7 +71,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
-  )
+  );
 }
 
 function AlertDescription({
@@ -83,7 +87,7 @@ function AlertDescription({
       )}
       {...props}
     />
-  )
+  );
 }
 type AlertType = { id: string; message: string; variant?: string };
 function StackableAlerts({
@@ -91,31 +95,31 @@ function StackableAlerts({
   setAlerts,
   className,
 }: {
-  alerts: AlertType[]
-  setAlerts: React.Dispatch<React.SetStateAction<AlertType[]>>
-  className?: string
+  alerts: AlertType[];
+  setAlerts: React.Dispatch<React.SetStateAction<AlertType[]>>;
+  className?: string;
 }) {
   return (
-  <AnimatePresence>
-    {alerts.map((alert, key) => (
-      <motion.div
-        key={key}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
-        className="absolute right-4 top-[4rem] w-[300px] z-50"
-        style={{ top: `${4 + key * 6}rem` }}
-      >
-        <Alert id={alert.id} setAlerts={setAlerts}>
-          <AlertTriangle className="text-red-500" />
-          <AlertTitle>Heads up!</AlertTitle>
-          <AlertDescription>{alert.message}</AlertDescription>
-        </Alert>
-      </motion.div>
-    ))}
-  </AnimatePresence>
-  )
+    <AnimatePresence>
+      {alerts.map((alert, key) => (
+        <motion.div
+          key={key}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="absolute right-4 top-[4rem] w-[300px] z-50"
+          style={{ top: `${4 + key * 6}rem` }}
+        >
+          <Alert id={alert.id} setAlerts={setAlerts}>
+            <AlertTriangle className="text-red-500" />
+            <AlertTitle>Heads up!</AlertTitle>
+            <AlertDescription>{alert.message}</AlertDescription>
+          </Alert>
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  );
 }
 
-export { Alert, AlertTitle, AlertDescription, StackableAlerts }
+export { Alert, AlertTitle, AlertDescription, StackableAlerts };

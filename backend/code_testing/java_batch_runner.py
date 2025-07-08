@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 from backend.code_testing.docker_runner import get_persistent_container
 from backend.code_testing.language_config import LANGUAGE_CONFIG
 
-def run_java_batch(code: str, test_cases: List[Dict], timeout: int = 10) -> List[Dict[str, Any]]:
+def run_java_batch(code: str, test_cases: List[Dict], timeout: int = 10, function_name: str = "solution") -> List[Dict[str, Any]]:
     """
     Run Java code against multiple test cases efficiently.
     Compiles once, then runs all test cases in the same JVM.
@@ -30,7 +30,7 @@ def run_java_batch(code: str, test_cases: List[Dict], timeout: int = 10) -> List
         config = LANGUAGE_CONFIG["java"]
         
         # Create optimized Java wrapper for batch execution
-        batch_wrapper = create_batch_java_wrapper(code, test_cases)
+        batch_wrapper = create_batch_java_wrapper(code, test_cases, function_name)
         print(f"🐛 [JAVA BATCH] Generated wrapper length: {len(batch_wrapper)} characters")
         
         # Write code to container
@@ -88,7 +88,7 @@ def run_java_batch(code: str, test_cases: List[Dict], timeout: int = 10) -> List
         return [{"success": False, "output": None, "error": str(e), "execution_time": None}] * len(test_cases)
 
 
-def create_batch_java_wrapper(user_code: str, test_cases: List[Dict]) -> str:
+def create_batch_java_wrapper(user_code: str, test_cases: List[Dict], function_name: str) -> str:
     """Create Java wrapper that runs multiple test cases."""
     
     # Encode test cases as JSON strings with proper Java escaping
@@ -165,7 +165,7 @@ class BatchSolution {{
                 int[] nums = (int[]) inputData.get("nums");
                 Integer target = (Integer) inputData.get("target");
                 
-                int[] result = solutionInstance.solution(nums, target);
+                int[] result = solutionInstance.{function_name}(nums, target);
                 
                 long endTime = System.nanoTime();
                 double executionTime = (endTime - startTime) / 1_000_000.0;
