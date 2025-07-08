@@ -30,7 +30,7 @@ export default function EditorWithTerminal({
   code = "# Start typing...",
   onCodeChange,
   language = "python",
-  theme = "vs-dark",
+  theme = "vs",
   className = "",
   onRunCode,
   selectedLanguage = "python",
@@ -48,9 +48,7 @@ export default function EditorWithTerminal({
       className={`flex flex-col h-full w-full ${className} rounded-lg overflow-hidden shadow-lg`}
     >
       {/* Editor Header Bar */}
-      <div
-        className="flex items-center justify-between border-b border-slate-600/50 px-4 py-3 min-h-[48px] shadow-md bg-primary"
-      >
+      <div className="flex items-center justify-between border-b border-slate-300 dark:border-slate-600 px-4 py-3 min-h-[48px] bg-gray-200 dark:bg-gray-800">
         <div className="flex items-center gap-3">
           {onLanguageChange && (
             <LanguageSelector
@@ -66,7 +64,7 @@ export default function EditorWithTerminal({
               onClick={onRun}
               size="sm"
               variant="outline"
-              className=""
+              className="text-black dark:text-white border-slate-300 dark:border-slate-600 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
               disabled={isRunning}
             >
               {isRunning ? (

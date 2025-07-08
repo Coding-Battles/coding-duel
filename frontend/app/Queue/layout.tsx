@@ -55,65 +55,56 @@ export default function QueueLayout({
   const [anonymousId, setAnonymousId] = useState<string>("");
   const [isAnonymous, setIsAnonymous] = useState<boolean>(true); // Default to anonymous until session is loaded
 
+  // Initialize socket connection once
   useEffect(() => {
-    //HAANDLING ALL THE SOCKET LOGIC HERE
+    if (socketRef.current) {
+      console.log("Socket already initialized");
+      return;
+    }
 
-    console.log("=== DEBUGGING SESSION DATA ===");
-    console.log("useEffect triggered, session:", session);
-    console.log("session?.user.id:", session?.user.id);
-    console.log("session?.user.name:", session?.user.name);
+    console.log("=== INITIALIZING SOCKET CONNECTION ===");
     
-    // Calculate isAnonymous based on current session state
-    const currentlyAnonymous = !session?.user?.id;
-    setIsAnonymous(currentlyAnonymous);
-    console.log("isAnonymous (calculated):", currentlyAnonymous);
-    console.log("socketRef.current:", socketRef.current);
-
-    // Only return early for invalid session states
-    if (session && !session?.user?.id) {
-      console.log("Early return - invalid session state");
-      return;
-    }
-
-    // Handle socket reconnection - socket is already connected, no need to update user data
-    if (socketRef.current && socketRef.current.connected) {
-      console.log("Socket already connected");
-      return;
-    }
-
-    // Disconnect existing socket if it exists but isn't connected
-    if (socketRef.current && !socketRef.current.connected) {
-      console.log("Cleaning up disconnected socket");
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-
     const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL, {
-      transports: ["websocket"],
+      transports: ["websocket", "polling"], // Add polling fallback
+      timeout: 10000, // 10 second connection timeout
+      reconnection: true, // Enable auto-reconnection
+      reconnectionDelay: 1000, // Wait 1s before reconnecting
+      reconnectionDelayMax: 5000, // Max 5s between reconnection attempts
+      reconnectionAttempts: 3, // Try 3 times then give up
+      forceNew: false, // Don't force new connection
     });
 
     socketRef.current = socket;
-    console.log("Connecting to server...: ", session?.user?.id);
-
-    const newAnonymousId =
-      "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now();
-
-    if (currentlyAnonymous) {
-      console.log("🔴 SETTING ANONYMOUS ID because currentlyAnonymous =", currentlyAnonymous);
-      console.log("🔴 Anonymous ID being set:", newAnonymousId);
-      setAnonymousId(newAnonymousId);
-    } else {
-      console.log(
-        "✅ USING SESSION DATA because currentlyAnonymous =",
-        currentlyAnonymous
-      );
-      console.log("✅ Session data being used:", session);
-    }
 
     socket.on("connect", () => {
       console.log("Connected to server with SID:", socket.id);
+      setLoadingState(false);
+      
+      // Join queue immediately when socket connects
+      const currentlyAnonymous = !session?.user?.id;
+      const newAnonymousId = currentlyAnonymous 
+        ? "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now()
+        : "";
+      
+      if (currentlyAnonymous) {
+        console.log("🔴 Setting anonymous ID on connect:", newAnonymousId);
+        setAnonymousId(newAnonymousId);
+        setIsAnonymous(true);
+      } else {
+        console.log("✅ Using session data on connect:", session);
+        setIsAnonymous(false);
+      }
+
       const username = (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
       const avatarUrl = getAvatarUrl(session?.user as CustomUser);
+      
+      console.log("Joining queue on connect with data:", {
+        name: username,
+        imageURL: avatarUrl,
+        id: session?.user?.id || newAnonymousId,
+        anonymous: currentlyAnonymous,
+      });
+
       socket.emit("join_queue", {
         name: username,
         imageURL: avatarUrl,
@@ -122,17 +113,21 @@ export default function QueueLayout({
       });
     });
 
-    const username = (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
-    const avatarUrl = getAvatarUrl(session?.user as CustomUser);
-    console.log("socket joined queue with data:", {
-      name: username,
-      imageURL: avatarUrl,
-      id: session?.user?.id || newAnonymousId,
-      anonymous: currentlyAnonymous,
+    socket.on("disconnect", (reason) => {
+      console.log("Disconnected from server, reason:", reason);
+      setLoadingState(true);
+      
+      // If disconnected due to timeout, try to reconnect
+      if (reason === "io client disconnect") {
+        console.log("Manual disconnect, not attempting to reconnect");
+      } else {
+        console.log("Unexpected disconnect, will attempt to reconnect");
+      }
     });
 
-    socket.on("disconnect", () => {
-      console.log("Disconnected from server");
+    socket.on("connect_error", (error) => {
+      console.error("Connection error:", error);
+      setLoadingState(true);
     });
 
     socket.on("queue_status", (data) => {
@@ -155,15 +150,56 @@ export default function QueueLayout({
       console.error("Socket error:", err);
     });
 
-    socket.on("connect_error", (error) => {
-      console.error("Connection error:", error);
-      setLoadingState(true);
-    });
-
+    // Cleanup only on component unmount
     return () => {
+      console.log("Cleaning up socket connection");
       socket.disconnect();
+      socketRef.current = null;
     };
-  }, [session]);
+  }, [router, session]); // Add router and session as dependencies
+
+  // Handle session changes separately without reconnecting
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    console.log("=== HANDLING SESSION CHANGE ===");
+    console.log("Session:", session);
+    
+    const currentlyAnonymous = !session?.user?.id;
+    setIsAnonymous(currentlyAnonymous);
+    
+    // Only update queue data if socket is connected and session has actually changed
+    if (socketRef.current.connected) {
+      const newAnonymousId = currentlyAnonymous 
+        ? "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now()
+        : "";
+      
+      if (currentlyAnonymous) {
+        console.log("🔴 Updating anonymous ID:", newAnonymousId);
+        setAnonymousId(newAnonymousId);
+      } else {
+        console.log("✅ Updating session data:", session);
+      }
+
+      const username = (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
+      const avatarUrl = getAvatarUrl(session?.user as CustomUser);
+      
+      console.log("Updating queue with new session data:", {
+        name: username,
+        imageURL: avatarUrl,
+        id: session?.user?.id || newAnonymousId,
+        anonymous: currentlyAnonymous,
+      });
+
+      // Re-join queue with updated session data
+      socketRef.current.emit("join_queue", {
+        name: username,
+        imageURL: avatarUrl,
+        id: session?.user?.id || newAnonymousId,
+        anonymous: currentlyAnonymous,
+      });
+    }
+  }, [session]); // Only depend on session changes
 
   return (
     <GameContext.Provider

@@ -1,7 +1,12 @@
 import React from "react";
 import Image from "next/image";
+import GameTimer from "./GameTimer";
 
-const DuelInfo = () => {
+interface DuelInfoProps {
+  timeRef?: React.RefObject<number>;
+}
+
+const DuelInfo = ({ timeRef }: DuelInfoProps) => {
   // Mock data - replace with real props/state
   const opponentData = {
     username: "CodeNinja42",
@@ -13,7 +18,7 @@ const DuelInfo = () => {
     wins: 127,
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "typing":
         return "bg-green-500";
@@ -28,7 +33,7 @@ const DuelInfo = () => {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case "typing":
         return "Typing...";
@@ -45,6 +50,13 @@ const DuelInfo = () => {
 
   return (
     <div className="w-full ">
+      {/* Timer */}
+      {timeRef && (
+        <div className="mb-4 text-center">
+          <GameTimer timeRef={timeRef} />
+        </div>
+      )}
+      
       {/* Avatar */}
       <div className="flex justify-center mb-3">
         <div className="relative w-30 h-30">

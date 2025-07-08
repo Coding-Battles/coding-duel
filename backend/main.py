@@ -152,10 +152,14 @@ app.include_router(questions_router.router)
 app.include_router(code.router)
 app.include_router(game.router)
 
-# Create Socket.IO server with CORS
+# Create Socket.IO server with CORS and better connection settings
 sio = socketio.AsyncServer(
     cors_allowed_origins="*",
-    async_mode='asgi'
+    async_mode='asgi',
+    ping_timeout=60,  # 60 seconds before considering client disconnected
+    ping_interval=25,  # Send ping every 25 seconds
+    logger=True,  # Enable logging for debugging
+    engineio_logger=True
 )
 
 # Set up socket events with game state integration
@@ -196,6 +200,7 @@ def health_check():
         "docker_available": docker_available,
         "services": ["users", "questions", "code", "game", "socket"]
     }
+
 
 if __name__ == "__main__":
     import uvicorn

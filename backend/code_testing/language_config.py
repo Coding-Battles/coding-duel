@@ -17,7 +17,7 @@ import time
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print(json.dumps({{"result": "Missing arguments: function_name and input_data", "execution_time": 0}}))
+        print(json.dumps({{"result": "Missing arguments: expected method name and input data", "execution_time": 0}}))
         sys.exit(1)
         
     function_name = sys.argv[1]
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         "mem_limit": "64m",
         "wrapper_template": """
 if (process.argv.length < 4) {{
-    console.log(JSON.stringify({{result: "Missing arguments: function_name and input_data", execution_time: 0}}));
+    console.log(JSON.stringify({{result: "Missing arguments: expected method name and input data", execution_time: 0}}));
     process.exit(1);
 }}
 
@@ -106,11 +106,11 @@ console.log(JSON.stringify({{
 """,
     },
     "cpp": {
-        "image": "frolvlad/alpine-gcc",
+        "image": "frolvlad/alpine-gxx",
         "file_extension": ".cpp",
-        "compile_command": "g++ -std=c++17 -O2 -o solution {filename}",
+        "compile_command": "g++ -std=c++17 -o solution {filename}",
         "run_command": "./solution",
-        "mem_limit": "128m",
+        "mem_limit": "256m",
         "wrapper_template": """
 #include <iostream>
 #include <string>

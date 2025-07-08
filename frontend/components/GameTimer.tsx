@@ -18,7 +18,7 @@ export default function GameTimer({
     return () => clearInterval(interval); // cleanup on unmount
   }, []);
   return (
-    <div className="text-xs font-bold border-2 border-solid border-gray-300 rounded-md p-2 bg-gray-100">
+    <div className="text-xs font-bold border-2 border-gray-300 dark:border-gray-600 rounded-md p-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
       Timer: {time} second{time !== 1 && "s"}
     </div>
   );

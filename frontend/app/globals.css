@@ -124,3 +124,50 @@ html {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Completely consistent, minimal question styling */
+  .leetcode-example {
+    @apply py-3;
+  }
+  
+  .leetcode-examples-container {
+    @apply space-y-4;
+  }
+  
+  .leetcode-constraints {
+    @apply py-3;
+  }
+  
+  .leetcode-constraints ul {
+    @apply space-y-1.5 mt-2;
+  }
+  
+  .leetcode-code {
+    @apply bg-slate-100/30 dark:bg-slate-800/30 px-1 py-0.5 rounded font-mono text-sm;
+  }
+  
+  .leetcode-heading {
+    @apply font-semibold mb-2;
+  }
+  
+  .leetcode-input-output {
+    @apply font-mono text-sm space-y-1.5;
+  }
+  
+  .leetcode-explanation {
+    @apply mt-2;
+  }
+  
+  .leetcode-difficulty-easy {
+    @apply text-green-600 dark:text-green-400 text-sm font-medium;
+  }
+  
+  .leetcode-difficulty-medium {
+    @apply text-amber-600 dark:text-amber-400 text-sm font-medium;
+  }
+  
+  .leetcode-difficulty-hard {
+    @apply text-red-600 dark:text-red-400 text-sm font-medium;
+  }
+}
