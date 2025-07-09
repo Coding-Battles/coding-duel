@@ -1,161 +1,210 @@
-
-import React, { useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2 } from "lucide-react";
-import GoogleOneTap from "@/components/GoogleOneTap";
-import { authClient, getSession, useSession } from "@/lib/auth-client";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
-export default async function HomePage() {
-  // const { data: session } = useSession();
-  // console.log("Session data:", session);
-
-  const session = await auth.api.getSession({
-    headers: await headers()
-  })
-  console.log("Session data:", await session);
+export default function HomePage() {
+  // Server component - all static content server-rendered
+  // Only GoogleSignInButton hydrates as client island
   return (
-    <>
-      {session && 
-      <Link href="/profile" className="fixed top-4 right-4 p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition z-50">
-        <img
-          src={session.user.image || "/default-avatar.png"}
-          alt="User Avatar"
-          className="w-8 h-8 rounded-full"
-        />
-      </Link>}
-      {!session && <GoogleOneTap />}
-      <div className="min-h-screen bg-gray-950 text-white">
-        {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center relative px-6 pt-20">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-transparent to-purple-600/20" />
-          <div className="container mx-auto max-w-6xl relative">
-            <div className="text-center space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-5xl md:text-7xl font-bold leading-tight">
-                  Code Fast.
-                  <br />
-                  <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                    Win Faster.
-                  </span>
-                </h1>
-                <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
-                  Real-time competitive coding battles. Race against opponents
-                  to solve algorithm challenges and climb the leaderboard.
-                </p>
+    <div className="min-h-screen bg-gray-950 text-white relative overflow-hidden">
+      {/* Subtle Matrix-inspired Background Pattern */}
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 1px 1px, rgba(34, 197, 94, 0.15) 1px, transparent 0),
+            linear-gradient(90deg, transparent 50px, rgba(34, 197, 94, 0.03) 51px, rgba(34, 197, 94, 0.03) 52px, transparent 53px),
+            linear-gradient(180deg, transparent 50px, rgba(59, 130, 246, 0.03) 51px, rgba(59, 130, 246, 0.03) 52px, transparent 53px)
+          `,
+          backgroundSize: "60px 60px, 120px 120px, 80px 80px",
+          backgroundPosition: "0 0, 30px 30px, 10px 10px",
+        }}
+      />
+      {/* Above-the-fold Hero Section - Server Rendered */}
+      <section className="min-h-screen flex items-center justify-center relative px-6">
+        <div className="container mx-auto max-w-6xl relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column - Content */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Head-to-head algorithm fights
+              </h1>
+              <div className="text-lg md:text-xl text-gray-300 font-medium mb-8">
+                Touch grass later
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-                <Link href="/queue">
-                  <Button
-                    size="lg"
-                    className="bg-white text-black text-lg px-8 py-6 hover:bg-gray-400"
-                  >
-                    Start Playing Free
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="flex justify-center gap-8 pt-8 text-sm text-gray-400">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  <span>No Installation</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  <span>Real-time Battles</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  <span>ELO Rating System</span>
-                </div>
+              {/* Sign In Section - Client Island */}
+              <div className="max-w-md mx-auto lg:mx-0">
+                <GoogleSignInButton className="w-full py-4 text-lg font-medium">
+                  Sign in with Google to start battling
+                </GoogleSignInButton>
               </div>
             </div>
 
-            {/* Animated Code Editor Preview */}
-            <Card className="mt-16 bg-gray-900 border-gray-800 shadow-2xl animate-float">
-              <div className="bg-gray-800 px-4 py-3 flex items-center justify-between rounded-t-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="text-gray-400">
-                    Time: <span className="text-white font-mono">4:32</span>
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className="border-yellow-500 text-yellow-400"
-                  >
-                    Opponent: Solving...
-                  </Badge>
+            {/* Right Column - Demo Video */}
+            <div className="order-first lg:order-last">
+              <div
+                className="relative bg-gray-800 rounded-xl overflow-hidden shadow-2xl"
+                style={{ aspectRatio: "16/9" }}
+              >
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4 mx-auto">
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-400 text-lg">
+                      Demo Video Coming Soon
+                    </p>
+                  </div>
                 </div>
               </div>
-              <CardContent className="p-6 font-mono text-sm">
-                <div className="text-gray-400 mb-2">
-                  {/* Two Sum Problem */}
-                </div>
-                <div className="text-blue-400">
-                  function <span className="text-yellow-300">twoSum</span>(
-                  <span className="text-orange-300">nums</span>,{" "}
-                  <span className="text-orange-300">target</span>) {`{`}
-                </div>
-                <div className="ml-4 text-purple-400">
-                  const <span className="text-white">map</span> ={" "}
-                  <span className="text-blue-400">new</span>{" "}
-                  <span className="text-yellow-300">Map</span>();
-                </div>
-                <div className="ml-4 text-purple-400">
-                  for (<span className="text-blue-400">let</span> i ={" "}
-                  <span className="text-green-400">0</span>; i {"<"}{" "}
-                  nums.length; i++) {`{`}
-                </div>
-                <div className="ml-8 text-white">...</div>
-                <div className="text-blue-400">{`}`}</div>
-              </CardContent>
-            </Card>
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Footer */}
-        <footer className="py-12 px-6 border-t border-gray-800">
-          <div className="container mx-auto max-w-6xl">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">CD</span>
-                </div>
-                <span className="text-xl font-bold">CodeDuel</span>
-              </Link>
+      {/* Below-the-fold Content Section - Server Rendered */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto max-w-6xl">
+          {/* Feature Highlights */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Why Choose CodeDuel?
+            </h2>
+            <p className="text-gray-400 text-lg">
+              Everything you need for competitive coding
+            </p>
+          </div>
 
-              <div className="flex gap-6 text-sm text-gray-400">
-                {/* <Link href="/privacy" className="hover:text-white transition">
-                Privacy
-              </Link>
-              <Link href="/terms" className="hover:text-white transition">
-                Terms
-              </Link>
-              <Link href="/contact" className="hover:text-white transition">
-                Contact
-              </Link> */}
-                <a
-                  href="https://github.com/Andriy3333/coding-duel"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  GitHub
-                </a>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
               </div>
+              <h3 className="text-lg font-semibold mb-2">
+                Real-time coding battles
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Face off against other developers in live coding challenges
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                Multiple difficulty levels
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Choose from easy, medium, or hard coding challenges
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                Compete with developers worldwide
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Challenge coders from around the globe in epic battles
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-12 h-12 bg-slate-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                Track your coding progress
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Monitor your wins, losses, and skill improvement over time
+              </p>
             </div>
           </div>
-        </footer>
-      </div>
-    </>
+        </div>
+      </section>
+
+      {/* Footer - Server Rendered */}
+      <footer className="py-12 px-6 border-t border-gray-800">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">CD</span>
+              </div>
+              <span className="text-xl font-bold">CodeDuel</span>
+            </Link>
+
+            <div className="flex gap-6 text-sm text-gray-400">
+              <a
+                href="https://github.com/Andriy3333/coding-duel"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                GitHub
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

@@ -63,6 +63,7 @@ class DockerRunRequest(BaseModel):
     language: str
     test_input: dict
     timeout: int = 5
+    function_name: Optional[str] = "solution"  # Default to "solution" for backward compatibility
 
 
 class TestCase(BaseModel):
@@ -96,8 +97,6 @@ class QuestionData(BaseModel):
     id: str
     title: str
     difficulty: str
-    tags: List[str]
+    tags: Optional[List[str]] = None
     description_html: str
-    examples_html: str
-    constraints_html: str
     starter_code: StarterCode

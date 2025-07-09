@@ -31,7 +31,5 @@ export interface QuestionData {
   difficulty: string;
   tags: string[];
   description_html: string;
-  examples_html: string;
-  constraints_html: string;
   starter_code: StarterCode;
 }

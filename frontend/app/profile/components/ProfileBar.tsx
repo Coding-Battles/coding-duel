@@ -1,12 +1,16 @@
 "use client"
-import { Button } from '@/components/ui/button';
 import { UserStats } from '@/interfaces/UserStats';
-import { authClient, getSession, useSession } from '@/lib/auth-client';
-import { Calendar, Edit, TrendingUp, User } from 'lucide-react'
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
+import { updateUserProfile, useSession, getAvatarUrl } from '@/lib/auth-client';
+import { Edit, Calendar, TrendingUp } from 'lucide-react'
+import React, { useState } from 'react'
+import ImageUploader from '@/components/ImageUploader';
 
-interface ProfileBarProps {
-  id: string;
+interface CustomUser {
+  username?: string;
+  name?: string;
+  image?: string;
+  id?: string;
+  selectedPfp?: number;
 }
 
 const userStats: UserStats = {
@@ -25,56 +29,37 @@ export const ProfileBar = () => {
   const {data: session} = useSession();
   console.log("Session data:", session);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewURL, setPreviewURL] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null); //for displaying messages if needed
   const [editingName, setEditingName] = useState(false);
-  const [newName, setNewName] = useState(session?.user?.name || "");
+  const [newName, setNewName] = useState((session?.user as CustomUser)?.username || session?.user?.name || "");
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewURL(URL.createObjectURL(file));  // generate preview
-
-      const formData = new FormData();
-      formData.append("image", file);
-
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/image/${session?.user.id}`, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          setMessage(`Upload successful: ${data.path}`);
-          if(session) session.user.image = data.path; // update session user image
-        } else {
-          setMessage(`Upload failed: ${data.detail || "Unknown error"}`);
-        }
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        setMessage('Failed to upload image. Please try again.');
-      }
+  const handleUploadSuccess = (imageUrl: string) => {
+    setUploadMessage('Upload successful!');
+    // Update session user image if available
+    if (session?.user) {
+      (session.user as any).image = imageUrl;
     }
-  }
+    // Clear message after 3 seconds
+    setTimeout(() => setUploadMessage(null), 3000);
+  };
+
+  const handleUploadError = (error: string) => {
+    setUploadMessage(`Upload failed: ${error}`);
+    // Clear message after 5 seconds
+    setTimeout(() => setUploadMessage(null), 5000);
+  };
   return (
     <div className="flex items-center space-x-4">
       
-      <div className="w-16 h-16  rounded-full flex items-center justify-center relative">
-        <img
-          src={previewURL ?? session?.user.image ?? "/default-avatar.png"}
-          className="h-full w-full rounded-full object-cover"
-        />
-        <button className='w-full h-full rounded-full absolute opacity-0 hover:opacity-50 bg-white flex items-center justify-center transition cursor-pointer z-30' onClick={() => {(fileInputRef.current?.click())}}>
-          {<Edit/>}
-        </button>
-        <input className='hidden' type="file" accept="image/*" ref={fileInputRef} onChange={handleFileUpload} />
-      </div>
+      <ImageUploader
+        currentImageUrl={getAvatarUrl(session?.user as CustomUser)}
+        onUploadSuccess={handleUploadSuccess}
+        onUploadError={handleUploadError}
+        size="md"
+        shape="circle"
+        userId={session?.user?.id}
+        alt="Profile picture"
+      />
       <div>
         <div className="flex items-center space-x-2">
           {editingName ? (
@@ -84,9 +69,9 @@ export const ProfileBar = () => {
               onChange={(e) => setNewName(e.target.value)}
               onBlur={async () => {
                 setEditingName(false);
-                if (newName && newName !== session?.user?.name || newName !== "") {
-                  await authClient.updateUser({
-                    name: newName,
+                if (newName && newName !== ((session?.user as CustomUser)?.username || session?.user?.name) || newName !== "") {
+                  await updateUserProfile({
+                    username: newName,
                   })
                 }
               }}
@@ -99,12 +84,17 @@ export const ProfileBar = () => {
                 className="text-2xl font-bold text-gray-800 cursor-pointer"
                 onClick={() => setEditingName(true)}
               >
-                {session?.user?.name || "Unknown User"}
+                {(session?.user as CustomUser)?.username || session?.user?.name || "Unknown User"}
               </h1>
               <Edit className="w-4 h-4 text-gray-500 cursor-pointer" onClick={() => setEditingName(true)} />
             </>
           )}
         </div>
+        {uploadMessage && (
+          <p className={`text-sm mt-1 ${uploadMessage.includes('failed') ? 'text-red-500' : 'text-green-500'}`}>
+            {uploadMessage}
+          </p>
+        )}
         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
           <div className="flex items-center space-x-1">
             <Calendar className="w-4 h-4" />

@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import {NightModeButton} from "@/components/NightModeButton";
-import { cookies, headers } from 'next/headers';
-import {auth} from "@/lib/auth";
-import { SessionProvider } from "@/components/SessionProvider";
-
-
+import { NightModeButton } from "@/components/NightModeButton";
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,30 +19,25 @@ export const metadata: Metadata = {
   description: "1v1 coding battles",
 };
 
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const theme = cookieStore.get('theme')?.value || 'light';
-
-  const sessionData = await auth.api.getSession({
-    headers: await headers()
-  })
-
-  const sessionUser = sessionData?.user || null;
-
   return (
-    <html lang="en" className={theme === 'dark' ? 'dark' : ''}>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NightModeButton/>
-        <SessionProvider sessionUser={sessionUser}>
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="system" 
+          enableSystem
+          disableTransitionOnChange
+        >
+          <NightModeButton />
           {children}
-        </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,11 +1,10 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
-import { oneTap } from "better-auth/plugins";
 import { Pool } from "pg";
 
 export const auth = betterAuth({
   database: new Pool({
-    connectionString: process.env.NEXT_PUBLIC_DATABASE_URL,
+    connectionString: process.env.DATABASE_URL,
   }),
 
   advanced: {
@@ -20,14 +19,25 @@ export const auth = betterAuth({
   socialProviders: {
     google: {
       clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
 
-  plugins: [
-    nextCookies(),
-    oneTap({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-    }),
-  ],
+
+  user: {
+    additionalFields: {
+      username: {
+        type: "string",
+        required: false,
+        unique: true,
+      },
+      selectedPfp: {
+        type: "number",
+        required: false,
+        defaultValue: 0,
+      },
+    },
+  },
+
+  plugins: [nextCookies()],
 });

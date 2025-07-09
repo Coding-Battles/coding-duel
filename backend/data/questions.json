@@ -1,7 +1,10 @@
 {
   "questions": [
     {
-      "title": "two-sum"
+      "slug": "two-sum",
+      "id": 1,
+      "title": "Two Sum",
+      "difficulty": "Easy"
     }
   ]
 }

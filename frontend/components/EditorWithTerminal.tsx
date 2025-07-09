@@ -6,7 +6,7 @@ import TestResults, { TestResultsData } from "./TestResults";
 import LanguageSelector from "./LanguageSelector";
 import { Button } from "@/components/ui/button";
 import { Language } from "@/types/languages";
-import { Check, Play } from "lucide-react";
+import { Check, Play, Loader2 } from "lucide-react";
 
 interface EditorWithTerminalProps {
   code?: string;
@@ -20,13 +20,17 @@ interface EditorWithTerminalProps {
   onRun?: () => void;
   onSubmit?: () => void;
   testResults?: TestResultsData;
+  isRunning?: boolean;
+  hasResults?: boolean;
+  onCloseResults?: () => void;
+  disableCopyPaste?: boolean;
 }
 
 export default function EditorWithTerminal({
   code = "# Start typing...",
   onCodeChange,
   language = "python",
-  theme = "vs-dark",
+  theme = "vs",
   className = "",
   onRunCode,
   selectedLanguage = "python",
@@ -34,11 +38,17 @@ export default function EditorWithTerminal({
   onRun,
   onSubmit,
   testResults,
+  isRunning = false,
+  hasResults = false,
+  onCloseResults,
+  disableCopyPaste = false,
 }: EditorWithTerminalProps) {
   return (
-    <div className={`flex flex-col h-full w-full ${className}`}>
+    <div
+      className={`flex flex-col h-full w-full ${className} rounded-lg overflow-hidden shadow-lg`}
+    >
       {/* Editor Header Bar */}
-      <div className="flex items-center justify-between bg-gray-900 border-b border-gray-700 px-4 py-2 min-h-[48px]">
+      <div className="flex items-center justify-between border-b border-slate-300 dark:border-slate-600 px-4 py-3 min-h-[48px] bg-gray-200 dark:bg-gray-800">
         <div className="flex items-center gap-3">
           {onLanguageChange && (
             <LanguageSelector
@@ -54,9 +64,14 @@ export default function EditorWithTerminal({
               onClick={onRun}
               size="sm"
               variant="outline"
-              className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white"
+              className="text-black dark:text-white border-slate-300 dark:border-slate-600 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+              disabled={isRunning}
             >
-              <Play size={14} className="mr-1" />
+              {isRunning ? (
+                <Loader2 size={14} className="mr-1 animate-spin" />
+              ) : (
+                <Play size={14} className="mr-1" />
+              )}
               Run
             </Button>
           )}
@@ -64,9 +79,15 @@ export default function EditorWithTerminal({
             <Button
               onClick={onSubmit}
               size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
+              variant="default"
+              className="bg-green-600 hover:bg-green-700 text-white border-0"
+              disabled={isRunning}
             >
-              <Check size={14} className="mr-1" />
+              {isRunning ? (
+                <Loader2 size={14} className="mr-1 animate-spin" />
+              ) : (
+                <Check size={14} className="mr-1" />
+              )}
               Submit
             </Button>
           )}
@@ -75,18 +96,25 @@ export default function EditorWithTerminal({
 
       {/* Editor and Test Results */}
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="h-[calc(100%-300px)] min-h-0">
+        <div className={hasResults ? "flex-1 min-h-0" : "flex-1"}>
           <CodeEditor
             value={code}
             onChange={onCodeChange}
             language={language}
             theme={theme}
             height="100%"
+            disableCopyPaste={disableCopyPaste}
           />
         </div>
-        <div className="h-[300px] border-t border-gray-700 bg-black">
-          <TestResults testResults={testResults} height="100%" />
-        </div>
+        {hasResults && (
+          <div className="flex-shrink-0 border-t border-slate-600/30">
+            <TestResults
+              testResults={testResults}
+              isRunning={isRunning}
+              onCloseResults={onCloseResults}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

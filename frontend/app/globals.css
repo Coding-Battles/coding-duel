@@ -43,27 +43,26 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-html{
+html {
   height: 100%;
-  
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.65rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
+  --primary: oklch(0.09 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(1 0 0);
+  --secondary-foreground: oklch(0.145 0 0);
+  --muted: oklch(1 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.95 0 0);
+  --accent-foreground: oklch(0.145 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -86,17 +85,17 @@ html{
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary: oklch(0.92 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.145 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.145 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.145 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -123,5 +122,52 @@ html{
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Completely consistent, minimal question styling */
+  .leetcode-example {
+    @apply py-3;
+  }
+  
+  .leetcode-examples-container {
+    @apply space-y-4;
+  }
+  
+  .leetcode-constraints {
+    @apply py-3;
+  }
+  
+  .leetcode-constraints ul {
+    @apply space-y-1.5 mt-2;
+  }
+  
+  .leetcode-code {
+    @apply bg-slate-100/30 dark:bg-slate-800/30 px-1 py-0.5 rounded font-mono text-sm;
+  }
+  
+  .leetcode-heading {
+    @apply font-semibold mb-2;
+  }
+  
+  .leetcode-input-output {
+    @apply font-mono text-sm space-y-1.5;
+  }
+  
+  .leetcode-explanation {
+    @apply mt-2;
+  }
+  
+  .leetcode-difficulty-easy {
+    @apply text-green-600 dark:text-green-400 text-sm font-medium;
+  }
+  
+  .leetcode-difficulty-medium {
+    @apply text-amber-600 dark:text-amber-400 text-sm font-medium;
+  }
+  
+  .leetcode-difficulty-hard {
+    @apply text-red-600 dark:text-red-400 text-sm font-medium;
   }
 }

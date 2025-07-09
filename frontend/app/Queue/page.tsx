@@ -4,17 +4,35 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useGameContext } from "./layout";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { FileQuestion } from "lucide-react";
+import { FileQuestion, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession, getAvatarUrl } from "@/lib/auth-client";
+import Image from "next/image";
+
+interface CustomUser {
+  username?: string;
+  name?: string;
+  image?: string;
+  id?: string;
+  selectedPfp?: number;
+}
 
 export default function QueueLayout() {
   const context = useGameContext();
+  const { data: session } = useSession();
   const [key, setKey] = useState(0); //used to loop the type animation
   const [timer, setTimer] = useState(0);
 
   const [playerFound, setPlayerFound] = useState(false);
 
   const router = useRouter();
+
+  // Helper function to get user avatar with proper fallbacks
+  const getUserAvatar = () => {
+    // Try context user first, then session user
+    const user = context?.user || (session?.user as CustomUser);
+    return getAvatarUrl(user);
+  };
 
   if (!context) {
     return (
@@ -110,21 +128,44 @@ export default function QueueLayout() {
 
       <div className="flex gap-8 mt-[100px]">
         <div className="flex flex-col items-center justify-center p-6 border-2 w-[170px] rounded-lg">
-          <img
-            src={context.user.image_url || undefined}
-            alt="Player Image"
-            className="w-24 h-24 mb-4 border-2 border-gray-300"
+          <Image
+            src={getUserAvatar()}
+            alt={`${(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "User"} Image`}
+            width={96}
+            height={96}
+            className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full object-cover"
           />
-          <h1 className="text-2xl font-bold">Username1</h1>
+          <h1 className="text-2xl font-bold">
+            {(() => {
+              console.log('=== QUEUE PAGE DISPLAY DEBUG ===');
+              console.log('context?.user?.username:', (context?.user as CustomUser)?.username);
+              console.log('context?.user?.name:', context?.user?.name);
+              console.log('session?.user?.username:', (session?.user as CustomUser)?.username);
+              console.log('session?.user?.name:', session?.user?.name);
+              const displayName = (context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
+              console.log('Final display name:', displayName);
+              return displayName;
+            })()}
+          </h1>
         </div>
 
         <div className="flex flex-col items-center justify-center p-6 border-2 rounded-lg w-[170px]">
-          {opponent.image_url ? 
-            <img src={opponent.image_url} alt="Opponent Image" className="w-24 h-24 mb-4 border-2 border-gray-300"/> 
-            : 
-            <FileQuestion className="w-8 h-8 text-gray-500" />
-          }
-          <h1 className="text-2xl font-bold">{opponent.name? opponent.name : "Finding"}</h1>
+          {opponent.image_url ? (
+            <Image
+              src={opponent.image_url}
+              alt={`${opponent.name || "Opponent"} Image`}
+              width={96}
+              height={96}
+              className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full bg-gray-100 flex items-center justify-center">
+              <FileQuestion className="w-8 h-8 text-gray-500" />
+            </div>
+          )}
+          <h1 className="text-2xl font-bold">
+            {opponent.name ? opponent.name : "Finding"}
+          </h1>
         </div>
       </div>
     </div>

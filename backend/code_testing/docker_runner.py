@@ -71,7 +71,7 @@ def get_persistent_container(language: str):
             name=container_name,
             detach=True,
             mem_limit=config.get("mem_limit", "128m"),
-            nano_cpus=500000000,  # 0.5 CPU core
+            nano_cpus=300000000,  # 0.3 CPU core
             network_mode="none",
             security_opt=["no-new-privileges:true"],
             working_dir="/tmp",
@@ -93,6 +93,9 @@ def run_code_in_docker(
 
     start_time = time.time()
     print(f"🐛 [DOCKER DEBUG] Starting {request.language} execution")
+    print(f"🐛 [DOCKER DEBUG] Function name: {request.function_name}")
+    print(f"🐛 [DOCKER DEBUG] Raw request.function_name: {repr(request.function_name)}")
+    print(f"🐛 [DOCKER DEBUG] Request language: {repr(request.language)}")
 
     try:
         config = LANGUAGE_CONFIG.get(request.language)
@@ -106,7 +109,17 @@ def run_code_in_docker(
         print(f"🐛 [DOCKER DEBUG] Getting container took {container_time:.0f}ms")
 
         # Prepare code with wrapper template
-        wrapped_code = config["wrapper_template"].format(code=request.code, imports="")
+        print(f"🐛 [DOCKER DEBUG] About to format wrapper template for {request.language}")
+        try:
+            wrapped_code = config["wrapper_template"].format(
+                code=request.code, 
+                imports="",
+                function_name=request.function_name
+            )
+            print(f"🐛 [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
+        except Exception as e:
+            print(f"🐛 [DOCKER DEBUG] Exception formatting wrapper: {e}")
+            raise
 
         # Determine filename
         if request.language == "java":
@@ -134,24 +147,43 @@ def run_code_in_docker(
                 "execution_time": (time.time() - start_time) * 1000,
                 "error": f"Failed to create file: {create_result.output.decode('utf-8')}",
             }
+            
+        print(f"🐛 [DOCKER DEBUG] File created successfully, proceeding to build commands...")
 
         # Build command sequence
         commands = []
+        print(f"🐛 [DOCKER DEBUG] Building commands...")
 
         # Add compilation step if needed
         if "compile_command" in config:
             compile_cmd = config["compile_command"].format(filename=filename)
             commands.append(compile_cmd)
+            print(f"🐛 [DOCKER DEBUG] Added compile command: {compile_cmd}")
 
         # Add run command
         if request.language == "java":
             run_command = config["run_command"]
         else:
             run_command = config["run_command"].format(filename=filename)
+        
+        print(f"🐛 [DOCKER DEBUG] Base run command: {run_command}")
 
-        # Pass input as command line argument
-        input_json = json.dumps(request.test_input).replace('"', '\\"')
-        run_command += f' "{input_json}"'
+        # Pass arguments based on language
+        print(f"🐛 [DOCKER DEBUG] About to check language condition: {request.language} in ['python', 'javascript']")
+        if request.language in ["python", "javascript"]:
+            print(f"🐛 [DOCKER DEBUG] ENTERING PYTHON/JS BRANCH")
+            # For Python and JavaScript, pass function name and input as separate arguments
+            function_name = getattr(request, 'function_name', 'solution')
+            print(f"🐛 [DOCKER DEBUG] Raw function_name from request: {repr(function_name)}")
+            print(f"🐛 [DOCKER DEBUG] Type of function_name: {type(function_name)}")
+            print(f"🐛 [DOCKER DEBUG] Function name for {request.language}: {function_name}")
+            input_json = json.dumps(request.test_input).replace('"', '\\"')
+            run_command += f' "{function_name}" "{input_json}"'
+            print(f"🐛 [DOCKER DEBUG] Run command after args: {run_command}")
+        else:
+            # For other languages (Java, C++), pass input as single argument
+            input_json = json.dumps(request.test_input).replace('"', '\\"')
+            run_command += f' "{input_json}"'
 
         commands.append(run_command)
 
@@ -159,6 +191,9 @@ def run_code_in_docker(
         exec_start = time.time()
         full_command = " && ".join(commands)
         print(f"🐛 [DOCKER DEBUG] Executing: {full_command}")
+        print(f"🐛 [DOCKER DEBUG] Request function_name: {getattr(request, 'function_name', 'NOT SET')}")
+        import sys
+        sys.stdout.flush()
 
         exec_result = container.exec_run(f"sh -c '{full_command}'", workdir="/tmp")
 
@@ -173,6 +208,7 @@ def run_code_in_docker(
                 logs = exec_result.output.decode("utf-8")
 
                 # Find JSON output line
+                print(f"🐛 [DOCKER DEBUG] Raw logs: {logs}")
                 output_lines = [
                     line.strip() for line in logs.strip().split("\n") if line.strip()
                 ]
@@ -180,6 +216,7 @@ def run_code_in_docker(
                 for line in reversed(output_lines):
                     try:
                         output_data = json.loads(line)
+                        print(f"🐛 [DOCKER DEBUG] Parsed JSON: {output_data}")
                         if isinstance(output_data, dict) and "result" in output_data:
                             return {
                                 "success": True,
@@ -217,6 +254,10 @@ def run_code_in_docker(
 
     except Exception as e:
         execution_time = (time.time() - start_time) * 1000
+        print(f"🐛 [DOCKER DEBUG] MAIN EXCEPTION CAUGHT: {str(e)}")
+        print(f"🐛 [DOCKER DEBUG] Exception type: {type(e)}")
+        import traceback
+        print(f"🐛 [DOCKER DEBUG] Traceback: {traceback.format_exc()}")
         return {
             "success": False,
             "output": None,

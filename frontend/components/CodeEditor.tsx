@@ -10,6 +10,7 @@ interface CodeEditorProps {
   height?: string;
   width?: string;
   className?: string;
+  disableCopyPaste?: boolean;
 }
 
 export default function CodeEditor({
@@ -20,6 +21,7 @@ export default function CodeEditor({
   height = "100%",
   width = "100%",
   className = "",
+  disableCopyPaste = false,
 }: CodeEditorProps) {
   return (
     <div className={className} style={{ height, width }}>
@@ -45,6 +47,19 @@ export default function CodeEditor({
           folding: true,
           lineDecorationsWidth: 0,
           lineNumbersMinChars: 3,
+          contextmenu: !disableCopyPaste,
+          quickSuggestions: !disableCopyPaste,
+          suggestOnTriggerCharacters: !disableCopyPaste,
+          parameterHints: { enabled: !disableCopyPaste },
+          wordBasedSuggestions: "off",
+        }}
+        onMount={(editor, monaco) => {
+          if (disableCopyPaste) {
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, () => {});
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => {});
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, () => {});
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyA, () => {});
+          }
         }}
       />
     </div>

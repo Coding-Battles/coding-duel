@@ -1,7 +1,13 @@
-'use client';
+"use client";
 
-import { Language, SUPPORTED_LANGUAGES } from '@/types/languages';
-import { ChevronDown } from 'lucide-react';
+import { Language, SUPPORTED_LANGUAGES } from "@/types/languages";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface LanguageSelectorProps {
   selectedLanguage: Language;
@@ -12,27 +18,32 @@ interface LanguageSelectorProps {
 export default function LanguageSelector({
   selectedLanguage,
   onLanguageChange,
-  className = ''
+  className = "",
 }: LanguageSelectorProps) {
   const languages = Object.keys(SUPPORTED_LANGUAGES) as Language[];
 
   return (
-    <div className={`relative ${className}`}>
-      <select
-        value={selectedLanguage}
-        onChange={(e) => onLanguageChange(e.target.value as Language)}
-        className="appearance-none bg-transparent border-2 border-gray-400 text-gray-700 hover:border-gray-600 hover:bg-gray-100 px-4 py-2 pr-8 rounded cursor-pointer focus:outline-none focus:border-blue-500 min-w-[120px]"
+    <Select value={selectedLanguage} onValueChange={onLanguageChange}>
+      <SelectTrigger
+        className={`${className} text-black dark:text-white border-slate-300 dark:border-slate-600 hover:bg-gray-300 dark:hover:bg-gray-700 bg-white dark:bg-gray-700 [&_svg]:text-black [&_svg]:dark:text-white cursor-pointer`}
+        size="sm"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent
+        className="text-black dark:text-white border-slate-300 dark:border-slate-600 bg-white dark:bg-gray-700"
       >
         {languages.map((language) => (
-          <option key={language} value={language}>
+          <SelectItem
+            key={language}
+            value={language}
+            className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:text-black dark:focus:text-white cursor-pointer [&_svg]:text-black [&_svg]:dark:text-white"
+          >
             {SUPPORTED_LANGUAGES[language].displayName}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-        <ChevronDown size={16} className="text-gray-500" />
-      </div>
-    </div>
+      </SelectContent>
+    </Select>
   );
 }
 

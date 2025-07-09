@@ -11,6 +11,13 @@ import {
 import { signInWithGoogle, signOut, useSession } from "@/lib/auth-client";
 import { ReactNode } from "react";
 
+interface CustomUser {
+  username?: string;
+  name?: string;
+  email?: string;
+  selectedPfp?: number;
+}
+
 interface LoginDialogProps {
   children: ReactNode;
 }
@@ -43,7 +50,7 @@ export function LoginDialog({ children }: LoginDialogProps) {
           <div className="grid gap-4 py-4">
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Signed in as</p>
-              <p className="font-medium">{session.user.name}</p>
+              <p className="font-medium">{(session.user as CustomUser)?.username || session.user.name}</p>
               <p className="text-sm text-muted-foreground">
                 {session.user.email}
               </p>
