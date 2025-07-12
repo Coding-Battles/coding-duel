@@ -1,7 +1,7 @@
 "use client";
 import TypeIt from "typeit-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useGameContext } from "./layout";
+import { useGameContext } from "../layout";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { FileQuestion, User } from "lucide-react";
@@ -56,7 +56,7 @@ export default function QueueLayout() {
   return (
     <div className="flex h-[100%] w-[100%] items-center justify-center flex-col">
       <Card className="mt-16 bg-gray-900 border-gray-800 shadow-2xl animate-float">
-        <div className="bg-gray-800 px-4 py-3 flex items-center justify-between rounded-t-lg">
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-800 rounded-t-lg">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-full" />
             <div className="w-3 h-3 bg-yellow-500 rounded-full" />
@@ -65,7 +65,7 @@ export default function QueueLayout() {
           <div className="flex items-center gap-4 text-sm">
             <span className="text-gray-400">
               Time:{" "}
-              <span className="text-white font-mono">
+              <span className="font-mono text-white">
                 {Math.floor(timer / 60)}:{timer % 60 < 10 && 0}
                 {timer % 60}
               </span>
@@ -73,14 +73,14 @@ export default function QueueLayout() {
             {!playerFound ? (
               <Badge
                 variant="outline"
-                className="border-yellow-500 text-yellow-400"
+                className="text-yellow-400 border-yellow-500"
               >
                 Finding Opponent...
               </Badge>
             ) : (
               <Badge
                 variant="outline"
-                className="border-green-500 text-green-400"
+                className="text-green-400 border-green-500"
               >
                 Opponent Found
               </Badge>
@@ -115,7 +115,7 @@ export default function QueueLayout() {
                     .type('<span style="color: orange;">Player Found!</span>')
                     .pause(2000)
                     .exec(() => {
-                      router.push("/queue/in-game");
+                      router.push("/game-setup/queue/in-game");
                     });
                   return instance;
                 }}
@@ -133,7 +133,7 @@ export default function QueueLayout() {
             alt={`${(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "User"} Image`}
             width={96}
             height={96}
-            className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full object-cover"
+            className="object-cover w-24 h-24 mb-4 border-2 border-gray-300 rounded-full"
           />
           <h1 className="text-2xl font-bold">
             {(() => {
@@ -156,10 +156,10 @@ export default function QueueLayout() {
               alt={`${opponent.name || "Opponent"} Image`}
               width={96}
               height={96}
-              className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full object-cover"
+              className="object-cover w-24 h-24 mb-4 border-2 border-gray-300 rounded-full"
             />
           ) : (
-            <div className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full bg-gray-100 flex items-center justify-center">
+            <div className="flex items-center justify-center w-24 h-24 mb-4 bg-gray-100 border-2 border-gray-300 rounded-full">
               <FileQuestion className="w-8 h-8 text-gray-500" />
             </div>
           )}

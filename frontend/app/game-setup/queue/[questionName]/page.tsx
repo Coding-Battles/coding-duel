@@ -6,7 +6,7 @@ import { Language, getLanguageConfig } from "@/types/languages";
 import { TestResultsData } from "@/components/TestResults";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef } from "react";
-import { useGameContext } from "../layout";
+import { useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
@@ -45,6 +45,8 @@ export default function InGamePage() {
   type AlertType = { id: string; message: string; variant?: string };
   const [alerts, setAlerts] = React.useState<AlertType[]>([]);
   const timeRef = useRef<number>(0);
+
+  console.log(testResults)
 
   // Initialize timer
   useEffect(() => {
@@ -356,13 +358,13 @@ export default function InGamePage() {
   };
 
   return (
-    <div className="flex h-screen w-screen">
+    <div className="flex w-screen h-screen">
       <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
 
       {!gameFinished ? (
-        <div className="flex h-full w-full">
+        <div className="flex w-full h-full">
           {/* Left Column - Question */}
-          <div className="w-1/3 border-r overflow-y-auto">
+          <div className="w-1/3 overflow-y-auto border-r">
             <div className="p-4">
               {questionData ? (
                 <div className="space-y-4">
@@ -375,7 +377,7 @@ export default function InGamePage() {
                     </span>
                   </div>
                   <div
-                    className="prose prose-sm max-w-none text-sm"
+                    className="text-sm prose-sm prose max-w-none"
                     dangerouslySetInnerHTML={{
                       __html: transformLeetCodeHtml(
                         questionData.description_html
@@ -412,11 +414,11 @@ export default function InGamePage() {
           </div>
 
           {/* Right Column - DuelInfo */}
-          <div className="w-1/4 border-l overflow-y-auto">
+          <div className="w-1/4 overflow-y-auto border-l">
             <div className="p-4">
               {/* Permanent opponent status display */}
               {opponentStatus && (
-                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
                   <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
                     {opponentStatus}
                   </p>
