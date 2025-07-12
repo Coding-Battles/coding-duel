@@ -37,7 +37,7 @@ export default function QueueLayout() {
   if (!context) {
     return (
       <div className="flex h-[100%] w-[100%] items-center justify-center">
-        <p className="text-red-500">Game context is not available.</p>
+        <p className="text-error">Game context is not available.</p>
       </div>
     );
   }
@@ -55,17 +55,17 @@ export default function QueueLayout() {
   const { socket, loading, opponent } = context;
   return (
     <div className="flex h-[100%] w-[100%] items-center justify-center flex-col">
-      <Card className="mt-16 bg-gray-900 border-gray-800 shadow-2xl animate-float">
-        <div className="bg-gray-800 px-4 py-3 flex items-center justify-between rounded-t-lg">
+      <Card className="mt-16 bg-background border-foreground/20 shadow-2xl animate-float">
+        <div className="bg-foreground/10 px-4 py-3 flex items-center justify-between rounded-t-lg">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full" />
-            <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-            <div className="w-3 h-3 bg-green-500 rounded-full" />
+            <div className="w-3 h-3 bg-error rounded-full" />
+            <div className="w-3 h-3 bg-accent rounded-full" />
+            <div className="w-3 h-3 bg-success rounded-full" />
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className="text-gray-400">
+            <span className="text-foreground/60">
               Time:{" "}
-              <span className="text-white font-mono">
+              <span className="text-foreground font-mono">
                 {Math.floor(timer / 60)}:{timer % 60 < 10 && 0}
                 {timer % 60}
               </span>
@@ -73,14 +73,14 @@ export default function QueueLayout() {
             {!playerFound ? (
               <Badge
                 variant="outline"
-                className="border-yellow-500 text-yellow-400"
+                className="border-accent text-accent"
               >
                 Finding Opponent...
               </Badge>
             ) : (
               <Badge
                 variant="outline"
-                className="border-green-500 text-green-400"
+                className="border-success text-success"
               >
                 Opponent Found
               </Badge>
@@ -88,9 +88,9 @@ export default function QueueLayout() {
           </div>
         </div>
         <CardContent className="p-6 font-mono text-sm">
-          <div className="ml-4 text-purple-400">
-            const <span className="text-white">Status</span> ={" "}
-            <span className="text-orange-400">"</span>
+          <div className="ml-4 text-accent">
+            const <span className="text-foreground">Status</span> ={" "}
+            <span className="text-accent">"</span>
             {!playerFound ? (
               <TypeIt
                 key={key} // use key to reset TypeIt instance
@@ -121,7 +121,7 @@ export default function QueueLayout() {
                 }}
               />
             )}
-            <span className="text-orange-400">"</span>
+            <span className="text-accent">"</span>
           </div>
         </CardContent>
       </Card>
@@ -133,7 +133,7 @@ export default function QueueLayout() {
             alt={`${(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "User"} Image`}
             width={96}
             height={96}
-            className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full object-cover"
+            className="w-24 h-24 mb-4 border-2 border-foreground/30 rounded-full object-cover"
           />
           <h1 className="text-2xl font-bold">
             {(() => {
@@ -156,11 +156,11 @@ export default function QueueLayout() {
               alt={`${opponent.name || "Opponent"} Image`}
               width={96}
               height={96}
-              className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full object-cover"
+              className="w-24 h-24 mb-4 border-2 border-foreground/30 rounded-full object-cover"
             />
           ) : (
-            <div className="w-24 h-24 mb-4 border-2 border-gray-300 rounded-full bg-gray-100 flex items-center justify-center">
-              <FileQuestion className="w-8 h-8 text-gray-500" />
+            <div className="w-24 h-24 mb-4 border-2 border-foreground/30 rounded-full bg-foreground/10 flex items-center justify-center">
+              <FileQuestion className="w-8 h-8 text-foreground/50" />
             </div>
           )}
           <h1 className="text-2xl font-bold">

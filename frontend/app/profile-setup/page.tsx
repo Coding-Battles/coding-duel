@@ -23,10 +23,10 @@ export default function ProfileSetupPage() {
   // Show loading state while session is being fetched
   if (isPending) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-300">Loading...</p>
+          <p className="text-foreground/70">Loading...</p>
         </div>
       </div>
     );
@@ -61,13 +61,13 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-6 py-20">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Create Your Profile
           </h1>
-          <p className="text-gray-300 text-lg">
+          <p className="text-foreground/70 text-lg">
             Choose your username and avatar to get started
           </p>
         </div>
@@ -86,7 +86,7 @@ export default function ProfileSetupPage() {
           
           {isSaving && (
             <div className="text-center mt-4">
-              <p className="text-gray-400">Saving your profile...</p>
+              <p className="text-foreground/60">Saving your profile...</p>
             </div>
           )}
         </div>

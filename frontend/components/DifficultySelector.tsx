@@ -93,17 +93,9 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                            transition-all duration-200 hover:transform hover:-translate-y-0.5 min-h-[120px]
                            ${
                              selectedDifficulties[diff.key]
-                               ? "border-2 border-transparent bg-gradient-to-br from-muted via-background to-muted shadow-xl shadow-primary/20 ring-2 ring-primary/30"
-                               : "bg-gradient-to-br from-muted via-muted/80 to-muted border-2 border-border/50 shadow-lg hover:shadow-xl hover:from-muted/90 hover:to-muted/90 hover:border-border"
+                               ? "border-2 border-selected bg-selected/10 shadow-xl ring-2 ring-selected/30"
+                               : "bg-background border-2 border-foreground/20 shadow-lg hover:shadow-xl hover:border-foreground/40"
                            }`}
-                style={
-                  selectedDifficulties[diff.key]
-                    ? {
-                        background:
-                          "linear-gradient(135deg, hsl(var(--muted)), hsl(var(--background)), hsl(var(--muted))) padding-box, linear-gradient(to right, rgb(251 191 36), rgb(251 146 60), rgb(248 113 113)) border-box",
-                      }
-                    : {}
-                }
               >
                 {/* Checkbox indicator */}
                 <div className="absolute top-3 left-3">
@@ -111,7 +103,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                     className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200
                               ${
                                 selectedDifficulties[diff.key]
-                                  ? "bg-orange-500 border-orange-500 text-white"
+                                  ? "bg-selected border-selected text-background"
                                   : "border-muted-foreground bg-transparent"
                               }`}
                   >

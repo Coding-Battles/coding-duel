@@ -22,19 +22,19 @@ interface UserStatsAndHistoryProps {
 
 const getDifficultyColor = (difficulty: string): string => {
   switch (difficulty) {
-    case 'Easy': return 'text-green-600 bg-green-100';
-    case 'Medium': return 'text-yellow-600 bg-yellow-100';
-    case 'Hard': return 'text-red-600 bg-red-100';
-    default: return 'text-gray-600 bg-gray-100';
+    case 'Easy': return 'text-success bg-success/10';
+    case 'Medium': return 'text-accent bg-accent/10';
+    case 'Hard': return 'text-error bg-error/10';
+    default: return 'text-foreground/60 bg-foreground/10';
   }
 };
 
 const getStatusIcon = (result: string) => {
   switch (result) {
-    case 'won': return <CheckCircle className="w-4 h-4 text-green-600" />;
-    case 'lost': return <XCircle className="w-4 h-4 text-red-600" />;
-    case 'tie': return <Circle className="w-4 h-4 text-yellow-600" />;
-    default: return <Circle className="w-4 h-4 text-gray-400" />;
+    case 'won': return <CheckCircle className="w-4 h-4 text-success" />;
+    case 'lost': return <XCircle className="w-4 h-4 text-error" />;
+    case 'tie': return <Circle className="w-4 h-4 text-accent" />;
+    default: return <Circle className="w-4 h-4 text-foreground/40" />;
   }
 };
 
@@ -58,18 +58,18 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
   {/* Stats Panel */}
   <div className="lg:col-span-1">
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Statistics</h2>
+    <div className="bg-background rounded-lg shadow-md p-6 mb-6">
+      <h2 className="text-lg font-semibold text-foreground mb-4">Statistics</h2>
       
       {/* Total Solved */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">Total Battles</span>
-          <span className="font-bold text-2xl text-gray-800">{totalBattles}</span>
+          <span className="text-foreground/60">Total Battles</span>
+          <span className="font-bold text-2xl text-foreground">{totalBattles}</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-foreground/20 rounded-full h-2">
           <div 
-            className="bg-green-600 h-2 rounded-full" 
+            className="bg-success h-2 rounded-full" 
             style={{ width: `${totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0}%` }}
           ></div>
         </div>
@@ -78,15 +78,15 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
       {/* Difficulty Breakdown */}
       <div className="space-y-3 mb-6">
         <div className="flex justify-between items-center">
-          <span className="text-green-600 font-medium">Easy</span>
+          <span className="text-success font-medium">Easy</span>
           <span className="font-semibold">?</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-yellow-600 font-medium">Medium</span>
+          <span className="text-accent font-medium">Medium</span>
           <span className="font-semibold">?</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-red-600 font-medium">Hard</span>
+          <span className="text-error font-medium">Hard</span>
           <span className="font-semibold">?</span>
         </div>
       </div>
@@ -94,49 +94,49 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
       {/* Additional Stats */}
       <div className="border-t pt-4 space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">Win Rate</span>
-          <span className="font-semibold text-green-600">{totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0}%</span>
+          <span className="text-foreground/60">Win Rate</span>
+          <span className="font-semibold text-success">{totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0}%</span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">Wins</span>
-          <span className="font-semibold text-green-600">{totalWins}</span>
+          <span className="text-foreground/60">Wins</span>
+          <span className="font-semibold text-success">{totalWins}</span>
         </div>
       </div>
     </div>
   </div>
   <div className="lg:col-span-2">
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Submissions</h2>
+    <div className="bg-background rounded-lg shadow-md p-6">
+      <h2 className="text-lg font-semibold text-foreground mb-4">Recent Submissions</h2>
       <div className="space-y-3">
         {userGameHistory.length > 0 && (
           <>
             {userGameHistory[selectedIndex].map((game, index) => (
-              <div key={game.game_id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors h-auto">
+              <div key={game.game_id} className="border rounded-lg p-4 hover:bg-foreground/5 transition-colors h-auto">
                 <div className='w-full absolute h-[70px] bg-transparent cursor-pointer' onClick={() => onClickExpand(index)} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {getStatusIcon(game.result)}
                     <div>
-                      <h3 className="font-medium text-gray-800">Game #{game.game_id}</h3>
+                      <h3 className="font-medium text-foreground">Game #{game.game_id}</h3>
                       <div className="flex items-center space-x-2 mt-1">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          game.result === 'won' ? 'text-green-600 bg-green-100' :
-                          game.result === 'lost' ? 'text-red-600 bg-red-100' :
-                          'text-yellow-600 bg-yellow-100'
+                          game.result === 'won' ? 'text-success bg-success/10' :
+                          game.result === 'lost' ? 'text-error bg-error/10' :
+                          'text-accent bg-accent/10'
                         }`}>
                           {game.result.toUpperCase()}
                         </span>
-                        <span className="text-xs text-gray-500">{game.participants.length} players</span>
+                        <span className="text-xs text-foreground/50">{game.participants.length} players</span>
                       </div>
-                      <div className="mt-2 text-sm text-gray-600">
+                      <div className="mt-2 text-sm text-foreground/60">
                         <p>Your time: {game.user_time}ms</p>
                         <p>Best opponent: {game.opponent_best_time}ms</p>
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="flex items-center space-x-1 text-sm text-gray-500">
+                    <div className="flex items-center space-x-1 text-sm text-foreground/50">
                       <Clock className="w-4 h-4" />
                       <span>Recently played</span>
                     </div>
@@ -157,8 +157,8 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
             key={index}
             className={`px-3 py-1 text-sm font-medium transition-colors cursor-pointer ${
               selectedIndex === index
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-accent text-background'
+                : 'bg-foreground/10 text-foreground/70 hover:bg-foreground/20'
             }`}
             onClick={() => {
               setSelectedIndex(index);

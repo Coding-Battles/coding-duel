@@ -212,9 +212,9 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
                 {isCheckingUsername ? (
                   <div className="w-4 h-4 border-2 border-ring border-t-transparent rounded-full animate-spin" />
                 ) : usernameAvailable === true ? (
-                  <span className="text-green-500 text-xl">✓</span>
+                  <span className="text-success text-xl">✓</span>
                 ) : usernameAvailable === false ? (
-                  <span className="text-red-500 text-xl">✗</span>
+                  <span className="text-error text-xl">✗</span>
                 ) : null}
               </div>
             )}

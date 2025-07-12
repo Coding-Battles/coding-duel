@@ -25,19 +25,19 @@ export default function LanguageSelector({
   return (
     <Select value={selectedLanguage} onValueChange={onLanguageChange}>
       <SelectTrigger
-        className={`${className} text-black dark:text-white border-slate-300 dark:border-slate-600 hover:bg-gray-300 dark:hover:bg-gray-700 bg-white dark:bg-gray-700 [&_svg]:text-black [&_svg]:dark:text-white cursor-pointer`}
+        className={`${className} text-foreground border-foreground/20 hover:bg-foreground/10 bg-background [&_svg]:text-foreground cursor-pointer`}
         size="sm"
       >
         <SelectValue />
       </SelectTrigger>
       <SelectContent
-        className="text-black dark:text-white border-slate-300 dark:border-slate-600 bg-white dark:bg-gray-700"
+        className="text-foreground border-foreground/20 bg-background"
       >
         {languages.map((language) => (
           <SelectItem
             key={language}
             value={language}
-            className="text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:text-black dark:focus:text-white cursor-pointer [&_svg]:text-black [&_svg]:dark:text-white"
+            className="text-foreground hover:bg-foreground/5 focus:bg-foreground/5 focus:text-foreground cursor-pointer [&_svg]:text-foreground"
           >
             {SUPPORTED_LANGUAGES[language].displayName}
           </SelectItem>

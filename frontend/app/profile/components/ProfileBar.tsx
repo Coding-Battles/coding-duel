@@ -75,27 +75,27 @@ export const ProfileBar = () => {
                   })
                 }
               }}
-              className="text-2xl font-bold border-b border-gray-300 outline-none"
+              className="text-2xl font-bold border-b border-foreground/30 outline-none bg-transparent text-foreground"
               autoFocus
             />
           ) : (
             <>
               <h1
-                className="text-2xl font-bold text-gray-800 cursor-pointer"
+                className="text-2xl font-bold text-foreground cursor-pointer"
                 onClick={() => setEditingName(true)}
               >
                 {(session?.user as CustomUser)?.username || session?.user?.name || "Unknown User"}
               </h1>
-              <Edit className="w-4 h-4 text-gray-500 cursor-pointer" onClick={() => setEditingName(true)} />
+              <Edit className="w-4 h-4 text-foreground/50 cursor-pointer" onClick={() => setEditingName(true)} />
             </>
           )}
         </div>
         {uploadMessage && (
-          <p className={`text-sm mt-1 ${uploadMessage.includes('failed') ? 'text-red-500' : 'text-green-500'}`}>
+          <p className={`text-sm mt-1 ${uploadMessage.includes('failed') ? 'text-error' : 'text-success'}`}>
             {uploadMessage}
           </p>
         )}
-        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+        <div className="flex items-center space-x-4 mt-2 text-sm text-foreground/50">
           <div className="flex items-center space-x-1">
             <Calendar className="w-4 h-4" />
             <span>Joined Jan 2023</span>

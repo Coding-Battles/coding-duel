@@ -199,7 +199,7 @@ export default function InGamePage() {
   if (error) {
     return (
       <div className="flex h-[100%] w-[100%] items-center justify-center">
-        <div className="text-red-500">Error: {error}</div>
+        <div className="text-error">Error: {error}</div>
       </div>
     );
   }
@@ -416,8 +416,8 @@ export default function InGamePage() {
             <div className="p-4">
               {/* Permanent opponent status display */}
               {opponentStatus && (
-                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                <div className="mb-4 p-3 bg-accent/10 border border-accent/20 rounded-lg">
+                  <p className="text-sm font-medium text-accent">
                     {opponentStatus}
                   </p>
                 </div>

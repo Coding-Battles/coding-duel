@@ -39,7 +39,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
   
   return (
     <div className="flex flex-col items-center justify-center h-[100%] w-[100%]">
-      <div className="border-2 borde-gray-300 shadow-xl px-4 pt-2 pb-8 text-xs w-auto h-[300px] rounded-xl">
+      <div className="border-2 border-foreground/30 shadow-xl px-4 pt-2 pb-8 text-xs w-auto h-[300px] rounded-xl">
         <div className="grid grid-cols-3 gap-4 w-full mt-2 font-bold">
           <span className="text-xs justify-self-start">{winnerStats.player_name}</span>
           <span className="text-lg justify-self-center">Stats</span>
@@ -65,28 +65,28 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
         </div>
       </div>
       <div className="flex gap-4 mt-[100px]">
-        <div className="flex flex-col items-center justify-center p-6 border-2 border-green-300 rounded-lg">
+        <div className="flex flex-col items-center justify-center p-6 border-2 border-success rounded-lg">
           <img
             src={winnerImage}
             alt="winnerImage"
-            className="w-24 h-24 mb-4 border-2 border-gray-300"
+            className="w-24 h-24 mb-4 border-2 border-foreground/30"
           />
           <span className="text-xs font-bold">{winnerStats.player_name}</span>
           <h1 className="text-2xl font-bold">Winner</h1>
         </div>
 
-        <div className="flex flex-col items-center justify-center p-6 border-2 border-red-300 rounded-lg">
+        <div className="flex flex-col items-center justify-center p-6 border-2 border-error rounded-lg">
           <img
             src={loserImage}
             alt="loserImage"
-            className="w-24 h-24 mb-4 border-2 border-gray-300"
+            className="w-24 h-24 mb-4 border-2 border-foreground/30"
           />
           <span className="text-xs font-bold">{loserStats.player_name}</span>
           <h1 className="text-2xl font-bold">Loser</h1>
         </div>
       </div>
       <div className="mt-12">
-        <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={() => {router.push("/")}}>
+        <button className="px-4 py-2 bg-accent text-background rounded hover:bg-accent/80" onClick={() => {router.push("/")}}>
           Go back to main menu
         </button>
       </div>

@@ -52,9 +52,12 @@ export default function GameSetupPage() {
     if (!session?.user) return;
 
     // Initialize socket connection
-    socket.current = io(process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", {
-      transports: ["websocket"],
-    });
+    socket.current = io(
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+      {
+        transports: ["websocket"],
+      }
+    );
 
     // Event handlers
     const handleMatchFound = (data: MatchFoundResponse) => {
@@ -84,10 +87,10 @@ export default function GameSetupPage() {
   // Show loading state while session is being fetched
   if (isPending) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-300">Loading...</p>
+          <p className="text-foreground/70">Loading...</p>
         </div>
       </div>
     );
@@ -124,15 +127,8 @@ export default function GameSetupPage() {
     Object.values(selectedDifficulties).some(Boolean);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="container mx-auto px-6 py-20">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Game Setup</h1>
-          <p className="text-gray-300 text-lg">
-            Choose your preferred difficulty levels
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+      <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto">
           <DifficultySelector
             selectedDifficulties={selectedDifficulties}

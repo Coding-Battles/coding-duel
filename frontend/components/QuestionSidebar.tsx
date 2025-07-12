@@ -46,24 +46,24 @@ export function QuestionSidebar({ questionName }: QuestionSidebarProps) {
 
   if (loading) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-white border-l border-gray-200">
-        <div className="text-gray-500">Loading question...</div>
+      <div className="h-full w-full flex items-center justify-center bg-background border-l border-foreground/20">
+        <div className="text-foreground/50">Loading question...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-white border-l border-gray-200">
-        <div className="text-red-500">Error: {error}</div>
+      <div className="h-full w-full flex items-center justify-center bg-background border-l border-foreground/20">
+        <div className="text-error">Error: {error}</div>
       </div>
     );
   }
 
   if (!questionData) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-white border-l border-gray-200">
-        <div className="text-gray-500">No question data available</div>
+      <div className="h-full w-full flex items-center justify-center bg-background border-l border-foreground/20">
+        <div className="text-foreground/50">No question data available</div>
       </div>
     );
   }
@@ -71,22 +71,22 @@ export function QuestionSidebar({ questionName }: QuestionSidebarProps) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'easy':
-        return 'text-green-600 bg-green-100';
+        return 'text-success bg-success/10';
       case 'medium':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-accent bg-accent/10';
       case 'hard':
-        return 'text-red-600 bg-red-100';
+        return 'text-error bg-error/10';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-foreground/60 bg-foreground/10';
     }
   };
 
   return (
-    <div className="h-full w-full bg-white border-l border-gray-200 overflow-y-auto">
+    <div className="h-full w-full bg-background border-l border-foreground/20 overflow-y-auto">
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold text-gray-900">{questionData.title}</h1>
+          <h1 className="text-2xl font-bold text-accent">{questionData.title}</h1>
           
           <div className="flex items-center gap-3">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(questionData.difficulty)}`}>
@@ -97,7 +97,7 @@ export function QuestionSidebar({ questionName }: QuestionSidebarProps) {
               {questionData.tags.map((tag, index) => (
                 <span 
                   key={index}
-                  className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md"
+                  className="px-2 py-1 bg-accent/10 text-accent text-xs rounded-md"
                 >
                   {tag}
                 </span>
@@ -108,16 +108,16 @@ export function QuestionSidebar({ questionName }: QuestionSidebarProps) {
 
         {/* Description */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800">Description</h2>
+          <h2 className="text-lg font-semibold text-foreground">Description</h2>
           <div 
-            className="prose prose-sm max-w-none text-gray-700"
+            className="prose prose-sm max-w-none text-foreground/80"
             dangerouslySetInnerHTML={{ __html: questionData.description_html }}
           />
         </div>
 
         {/* Examples */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800">Examples</h2>
+          <h2 className="text-lg font-semibold text-foreground">Examples</h2>
           <div 
             className="prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: questionData.examples_html }}
@@ -126,7 +126,7 @@ export function QuestionSidebar({ questionName }: QuestionSidebarProps) {
 
         {/* Constraints */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800">Constraints</h2>
+          <h2 className="text-lg font-semibold text-foreground">Constraints</h2>
           <div 
             className="prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: questionData.constraints_html }}
@@ -136,7 +136,7 @@ export function QuestionSidebar({ questionName }: QuestionSidebarProps) {
         {/* Follow-up */}
         {questionData.follow_up_html && (
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-gray-800">Follow-up</h2>
+            <h2 className="text-lg font-semibold text-foreground">Follow-up</h2>
             <div 
               className="prose prose-sm max-w-none"
               dangerouslySetInnerHTML={{ __html: questionData.follow_up_html }}

@@ -73,7 +73,7 @@ export default function InGamePage() {
   if (error) {
     return (
       <div className="flex h-[100%] w-[100%] items-center justify-center">
-        <div className="text-red-500">Error: {error}</div>
+        <div className="text-error">Error: {error}</div>
       </div>
     );
   }
@@ -115,11 +115,11 @@ export default function InGamePage() {
           <div className="flex flex-1 flex-col gap-4 p-4">
             <div className="flex h-[100%] w-[100%]">
               <div className="flex gap-2 justify-self-end absolute top-4 right-4 z-10">
-                <Button className="text-black border-black border-2 cursor-pointer bg-transparent hover:bg-gray-200">
+                <Button className="text-foreground border-foreground border-2 cursor-pointer bg-transparent hover:bg-foreground/10">
                   Run
                 </Button>
                 <Button
-                  className="text-green-300 border-green-300 border-2 cursor-pointer bg-transparent hover:bg-green-100"
+                  className="text-success border-success border-2 cursor-pointer bg-transparent hover:bg-success/10"
                   onClick={runCode}
                 >
                   <Check />

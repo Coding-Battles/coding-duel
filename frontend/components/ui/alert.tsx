@@ -112,7 +112,7 @@ function StackableAlerts({
           style={{ top: `${4 + key * 6}rem` }}
         >
           <Alert id={alert.id} setAlerts={setAlerts}>
-            <AlertTriangle className="text-red-500" />
+            <AlertTriangle className="text-error" />
             <AlertTitle>Heads up!</AlertTitle>
             <AlertDescription>{alert.message}</AlertDescription>
           </Alert>

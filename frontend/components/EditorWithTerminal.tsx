@@ -48,7 +48,7 @@ export default function EditorWithTerminal({
       className={`flex flex-col h-full w-full ${className} rounded-lg overflow-hidden shadow-lg`}
     >
       {/* Editor Header Bar */}
-      <div className="flex items-center justify-between border-b border-slate-300 dark:border-slate-600 px-4 py-3 min-h-[48px] bg-gray-200 dark:bg-gray-800">
+      <div className="flex items-center justify-between border-b border-foreground/20 px-4 py-3 min-h-[48px] bg-foreground/5">
         <div className="flex items-center gap-3">
           {onLanguageChange && (
             <LanguageSelector
@@ -64,7 +64,7 @@ export default function EditorWithTerminal({
               onClick={onRun}
               size="sm"
               variant="outline"
-              className="text-black dark:text-white border-slate-300 dark:border-slate-600 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+              className="text-foreground border-foreground/20 bg-background hover:bg-foreground/5"
               disabled={isRunning}
             >
               {isRunning ? (
@@ -80,7 +80,7 @@ export default function EditorWithTerminal({
               onClick={onSubmit}
               size="sm"
               variant="default"
-              className="bg-green-600 hover:bg-green-700 text-white border-0"
+              className="bg-success hover:bg-success/80 text-background border-0"
               disabled={isRunning}
             >
               {isRunning ? (

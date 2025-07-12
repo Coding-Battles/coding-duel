@@ -21,15 +21,15 @@ const DuelInfo = ({ timeRef }: DuelInfoProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "typing":
-        return "bg-green-500";
+        return "bg-success";
       case "running":
-        return "bg-yellow-500";
+        return "bg-accent";
       case "submitted":
-        return "bg-blue-500";
+        return "bg-accent";
       case "idle":
-        return "bg-gray-400";
+        return "bg-foreground/40";
       default:
-        return "bg-gray-400";
+        return "bg-foreground/40";
     }
   };
 
@@ -73,12 +73,12 @@ const DuelInfo = ({ timeRef }: DuelInfoProps) => {
             )}`}
           >
             {opponentData.status === "typing" && (
-              <div className="w-full h-full rounded-full animate-pulse bg-green-400"></div>
+              <div className="w-full h-full rounded-full animate-pulse bg-success"></div>
             )}
           </div>
           {/* Speech bubble positioned absolutely */}
           <div className="absolute right-full top-0 ml-3">
-            <div className="relative bg-gray-100 rounded-lg px-4 py-2 text-3xl">
+            <div className="relative bg-foreground/10 rounded-lg px-4 py-2 text-3xl">
               😂
               {/* Speech bubble tail pointing left */}
               <div className="absolute right-full top-1/2 transform -translate-y-1/2">
@@ -91,14 +91,14 @@ const DuelInfo = ({ timeRef }: DuelInfoProps) => {
 
       {/* Username */}
       <div className="text-center mb-4">
-        <p className="font-semibold text-gray-900">{opponentData.username}</p>
+        <p className="font-semibold text-foreground">{opponentData.username}</p>
       </div>
 
       {/* Stats */}
       <div className="space-y-3">
         {/* Status */}
         <div className="flex items-center justify-center">
-          <span className="text-sm text-gray-600">Status: </span>
+          <span className="text-sm text-foreground/60">Status: </span>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">
               {getStatusText(opponentData.status)}
@@ -108,7 +108,7 @@ const DuelInfo = ({ timeRef }: DuelInfoProps) => {
 
         {/* Time */}
         <div className="flex items-center justify-center">
-          <span className="text-sm text-gray-600">Time: </span>
+          <span className="text-sm text-foreground/60">Time: </span>
           <span className="text-sm font-mono font-medium">
             {opponentData.timeElapsed}
           </span>
@@ -116,29 +116,29 @@ const DuelInfo = ({ timeRef }: DuelInfoProps) => {
 
         {/* Runs */}
         <div className="flex items-center justify-center">
-          <span className="text-sm text-gray-600">Code Runs: </span>
+          <span className="text-sm text-foreground/60">Code Runs: </span>
           <span className="text-sm font-medium">{opponentData.timesRan}</span>
         </div>
 
         {/* User Info */}
         <div className="flex items-center justify-center">
-          <span className="text-sm text-gray-600">W&apos;s: </span>
+          <span className="text-sm text-foreground/60">W&apos;s: </span>
           <span className="text-sm font-medium">{opponentData.wins}</span>
         </div>
       </div>
 
       {/* Opponent Code Preview */}
       <div className="mt-4 border-t pt-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">
+        <h4 className="text-sm font-semibold text-foreground/70 mb-2">
           Opponent&apos;s Code (30s delay)
         </h4>
-        <div className="bg-gray-900 rounded-md p-3 text-xs font-mono text-green-400 h-80 overflow-y-auto">
-          <div className="text-gray-500"># Python starter code</div>
-          <div className="text-blue-400">def</div>{" "}
-          <div className="text-yellow-300 inline">two_sum</div>
-          <div className="text-white inline">(nums, target):</div>
-          <div className="ml-4 text-gray-500"># Your solution here</div>
-          <div className="ml-4 text-purple-400">pass</div>
+        <div className="bg-foreground/5 rounded-md p-3 text-xs font-mono text-success h-80 overflow-y-auto">
+          <div className="text-foreground/50"># Python starter code</div>
+          <div className="text-accent">def</div>{" "}
+          <div className="text-accent inline">two_sum</div>
+          <div className="text-foreground inline">(nums, target):</div>
+          <div className="ml-4 text-foreground/50"># Your solution here</div>
+          <div className="ml-4 text-accent">pass</div>
         </div>
       </div>
     </div>
