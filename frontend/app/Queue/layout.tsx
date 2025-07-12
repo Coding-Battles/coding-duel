@@ -98,19 +98,19 @@ export default function QueueLayout({
       const username = (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
       const avatarUrl = getAvatarUrl(session?.user as CustomUser);
       
-      console.log("Joining queue on connect with data:", {
-        name: username,
-        imageURL: avatarUrl,
-        id: session?.user?.id || newAnonymousId,
-        anonymous: currentlyAnonymous,
-      });
+      // console.log("Joining queue on connect with data:", {
+      //   name: username,
+      //   imageURL: avatarUrl,
+      //   id: session?.user?.id || newAnonymousId,
+      //   anonymous: currentlyAnonymous,
+      // });
 
-      socket.emit("join_queue", {
-        name: username,
-        imageURL: avatarUrl,
-        id: session?.user?.id || newAnonymousId,
-        anonymous: currentlyAnonymous,
-      });
+      // socket.emit("join_queue", {
+      //   name: username,
+      //   imageURL: avatarUrl,
+      //   id: session?.user?.id || newAnonymousId,
+      //   anonymous: currentlyAnonymous,
+      // });
     });
 
     socket.on("disconnect", (reason) => {
@@ -191,13 +191,14 @@ export default function QueueLayout({
         anonymous: currentlyAnonymous,
       });
 
-      // Re-join queue with updated session data
-      socketRef.current.emit("join_queue", {
-        name: username,
-        imageURL: avatarUrl,
-        id: session?.user?.id || newAnonymousId,
-        anonymous: currentlyAnonymous,
-      });
+      // // Re-join queue with updated session data
+      // socketRef.current.emit("join_queue", {
+      //   name: username,
+      //   imageURL: avatarUrl,
+      //   id: session?.user?.id || newAnonymousId,
+      //   easy: 
+      //   anonymous: currentlyAnonymous,
+      // });
     }
   }, [session]); // Only depend on session changes
 

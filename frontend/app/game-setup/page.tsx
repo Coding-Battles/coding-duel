@@ -73,20 +73,20 @@ export default function GameSetupPage() {
 
     // Cleanup function
     return () => {
-      if (socket.current) {
-        socket.current.off("match_found", handleMatchFound);
-        socket.current.off("queue_status", handleQueueStatus);
-        socket.current.disconnect();
-      }
+      // if (socket.current) {
+      //   socket.current.off("match_found", handleMatchFound);
+      //   socket.current.off("queue_status", handleQueueStatus);
+      //   socket.current.disconnect();
+      // }
     };
   }, [session?.user, router]);
 
   // Show loading state while session is being fetched
   if (isPending) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen text-white bg-gray-950">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 mx-auto mb-4 border-2 rounded-full border-primary border-t-transparent animate-spin" />
           <p className="text-gray-300">Loading...</p>
         </div>
       </div>
@@ -110,6 +110,9 @@ export default function GameSetupPage() {
     socket.current.emit("join_queue", {
       id: session.user.id,
       name: (session.user as CustomUser)?.username || session.user.name,
+      easy: selectedDifficulties.easy,
+      medium: selectedDifficulties.medium,
+      hard: selectedDifficulties.hard,
       imageURL: getAvatarUrl(session.user as CustomUser),
       anonymous: false,
       // Note: Backend may need to be updated to handle difficulty preferences
@@ -124,11 +127,11 @@ export default function GameSetupPage() {
     Object.values(selectedDifficulties).some(Boolean);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="container mx-auto px-6 py-20">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Game Setup</h1>
-          <p className="text-gray-300 text-lg">
+    <div className="min-h-screen text-white bg-gray-950">
+      <div className="container px-6 py-20 mx-auto">
+        <div className="mb-8 text-center">
+          <h1 className="mb-4 text-3xl font-bold md:text-4xl">Game Setup</h1>
+          <p className="text-lg text-gray-300">
             Choose your preferred difficulty levels
           </p>
         </div>

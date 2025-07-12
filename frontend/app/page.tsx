@@ -5,7 +5,7 @@ export default function HomePage() {
   // Server component - all static content server-rendered
   // Only GoogleSignInButton hydrates as client island
   return (
-    <div className="min-h-screen bg-gray-950 text-white relative overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       {/* Subtle Matrix-inspired Background Pattern */}
       <div
         className="absolute inset-0 opacity-20"
@@ -20,15 +20,15 @@ export default function HomePage() {
         }}
       />
       {/* Above-the-fold Hero Section - Server Rendered */}
-      <section className="min-h-screen flex items-center justify-center relative px-6">
-        <div className="container mx-auto max-w-6xl relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="relative flex items-center justify-center min-h-screen px-6">
+        <div className="container relative max-w-6xl mx-auto">
+          <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-2">
             {/* Left Column - Content */}
             <div className="text-center lg:text-left">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
                 Head-to-head algorithm fights
               </h1>
-              <div className="text-lg md:text-xl text-gray-300 font-medium mb-8">
+              <div className="mb-8 text-lg font-medium md:text-xl text-muted-foreground">
                 Touch grass later
               </div>
 
@@ -43,21 +43,21 @@ export default function HomePage() {
             {/* Right Column - Demo Video */}
             <div className="order-first lg:order-last">
               <div
-                className="relative bg-gray-800 rounded-xl overflow-hidden shadow-2xl"
+                className="relative overflow-hidden border shadow-2xl bg-card rounded-xl border-border"
                 style={{ aspectRatio: "16/9" }}
               >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-muted">
                       <svg
-                        className="w-8 h-8 text-gray-400"
+                        className="w-8 h-8 text-muted-foreground"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                       >
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
-                    <p className="text-gray-400 text-lg">
+                    <p className="text-lg text-muted-foreground">
                       Demo Video Coming Soon
                     </p>
                   </div>
@@ -69,23 +69,23 @@ export default function HomePage() {
       </section>
 
       {/* Below-the-fold Content Section - Server Rendered */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto max-w-6xl">
+      <section className="px-6 py-20">
+        <div className="container max-w-6xl mx-auto">
           {/* Feature Highlights */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
               Why Choose CodeDuel?
             </h2>
-            <p className="text-gray-400 text-lg">
+            <p className="text-lg text-muted-foreground">
               Everything you need for competitive coding
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-center">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-lg bg-chart-1">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-6 h-6 text-primary-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -98,18 +98,18 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2">
+              <h3 className="mb-2 text-lg font-semibold">
                 Real-time coding battles
               </h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-sm text-muted-foreground">
                 Face off against other developers in live coding challenges
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-lg bg-chart-2">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-6 h-6 text-primary-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -122,18 +122,18 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2">
+              <h3 className="mb-2 text-lg font-semibold">
                 Multiple difficulty levels
               </h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-sm text-muted-foreground">
                 Choose from easy, medium, or hard coding challenges
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-lg bg-chart-3">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-6 h-6 text-primary-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -146,18 +146,18 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2">
+              <h3 className="mb-2 text-lg font-semibold">
                 Compete with developers worldwide
               </h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-sm text-muted-foreground">
                 Challenge coders from around the globe in epic battles
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-12 h-12 bg-slate-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-lg bg-chart-4">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-6 h-6 text-primary-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -170,10 +170,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2">
+              <h3 className="mb-2 text-lg font-semibold">
                 Track your coding progress
               </h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-sm text-muted-foreground">
                 Monitor your wins, losses, and skill improvement over time
               </p>
             </div>
@@ -182,22 +182,22 @@ export default function HomePage() {
       </section>
 
       {/* Footer - Server Rendered */}
-      <footer className="py-12 px-6 border-t border-gray-800">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+      <footer className="px-6 py-12 border-t border-border">
+        <div className="container max-w-6xl mx-auto">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">CD</span>
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-chart-1 to-chart-2">
+                <span className="text-lg font-bold text-primary-foreground">CD</span>
               </div>
               <span className="text-xl font-bold">CodeDuel</span>
             </Link>
 
-            <div className="flex gap-6 text-sm text-gray-400">
+            <div className="flex gap-6 text-sm text-muted-foreground">
               <a
                 href="https://github.com/Andriy3333/coding-duel"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-white transition"
+                className="transition hover:text-foreground"
               >
                 GitHub
               </a>

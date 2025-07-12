@@ -32,6 +32,9 @@ class Player(BaseModel):
     id: str  # This is the player's custom ID
     name: str
     imageURL: str
+    easy: bool
+    medium: bool
+    hard: bool
     anonymous: bool = True  # Whether the player is anonymous or not
     sid: str  # This is the socket connection ID
 
@@ -199,7 +202,9 @@ app = FastAPI(lifespan=lifespan)
 #-------------#SOCKET SETUP#-------------#
 DATABASE_URL = os.getenv("DATABASE_URL")
 database = databases.Database(DATABASE_URL)
-waiting_players: list[Player] = []
+waiting_players_easy: list[Player] = []
+waiting_players_medium: list[Player] = []
+waiting_players_hard: list[Player] = []
 game_states: Dict[str, GameState] = {}  # game_id -> GameState
 player_to_game: Dict[str, str] = {}  # player_id -> game_id mapping
 
@@ -221,7 +226,7 @@ async def shutdown():
 
 @app.get("/", response_model=QueueStatusResponse)
 def health_check():
-    return QueueStatusResponse(status="ok", queue_size=len(waiting_players))
+    return QueueStatusResponse(status="ok", queue_size=max(len(waiting_players_easy), len(waiting_players_medium), len(waiting_players_hard)))
 
 @sio.event
 async def ping(sid, data):
@@ -234,9 +239,13 @@ async def connect(sid, environ):
 
 @sio.event
 async def disconnect(sid):
-    global waiting_players
+    global waiting_players_easy
+    global waiting_players_medium
+    global waiting_players_hard
     # Remove player from queue if they disconnect
-    waiting_players = [p for p in waiting_players if p.sid != sid]
+    waiting_players_easy = [p for p in waiting_players_easy if p.sid != sid]
+    waiting_players_medium = [p for p in waiting_players_medium if p.sid != sid]
+    waiting_players_hard = [p for p in waiting_players_hard if p.sid != sid]
 
     # Remove player from game if they disconnect
     player_id_to_remove = None
@@ -268,8 +277,8 @@ async def disconnect(sid):
         if game_id_to_update in game_states:
             del game_states[game_id_to_update]
     
-    logger.info(f"Client {sid} disconnected. Queue size: {len(waiting_players)}")
-    logger.info(f"Client {sid} disconnected. Queue size: {len(waiting_players)}")
+    logger.info(f"Client {sid} disconnected. Queue size: {len(waiting_players_easy) + len(waiting_players_medium) + len(waiting_players_hard)}")
+    logger.info(f"Client {sid} disconnected. Queue size: easy={len(waiting_players_easy)}, medium={len(waiting_players_medium)}, hard={len(waiting_players_hard)}")
 
 @sio.event
 async def join_queue(sid, data):
@@ -277,24 +286,75 @@ async def join_queue(sid, data):
         # Create player with both custom ID and socket ID
         player_data = {**data, "sid": sid}
         player = Player(**player_data)
-        waiting_players.append(player)
+        if player.easy:
+            waiting_players_easy.append(player)
+        if player.medium:
+            waiting_players_medium.append(player)
+        if player.hard:
+            waiting_players_hard.append(player)
+
         logger.info(
-            f"Player {player.name} joined the queue. Total players in queue: {len(waiting_players)}"
+            f"Player {player.name} joined the queue. Total players in queue: easy={len(waiting_players_easy)}, medium={len(waiting_players_medium)}, hard={len(waiting_players_hard)}"
         )
 
+        difficulties = []
+        difficulties_identifier = []
+
+        if(len(waiting_players_easy) >= 2):
+            difficulties.append(waiting_players_easy)
+            difficulties_identifier.append("easy")
+        if(len(waiting_players_medium) >= 2):
+            difficulties.append(waiting_players_medium)
+            difficulties_identifier.append("medium")
+        if(len(waiting_players_hard) >= 2):
+            difficulties.append(waiting_players_hard)
+            difficulties_identifier.append("hard")
+
+        with open("backend/data/questions.json", 'r') as f:
+            data = json.load(f)
+
+        logger.info(data["questions"].keys())
+
+
+
         # Check if we can form a match
-        if len(waiting_players) >= 2:
+        if len(difficulties) > 0:
             logger.info("🔍 pair found")
-            player1 = waiting_players.pop(0)  # First player
-            player2 = waiting_players.pop(0)  # Second player (current player)
+            rand_num = random.randint(0, len(difficulties) - 1)
+            difficulty_player_list = difficulties[rand_num]
+            difficulty_identifier = difficulties_identifier[rand_num]
+
+
+            player1 = difficulty_player_list.pop(0)  # First player (current player)
+            player2 = difficulty_player_list.pop(0)  # Second player (opponent)
+
+            logger.info(f"Pairing players: {player1.name} vs {player2.name} in difficulty {difficulty_identifier}")
+
+            # Remove players from waiting lists
+            if player1 in waiting_players_easy:
+                waiting_players_easy.remove(player1)
+            if player2 in waiting_players_easy:
+                waiting_players_easy.remove(player2)
+            if player1 in waiting_players_medium:
+                waiting_players_medium.remove(player1)
+            if player2 in waiting_players_medium:
+                waiting_players_medium.remove(player2)
+            if player1 in waiting_players_hard:
+                waiting_players_hard.remove(player1)
+            if player2 in waiting_players_hard:
+                waiting_players_hard.remove(player2)
 
             game_id = f"game_{uuid.uuid4().hex[:12]}"
-
             with open("backend/data/questions.json", 'r') as f:
                 data = json.load(f)
 
+            logger.info("difficulty_identifier:", difficulty_identifier)
+            logger.info("keys available:", list(data["questions"].keys()))
+            logger.info("selected list:", data["questions"][difficulty_identifier])
+
             # Randomly select a question from the available questions
-            question = random.choice(data["questions"])
+            question = random.choice(data["questions"][difficulty_identifier])
+
             question_name = question["slug"]  # Use slug for both loading files and URLs
             question_slug = question["slug"]  # Use slug for URLs
             question_title = question["title"]  # Human-readable title for display
@@ -341,7 +401,7 @@ async def join_queue(sid, data):
             await sio.enter_room(player2.sid, game_id)
         else:
             status_response = QueueStatusResponse(
-                status="waiting", queue_size=len(waiting_players)
+                status="waiting", queue_size=len(max(len(waiting_players_easy), len(waiting_players_medium), len(waiting_players_hard)))
             )
             await sio.emit("queue_status", status_response.model_dump(), room=sid)
 
