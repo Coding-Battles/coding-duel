@@ -148,4 +148,151 @@ html {
   .leetcode-difficulty-hard {
     @apply text-error text-sm font-medium;
   }
+
+  /* RGB glitch effect only */
+  .gaming-title {
+    position: relative;
+  }
+
+  .gaming-title::before,
+  .gaming-title::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gaming-title::before {
+    color: #ff0040;
+    animation: glitch-1 2s ease-out;
+    animation-iteration-count: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  }
+
+  .gaming-title::after {
+    color: #00ffff;
+    animation: glitch-2 2s ease-out;
+    animation-iteration-count: 1;
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  }
+
+  @keyframes glitch-1 {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-2px, 1px);
+    }
+    16%, 29% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    30% {
+      opacity: 1;
+      transform: translate(-18px, -5px);
+    }
+    31%, 49% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-3px, -1px);
+    }
+    51%, 64% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    65% {
+      opacity: 1;
+      transform: translate(-1px, 2px);
+    }
+    66%, 79% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    80% {
+      opacity: 1;
+      transform: translate(-22px, 4px);
+    }
+    81%, 100% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+  }
+
+  @keyframes glitch-2 {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+    22% {
+      opacity: 1;
+      transform: translate(3px, -1px);
+    }
+    23%, 39% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    40% {
+      opacity: 1;
+      transform: translate(1px, 2px);
+    }
+    41%, 54% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    55% {
+      opacity: 1;
+      transform: translate(20px, 6px);
+    }
+    56%, 69% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    70% {
+      opacity: 1;
+      transform: translate(2px, -1px);
+    }
+    71%, 84% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    85% {
+      opacity: 1;
+      transform: translate(24px, -3px);
+    }
+    86%, 100% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+  }
+
+  /* Gaming grid pattern background */
+  .bg-grid-pattern {
+    background-image: linear-gradient(
+        rgba(148, 163, 184, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Hide scrollbars for avatar carousel */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

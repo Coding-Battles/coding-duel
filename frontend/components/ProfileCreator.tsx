@@ -1,8 +1,14 @@
-import React, { useState, useRef, ChangeEvent } from "react";
+import React, {
+  useState,
+  useRef,
+  ChangeEvent,
+  useEffect,
+  useCallback,
+} from "react";
 import Image from "next/image";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Shuffle, Upload } from "lucide-react";
+import { Shuffle, Upload, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProfileCreatorProps {
   username: string;
@@ -33,6 +39,10 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   const [suggestedUsername, setSuggestedUsername] = useState<string>("");
   const [isGeneratingUsername, setIsGeneratingUsername] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [focusedAvatarIndex, setFocusedAvatarIndex] = useState<number | null>(
+    null
+  );
 
   // Type-safe debounce utility function
   function debounce<Args extends readonly unknown[]>(
@@ -157,13 +167,105 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
     }
   };
 
-  const handleAvatarSelect = (index: number) => {
-    onAvatarChange(index);
-    // Clear custom avatar when selecting default avatar
-    if (onCustomAvatarChange) {
-      onCustomAvatarChange(null);
+  const handleAvatarSelect = useCallback(
+    (index: number) => {
+      onAvatarChange(index);
+      setFocusedAvatarIndex(index);
+      // Clear custom avatar when selecting default avatar
+      if (onCustomAvatarChange) {
+        onCustomAvatarChange(null);
+      }
+    },
+    [onAvatarChange, onCustomAvatarChange]
+  );
+
+  // Scroll avatar into view
+  const scrollToAvatar = useCallback((index: number) => {
+    if (!scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const avatarWidth = 150 + 16; // avatar width + gap
+    const containerWidth = container.clientWidth;
+    const scrollLeft = container.scrollLeft;
+
+    const avatarLeft = index * avatarWidth;
+    const avatarRight = avatarLeft + avatarWidth;
+
+    // Check if avatar is out of view and scroll to it
+    if (avatarLeft < scrollLeft) {
+      container.scrollTo({
+        left: avatarLeft - 16, // Add some padding
+        behavior: "smooth",
+      });
+    } else if (avatarRight > scrollLeft + containerWidth) {
+      container.scrollTo({
+        left: avatarRight - containerWidth + 16, // Add some padding
+        behavior: "smooth",
+      });
     }
-  };
+  }, []);
+
+  // Scroll by one avatar at a time
+  const scrollByAvatar = useCallback((direction: "left" | "right") => {
+    if (!scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const avatarWidth = 150 + 16; // avatar width + gap
+    const scrollAmount = direction === "left" ? -avatarWidth : avatarWidth;
+
+    container.scrollBy({
+      left: scrollAmount,
+      behavior: "smooth",
+    });
+  }, []);
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.target !== document.body) return; // Only handle when not in input
+
+      const avatarCount = 6; // Update this if you change the number of avatars
+      let newIndex = focusedAvatarIndex;
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          newIndex =
+            focusedAvatarIndex === null
+              ? 0
+              : Math.max(0, focusedAvatarIndex - 1);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          newIndex =
+            focusedAvatarIndex === null
+              ? 0
+              : Math.min(avatarCount - 1, focusedAvatarIndex + 1);
+          break;
+        case "Enter":
+        case " ":
+          if (focusedAvatarIndex !== null) {
+            e.preventDefault();
+            handleAvatarSelect(focusedAvatarIndex);
+          }
+          break;
+        default:
+          return;
+      }
+
+      if (newIndex !== null && newIndex !== focusedAvatarIndex) {
+        setFocusedAvatarIndex(newIndex);
+        scrollToAvatar(newIndex);
+      }
+    },
+    [focusedAvatarIndex, handleAvatarSelect, scrollToAvatar]
+  );
+
+  // Add keyboard event listeners
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   const handleAvatarPreviewClick = () => {
     fileInputRef.current?.click();
@@ -218,68 +320,25 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   };
 
   return (
-    <div
-      className={`relative border border-accent/30 rounded-2xl overflow-hidden ${className}`}
-    >
+    <div className={`relative ${className}`}>
       {/* Content container */}
       <div className="relative p-8">
         {/* Main Title */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl uppercase text-gradient font-bold tracking-wide">
+          <h1
+            className="text-4xl sm:text-6xl lg:text-8xl uppercase text-gradient font-bold tracking-wide gaming-title"
+            data-text="Choose your fighter"
+          >
             Choose your fighter
           </h1>
         </div>
 
-        {/* Username + Avatar Preview Section */}
-        <div className="mb-12">
-          <div className="flex items-center gap-8 mb-8">
-            {/* Username Input */}
-            <div className="flex-1">
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => handleUsernameChange(e.target.value)}
-                  className={`w-full h-12 bg-input border-2 rounded-lg px-3 pr-20 text-foreground text-base
-                         focus:outline-none transition-all duration-200 ${
-                           username && usernameAvailable === true
-                             ? "border-success focus-visible:border-success focus-visible:ring-success/20 shadow-lg shadow-success/20"
-                             : username && usernameAvailable === false
-                             ? "border-error focus-visible:border-error focus-visible:ring-error/20 shadow-lg shadow-error/20"
-                             : "border-border focus-visible:border-ring focus-visible:ring-ring/20"
-                         }`}
-                  maxLength={20}
-                />
-
-                {/* Right side container for indicator and button */}
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                  {/* Loading indicator */}
-                  {username && usernameAvailable === null && (
-                    <div className="w-4 h-4 border-2 border-ring border-t-transparent rounded-full animate-spin" />
-                  )}
-
-                  {/* Generate button */}
-                  <button
-                    type="button"
-                    onClick={generateAiUsername}
-                    disabled={isGeneratingUsername}
-                    className="p-1 text-primary hover:text-primary transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                    title="Generate AI username"
-                  >
-                    {isGeneratingUsername ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Shuffle className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
+        {/* Avatar Section: Preview + Selection */}
+        <div className="mb-12 overflow-hidden">
+          <div className="flex flex-col lg:flex-row items-center gap-8 mb-8">
             {/* Avatar Preview */}
             <div className="flex-shrink-0">
-              <div className="w-48 h-48 relative">
+              <div className="w-32 h-32 sm:w-48 sm:h-48 relative">
                 {selectedAvatar !== null ? (
                   selectedAvatar === 999 && customAvatar ? (
                     <div
@@ -331,54 +390,147 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
                 className="hidden"
               />
             </div>
-          </div>
 
-          {/* Username suggestions */}
-          {usernameAvailable === false && suggestedUsername && (
-            <div className="mt-4">
-              <p className="text-sm text-muted-foreground">
-                &ldquo;{username}&rdquo; is taken. Try{" "}
-                <span
-                  onClick={() =>
-                    handleUsernameChange(suggestedUsername, "generated")
+            {/* Avatar Selection Carousel */}
+            <div className="flex-1 relative overflow-hidden">
+              {/* Navigation Arrows */}
+              <ChevronLeft
+                onClick={() => scrollByAvatar("left")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  (e.key === "Enter" || e.key === " ") && scrollByAvatar("left")
+                }
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 h-16 w-10 text-primary cursor-pointer hover:scale-110 transition-transform duration-200"
+                aria-label="Scroll left"
+              />
+
+              <ChevronRight
+                onClick={() => scrollByAvatar("right")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  (e.key === "Enter" || e.key === " ") &&
+                  scrollByAvatar("right")
+                }
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 h-16 w-10 text-primary cursor-pointer hover:scale-110 transition-transform duration-200"
+                aria-label="Scroll right"
+              />
+
+              {/* Fade edges for scroll indication */}
+              <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+
+              {/* Horizontal scrollable container */}
+              <div
+                ref={scrollContainerRef}
+                className="flex gap-4 overflow-x-auto scrollbar-hide py-4 px-12"
+                style={{
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                  WebkitOverflowScrolling: "touch",
+                }}
+                onWheel={(e) => {
+                  // Enable horizontal scrolling with mouse wheel
+                  if (scrollContainerRef.current) {
+                    e.preventDefault();
+                    scrollContainerRef.current.scrollLeft += e.deltaY;
                   }
-                  className="text-primary hover:underline font-medium cursor-pointer"
-                >
-                  &ldquo;{suggestedUsername}&rdquo;
-                </span>
-                ?
-              </p>
+                }}
+              >
+                {/* Avatars */}
+                {Array.from({ length: 6 }, (_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAvatarSelect(index)}
+                    onFocus={() => setFocusedAvatarIndex(index)}
+                    className="relative flex-shrink-0 cursor-pointer focus:outline-none rounded-xl"
+                    aria-label={`Select Avatar ${index + 1}`}
+                  >
+                    <div
+                      className={`w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 ${
+                        selectedAvatar === index
+                          ? "selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105"
+                          : "border-gradient hover:shadow-xl hover:shadow-slate-500/30 hover:scale-105"
+                      }`}
+                    >
+                      <Image
+                        src={`/avatars/${index}.png`}
+                        alt={`Avatar ${index + 1}`}
+                        width={160}
+                        height={160}
+                        className="w-full h-full rounded-lg object-cover bg-muted"
+                        priority={index < 4} // Prioritize first 4 visible avatars
+                      />
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Avatar Selection Grid */}
-        <div className="mb-8">
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            {/* Avatars */}
-            {Array.from({ length: 6 }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => handleAvatarSelect(index)}
-                className="relative text-center cursor-pointer"
-              >
-                <div
-                  className={`aspect-square rounded-xl p-1 overflow-hidden transition-all duration-200 hover:transform hover:-translate-y-1 ${
-                    selectedAvatar === index
-                      ? "selected-gradient shadow-xl shadow-slate-500/70 -translate-y-1 scale-105"
-                      : "border-gradient hover:shadow-lg hover:shadow-slate-500/30"
-                  }`}
+        {/* Username Section */}
+        <div className="mb-12">
+          <div className="max-w-md mx-auto">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                className={`w-full h-10 sm:h-12 bg-input border-2 rounded-lg px-3 pr-20 text-foreground text-base
+                       focus:outline-none transition-all duration-200 ${
+                         username && usernameAvailable === true
+                           ? "border-success focus-visible:border-success focus-visible:ring-success/20 shadow-lg shadow-success/20"
+                           : username && usernameAvailable === false
+                           ? "border-error focus-visible:border-error focus-visible:ring-error/20 shadow-lg shadow-error/20"
+                           : "border-border focus-visible:border-ring focus-visible:ring-ring/20"
+                       }`}
+                maxLength={20}
+              />
+
+              {/* Right side container for indicator and button */}
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                {/* Loading indicator */}
+                {username && usernameAvailable === null && (
+                  <div className="w-4 h-4 border-2 border-ring border-t-transparent rounded-full animate-spin" />
+                )}
+
+                {/* Generate button */}
+                <button
+                  type="button"
+                  onClick={generateAiUsername}
+                  disabled={isGeneratingUsername}
+                  className="p-1 text-primary hover:text-primary transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Generate AI username"
                 >
-                  <Image
-                    src={`/avatars/${index}.png`}
-                    alt={`Avatar ${index}`}
-                    width={120}
-                    height={120}
-                    className="w-full h-full rounded-lg object-cover bg-muted"
-                  />
-                </div>
-              </button>
-            ))}
+                  {isGeneratingUsername ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Shuffle className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Username suggestions */}
+            {usernameAvailable === false && suggestedUsername && (
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground">
+                  &ldquo;{username}&rdquo; is taken. Try{" "}
+                  <span
+                    onClick={() =>
+                      handleUsernameChange(suggestedUsername, "generated")
+                    }
+                    className="text-primary hover:underline font-medium cursor-pointer"
+                  >
+                    &ldquo;{suggestedUsername}&rdquo;
+                  </span>
+                  ?
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
