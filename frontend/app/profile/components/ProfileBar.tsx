@@ -56,7 +56,6 @@ export const ProfileBar = () => {
         onUploadSuccess={handleUploadSuccess}
         onUploadError={handleUploadError}
         size="md"
-        shape="circle"
         userId={session?.user?.id}
         alt="Profile picture"
       />

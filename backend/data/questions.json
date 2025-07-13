@@ -1,10 +1,28 @@
 {
-  "questions": [
-    {
-      "slug": "two-sum",
-      "id": 1,
-      "title": "Two Sum",
-      "difficulty": "Easy"
-    }
-  ]
+  "questions": {
+    "easy": [
+      {
+        "slug": "two-sum",
+        "id": 1,
+        "title": "Two Sum",
+        "difficulty": "Easy"
+      }
+    ],
+    "medium": [
+      {
+        "slug": "add-two-numbers",
+        "id": 2,
+        "title": "Add Two Numbers",
+        "difficulty": "Medium"
+      }
+    ],
+    "hard": [
+      {
+        "slug": "longest-substring-without-repeating-characters",
+        "id": 3,
+        "title": "Longest Substring Without Repeating Characters",
+        "difficulty": "Hard"
+      }
+    ]
+  }
 }

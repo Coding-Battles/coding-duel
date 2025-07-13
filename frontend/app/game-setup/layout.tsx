@@ -5,10 +5,27 @@ import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { User } from "better-auth";
+import { DifficultyState } from "@/components/DifficultySelector";
 
-interface CustomUser extends User {
+interface CustomUser {
   username?: string;
+  name?: string;
+  image?: string;
+  id?: string;
   selectedPfp?: number;
+}
+
+// Types for socket events (following existing patterns)
+interface MatchFoundResponse {
+  game_id: string;
+  opponent_Name: string;
+  opponentImageURL?: string;
+  question_name: string;
+}
+
+interface QueueStatusResponse {
+  status: string;
+  queue_size: number;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -26,6 +43,10 @@ type GameContextType = {
   gameId: string;
   isAnonymous?: boolean;
   anonymousId?: string;
+  selectedDifficulties?: DifficultyState;
+  setSelectedDifficulties?: React.Dispatch<React.SetStateAction<DifficultyState>>;
+  handleFindGame?: () => void;
+
 };
 
 type MatchFoundData = {
@@ -54,6 +75,14 @@ export default function QueueLayout({
   const [gameId, setGameId] = useState<string>("");
   const [anonymousId, setAnonymousId] = useState<string>("");
   const [isAnonymous, setIsAnonymous] = useState<boolean>(true); // Default to anonymous until session is loaded
+  
+  const [selectedDifficulties, setSelectedDifficulties] =
+    useState<DifficultyState>({
+      easy: true,
+      medium: false,
+      hard: false,
+    });
+
 
   // Initialize socket connection once
   useEffect(() => {
@@ -98,19 +127,19 @@ export default function QueueLayout({
       const username = (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
       const avatarUrl = getAvatarUrl(session?.user as CustomUser);
       
-      console.log("Joining queue on connect with data:", {
-        name: username,
-        imageURL: avatarUrl,
-        id: session?.user?.id || newAnonymousId,
-        anonymous: currentlyAnonymous,
-      });
+      // console.log("Joining queue on connect with data:", {
+      //   name: username,
+      //   imageURL: avatarUrl,
+      //   id: session?.user?.id || newAnonymousId,
+      //   anonymous: currentlyAnonymous,
+      // });
 
-      socket.emit("join_queue", {
-        name: username,
-        imageURL: avatarUrl,
-        id: session?.user?.id || newAnonymousId,
-        anonymous: currentlyAnonymous,
-      });
+      // socket.emit("join_queue", {
+      //   name: username,
+      //   imageURL: avatarUrl,
+      //   id: session?.user?.id || newAnonymousId,
+      //   anonymous: currentlyAnonymous,
+      // });
     });
 
     socket.on("disconnect", (reason) => {
@@ -142,7 +171,7 @@ export default function QueueLayout({
           image_url: data.opponentImageURL || "",
         });
         setGameId(data.game_id);
-        router.push("/queue/" + data.question_name);
+        router.push("/game-setup/queue/" + data.question_name);
       }, 5000);
     });
 
@@ -191,15 +220,41 @@ export default function QueueLayout({
         anonymous: currentlyAnonymous,
       });
 
-      // Re-join queue with updated session data
-      socketRef.current.emit("join_queue", {
-        name: username,
-        imageURL: avatarUrl,
-        id: session?.user?.id || newAnonymousId,
-        anonymous: currentlyAnonymous,
-      });
+      // // Re-join queue with updated session data
+      // socketRef.current.emit("join_queue", {
+      //   name: username,
+      //   imageURL: avatarUrl,
+      //   id: session?.user?.id || newAnonymousId,
+      //   easy: 
+      //   anonymous: currentlyAnonymous,
+      // });
     }
-  }, [session]); // Only depend on session changes
+  }, [session]); // Only depend on session 
+  
+  const handleFindGame = () => {
+    if (!socketRef.current || !session?.user) {
+      console.error("Socket not connected or user not authenticated");
+      return;
+    }
+
+    console.log("Finding game with difficulties:", selectedDifficulties);
+
+    // Emit join_queue event with user data (following existing pattern)
+    socketRef.current.emit("join_queue", {
+      id: session.user.id,
+      name: (session.user as CustomUser)?.username || session.user.name,
+      easy: selectedDifficulties.easy,
+      medium: selectedDifficulties.medium,
+      hard: selectedDifficulties.hard,
+      imageURL: getAvatarUrl(session.user as CustomUser),
+      anonymous: false,
+      // Note: Backend may need to be updated to handle difficulty preferences
+      // For now, following existing pattern that randomly selects questions
+    });
+
+    // Navigate to queue page to show waiting state
+    router.push("/game-setup/queue");
+  };
 
   return (
     <GameContext.Provider
@@ -211,6 +266,9 @@ export default function QueueLayout({
         gameId: gameId,
         isAnonymous: isAnonymous,
         anonymousId: anonymousId,
+        selectedDifficulties: selectedDifficulties,
+        setSelectedDifficulties: setSelectedDifficulties,
+        handleFindGame: handleFindGame,
       }}
     >
       <div className="flex h-[100%] w-[100%] items-center justify-center">
@@ -224,4 +282,4 @@ export function useGameContext() {
   return useContext(GameContext);
 }
 
-export type { OpponentData };
+export type { OpponentData, CustomUser };

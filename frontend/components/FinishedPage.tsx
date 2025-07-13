@@ -4,15 +4,11 @@
 import { User } from "better-auth";
 import React, { useEffect } from "react";
 import { TestResultsData } from "./TestResults";
-import { OpponentData } from "@/app/queue/layout";
+import { CustomUser, OpponentData } from "@/app/game-setup/layout";
 import { useRouter } from "next/navigation";
 import { getAvatarUrl } from "@/lib/auth-client";
 
 
-interface CustomUser extends User {
-  username?: string;
-  selectedPfp?: number;
-}
 
 interface FinishedPageProps {
   opponent: OpponentData,
@@ -40,32 +36,32 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
   return (
     <div className="flex flex-col items-center justify-center h-[100%] w-[100%]">
       <div className="border-2 border-foreground/30 shadow-xl px-4 pt-2 pb-8 text-xs w-auto h-[300px] rounded-xl">
-        <div className="grid grid-cols-3 gap-4 w-full mt-2 font-bold">
+        <div className="grid w-full grid-cols-3 gap-4 mt-2 font-bold">
           <span className="text-xs justify-self-start">{winnerStats.player_name}</span>
           <span className="text-lg justify-self-center">Stats</span>
           <span className="text-xs justify-self-end">{loserStats.player_name}</span>
         </div>
         
-        <div className="grid grid-cols-3 gap-4 items-center w-full mt-8">
+        <div className="grid items-center w-full grid-cols-3 gap-4 mt-8">
           <span className="justify-self-start">{winnerStats.implement_time}</span>
           <b className="justify-self-center">Time Finished</b>
           <span className="justify-self-end">{loserStats.implement_time}</span>
         </div>
         
-        <div className="grid grid-cols-3 gap-4 items-center w-full mt-8">
+        <div className="grid items-center w-full grid-cols-3 gap-4 mt-8">
           <span className="justify-self-start">{winnerStats.complexity}</span>
           <b className="justify-self-center">Time Complexity</b>
           <span className="justify-self-end">{loserStats.complexity}</span>
         </div>
         
-        <div className="grid grid-cols-3 gap-4 items-center w-full mt-8">
+        <div className="grid items-center w-full grid-cols-3 gap-4 mt-8">
           <span className="justify-self-start">{winnerStats.final_time}</span>
           <b className="justify-self-center">Total score</b>
           <span className="justify-self-end">{loserStats.final_time}</span>
         </div>
       </div>
       <div className="flex gap-4 mt-[100px]">
-        <div className="flex flex-col items-center justify-center p-6 border-2 border-success rounded-lg">
+        <div className="flex flex-col items-center justify-center p-6 border-2 rounded-lg border-success">
           <img
             src={winnerImage}
             alt="winnerImage"
@@ -75,7 +71,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
           <h1 className="text-2xl font-bold">Winner</h1>
         </div>
 
-        <div className="flex flex-col items-center justify-center p-6 border-2 border-error rounded-lg">
+        <div className="flex flex-col items-center justify-center p-6 border-2 rounded-lg border-error">
           <img
             src={loserImage}
             alt="loserImage"
@@ -86,7 +82,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
         </div>
       </div>
       <div className="mt-12">
-        <button className="px-4 py-2 bg-accent text-background rounded hover:bg-accent/80" onClick={() => {router.push("/")}}>
+        <button className="px-4 py-2 rounded bg-accent text-background hover:bg-accent/80" onClick={() => {router.push("/")}}>
           Go back to main menu
         </button>
       </div>

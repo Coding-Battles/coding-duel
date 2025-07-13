@@ -137,14 +137,14 @@ export default function ImageUploader({
   const displayImage = previewUrl || currentImageUrl;
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className} rounded-full`}>
       {displayImage ? (
         <Image
           src={displayImage}
           alt={alt}
           width={100}
           height={100}
-          className="w-full h-auto rounded object-cover bg-muted transition-all duration-200"
+          className="w-full h-auto rounded-full object-cover bg-muted transition-all duration-200"
         />
       ) : (
         <div className="w-full h-auto rounded bg-muted flex items-center justify-center aspect-square">
@@ -158,11 +158,11 @@ export default function ImageUploader({
         disabled={disabled || isUploading}
         className={`
           ${displayImage 
-            ? 'w-8 h-8 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2' 
+            ? 'rounded-full absolute top-0 w-full h-full' 
             : 'absolute inset-0'
           }
           ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-          ${isUploading ? 'bg-black/70' : 'bg-white/0 hover:bg-black/40'}
+          ${isUploading ? 'bg-black/70' : 'opacity-0 hover:opacity-100 hover:bg-black/30'}
           flex items-center justify-center transition-all duration-200
           ${showEditIcon ? '' : 'opacity-0'}
         `}
@@ -170,7 +170,7 @@ export default function ImageUploader({
         {isUploading ? (
           <Loader2 className="w-4 h-4 text-white animate-spin" />
         ) : showEditIcon ? (
-          <Edit className="w-4 h-4 text-white opacity-0 hover:opacity-100 transition-opacity" />
+          <Edit className="w-4 h-4 text-white transition-opacity" />
         ) : null}
       </button>
 

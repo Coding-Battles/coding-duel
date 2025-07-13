@@ -91,7 +91,7 @@ html {
   }
 
   .leetcode-heading {
-    @apply font-semibold mb-2;
+    @apply mb-2 font-semibold;
   }
 
   .leetcode-input-output {
@@ -103,14 +103,14 @@ html {
   }
 
   .leetcode-difficulty-easy {
-    @apply text-success text-sm font-medium;
+    @apply text-sm font-medium text-success;
   }
 
   .leetcode-difficulty-medium {
-    @apply text-accent text-sm font-medium;
+    @apply text-sm font-medium text-accent;
   }
 
   .leetcode-difficulty-hard {
-    @apply text-error text-sm font-medium;
+    @apply text-sm font-medium text-error;
   }
 }
