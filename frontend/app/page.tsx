@@ -25,10 +25,10 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Content */}
             <div className="text-center lg:text-left">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-accent">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-gradient">
                 Head-to-head algorithm fights
               </h1>
-              <div className="text-lg md:text-xl text-foreground/70 font-medium mb-8">
+              <div className="text-lg md:text-xl text-secondary font-medium mb-8">
                 Touch grass later
               </div>
 

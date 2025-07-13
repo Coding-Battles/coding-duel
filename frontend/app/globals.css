@@ -25,8 +25,8 @@
   --color-destructive-foreground: var(--background);
   --color-input: var(--background);
   --color-ring: var(--accent);
-  --color-border: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-border: var(--secondary);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -40,9 +40,9 @@ html {
 
 :root {
   --radius: 0.65rem;
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.15 0 0);
-  --accent: oklch(0.4 0.15 250);
+  --background: oklch(0.89 0 0);
+  --foreground: oklch(0.22 0.03 210);
+  --accent: oklch(0.6 0.015 60);
   --secondary: oklch(0.45 0.13 180);
   --selected: oklch(0.85 0.18 210);
   --success: oklch(0.5 0.15 140);
@@ -50,13 +50,15 @@ html {
 }
 
 .dark {
-  --background: oklch(0.08 0 0);
-  --foreground: oklch(0.95 0 0);
-  --accent: oklch(0.6 0.15 250);
-  --secondary: oklch(0.55 0.13 180);
-  --selected: oklch(0.3 0.18 210);
+  --background: oklch(0.15 0.01 240);
+  --foreground: oklch(0.92 0.005 240);
+  --accent: oklch(0.82 0.04 240);
+  --secondary: oklch(0.7 0.03 240);
+  --friendly: oklch(0.45 0.2 260);
+  --opponent: oklch(0.5 0.25 25);
+  --selected: oklch(0.7 0.18 55);
   --success: oklch(0.6 0.15 140);
-  --error: oklch(0.65 0.2 20);
+  --error: oklch(0.55 0.22 10);
 }
 
 @layer base {
@@ -69,6 +71,39 @@ html {
 }
 
 @layer utilities {
+  /* Reusable gradient text utility */
+  .text-gradient {
+    background: linear-gradient(
+      to right,
+      theme("colors.slate.400"),
+      theme("colors.slate.300"),
+      theme("colors.slate.400")
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Selected gradient utility */
+  .selected-gradient {
+    background: linear-gradient(
+      to right,
+      theme("colors.slate.400"),
+      theme("colors.slate.300"),
+      theme("colors.slate.400")
+    );
+  }
+
+  /* Border gradient utility */
+  .border-gradient {
+    background: linear-gradient(
+      to right,
+      theme("colors.slate.500"),
+      theme("colors.slate.400"),
+      theme("colors.slate.500")
+    );
+  }
   /* Completely consistent, minimal question styling */
   .leetcode-example {
     @apply py-3;

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, ChangeEvent } from "react";
 import Image from "next/image";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import ImageUploader from "./ImageUploader";
+import { Shuffle, Upload } from "lucide-react";
 
 interface ProfileCreatorProps {
   username: string;
@@ -25,12 +25,14 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   onCustomAvatarChange,
   userId,
   onComplete,
-  className = ""
+  className = "",
 }) => {
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
+    null
+  );
   const [suggestedUsername, setSuggestedUsername] = useState<string>("");
   const [isGeneratingUsername, setIsGeneratingUsername] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Type-safe debounce utility function
   function debounce<Args extends readonly unknown[]>(
@@ -48,7 +50,6 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   const checkUsernameAvailability = async (username: string) => {
     if (!username.trim()) return;
 
-    setIsCheckingUsername(true);
     try {
       const response = await fetch(
         "http://localhost:8000/api/users/check-username",
@@ -97,8 +98,6 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
     } catch (error) {
       console.error("Error checking username:", error);
       setUsernameAvailable(null);
-    } finally {
-      setIsCheckingUsername(false);
     }
   };
 
@@ -166,185 +165,241 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
     }
   };
 
-  const handleCustomAvatarSelect = () => {
-    // Select custom avatar (works with or without uploaded avatar)
-    onAvatarChange(-1); // Use -1 to indicate custom avatar selected
+  const handleAvatarPreviewClick = () => {
+    fileInputRef.current?.click();
   };
 
-  const handleCustomAvatarUpload = (avatarUrl: string) => {
-    if (onCustomAvatarChange) {
-      onCustomAvatarChange(avatarUrl);
+  const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      console.error("File size must be less than 5MB");
+      return;
     }
-    // Automatically select custom avatar when uploading
-    onAvatarChange(-1); // Use -1 to indicate custom avatar selected
-  };
 
-  const handleCustomAvatarError = (error: string) => {
-    console.error("Avatar upload error:", error);
-    // You might want to show a toast or error message here
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      console.error(
+        "Please select a valid image file (JPEG, PNG, GIF, or WebP)"
+      );
+      return;
+    }
+
+    // Upload file
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const endpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL}/image/${userId}`;
+      const response = await fetch(endpoint, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (onCustomAvatarChange) {
+          onCustomAvatarChange(data.path);
+        }
+        // Set custom avatar as selected
+        onAvatarChange(999); // Use 999 to indicate custom avatar
+      } else {
+        console.error("Upload failed:", data);
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+    }
+
+    // Clear file input
+    event.target.value = "";
   };
 
   return (
-    <div className={`bg-card rounded-3xl p-8 border border-border shadow-2xl ${className}`}>
-      {/* Step 1: Warrior Name */}
-      <div className="mb-8">
-        <div className="text-center mb-4">
-          <h2 className="text-primary font-bold text-xl uppercase tracking-wide">
-            FORGE YOUR IDENTITY
-          </h2>
+    <div
+      className={`relative border border-accent/30 rounded-2xl overflow-hidden ${className}`}
+    >
+      {/* Content container */}
+      <div className="relative p-8">
+        {/* Main Title */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl uppercase text-gradient font-bold tracking-wide">
+            Choose your fighter
+          </h1>
         </div>
-        <div className="flex gap-2 items-center justify-center">
-          <div className="relative w-64">
-            <Input
-              type="text"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => handleUsernameChange(e.target.value)}
-              className="w-full h-12 bg-input border-2 border-border rounded-lg px-3 pr-10 text-foreground text-base
-                         focus:border-ring focus:ring-2 focus:ring-ring/20 focus:outline-none
-                         transition-all duration-200"
-              maxLength={20}
-            />
 
-            {/* Availability indicator */}
-            {username && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                {isCheckingUsername ? (
-                  <div className="w-4 h-4 border-2 border-ring border-t-transparent rounded-full animate-spin" />
-                ) : usernameAvailable === true ? (
-                  <span className="text-success text-xl">✓</span>
-                ) : usernameAvailable === false ? (
-                  <span className="text-error text-xl">✗</span>
-                ) : null}
+        {/* Username + Avatar Preview Section */}
+        <div className="mb-12">
+          <div className="flex items-center gap-8 mb-8">
+            {/* Username Input */}
+            <div className="flex-1">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  className={`w-full h-12 bg-input border-2 rounded-lg px-3 pr-20 text-foreground text-base
+                         focus:outline-none transition-all duration-200 ${
+                           username && usernameAvailable === true
+                             ? "border-success focus-visible:border-success focus-visible:ring-success/20 shadow-lg shadow-success/20"
+                             : username && usernameAvailable === false
+                             ? "border-error focus-visible:border-error focus-visible:ring-error/20 shadow-lg shadow-error/20"
+                             : "border-border focus-visible:border-ring focus-visible:ring-ring/20"
+                         }`}
+                  maxLength={20}
+                />
+
+                {/* Right side container for indicator and button */}
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                  {/* Loading indicator */}
+                  {username && usernameAvailable === null && (
+                    <div className="w-4 h-4 border-2 border-ring border-t-transparent rounded-full animate-spin" />
+                  )}
+
+                  {/* Generate button */}
+                  <button
+                    type="button"
+                    onClick={generateAiUsername}
+                    disabled={isGeneratingUsername}
+                    className="p-1 text-primary hover:text-primary transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Generate AI username"
+                  >
+                    {isGeneratingUsername ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Shuffle className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* Avatar Preview */}
+            <div className="flex-shrink-0">
+              <div className="w-48 h-48 relative">
+                {selectedAvatar !== null ? (
+                  selectedAvatar === 999 && customAvatar ? (
+                    <div
+                      className="w-full h-full rounded-2xl overflow-hidden selected-gradient p-2 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={handleAvatarPreviewClick}
+                    >
+                      <Image
+                        src={customAvatar}
+                        alt="Selected custom avatar"
+                        width={176}
+                        height={176}
+                        className="w-full h-full rounded-xl object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-full h-full rounded-2xl overflow-hidden selected-gradient p-2 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={handleAvatarPreviewClick}
+                    >
+                      <Image
+                        src={`/avatars/${selectedAvatar}.png`}
+                        alt={`Selected Avatar ${selectedAvatar}`}
+                        width={176}
+                        height={176}
+                        className="w-full h-full rounded-xl object-cover"
+                      />
+                    </div>
+                  )
+                ) : (
+                  <div
+                    className="w-full h-full rounded-2xl border border-border cursor-pointer transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center text-muted-foreground hover:text-primary"
+                    onClick={handleAvatarPreviewClick}
+                  >
+                    <Upload className="w-8 h-8 mb-3" />
+                    <span className="text-sm font-medium mb-1">
+                      Upload Custom
+                    </span>
+                    <span className="text-xs opacity-70">Click to browse</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
           </div>
 
-          {/* Generate button */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={generateAiUsername}
-            disabled={isGeneratingUsername}
-            className="shrink-0 h-12 w-12 bg-muted/50 hover:bg-muted
-                       border border-border hover:border-ring
-                       transition-all duration-200 hover:scale-105 active:scale-95
-                       cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-            title="Generate AI username"
-          >
-            {isGeneratingUsername ? (
-              <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <span className="text-lg">🎲</span>
-            )}
-          </Button>
+          {/* Username suggestions */}
+          {usernameAvailable === false && suggestedUsername && (
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground">
+                &ldquo;{username}&rdquo; is taken. Try{" "}
+                <span
+                  onClick={() =>
+                    handleUsernameChange(suggestedUsername, "generated")
+                  }
+                  className="text-primary hover:underline font-medium cursor-pointer"
+                >
+                  &ldquo;{suggestedUsername}&rdquo;
+                </span>
+                ?
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Username suggestions */}
-        {usernameAvailable === false && suggestedUsername && (
-          <p className="text-sm text-muted-foreground mt-2">
-            &ldquo;{username}&rdquo; is taken. Try{" "}
-            <button
-              onClick={() =>
-                handleUsernameChange(suggestedUsername, "generated")
-              }
-              className="text-primary hover:underline font-medium"
+        {/* Avatar Selection Grid */}
+        <div className="mb-8">
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            {/* Avatars */}
+            {Array.from({ length: 6 }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => handleAvatarSelect(index)}
+                className="relative text-center cursor-pointer"
+              >
+                <div
+                  className={`aspect-square rounded-xl p-1 overflow-hidden transition-all duration-200 hover:transform hover:-translate-y-1 ${
+                    selectedAvatar === index
+                      ? "selected-gradient shadow-xl shadow-slate-500/70 -translate-y-1 scale-105"
+                      : "border-gradient hover:shadow-lg hover:shadow-slate-500/30"
+                  }`}
+                >
+                  <Image
+                    src={`/avatars/${index}.png`}
+                    alt={`Avatar ${index}`}
+                    width={120}
+                    height={120}
+                    className="w-full h-full rounded-lg object-cover bg-muted"
+                  />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Next Button */}
+        {onComplete && (
+          <div className="mt-8 text-center">
+            <Button
+              onClick={onComplete}
+              disabled={!username.trim() || selectedAvatar === null}
+              variant="default"
+              size="lg"
             >
-              &ldquo;{suggestedUsername}&rdquo;
-            </button>
-            ?
-          </p>
+              {!username.trim()
+                ? "Enter Username"
+                : selectedAvatar === null
+                ? "Select Avatar"
+                : "Next"}
+            </Button>
+          </div>
         )}
       </div>
-
-      {/* Step 2: Pick Your Fighter */}
-      <div className="mb-8">
-        <div className="text-center mb-4">
-          <h2 className="text-primary font-bold text-xl uppercase tracking-wide">
-            CHOOSE YOUR FIGHTER
-          </h2>
-        </div>
-        <div className="grid grid-cols-7 gap-3 mb-4">
-          {/* Default Avatars */}
-          {Array.from({ length: 6 }, (_, index) => (
-            <button
-              key={index}
-              onClick={() => handleAvatarSelect(index)}
-              className={`relative rounded-lg p-1 text-center cursor-pointer overflow-hidden
-                         transition-all duration-200 hover:transform hover:-translate-y-1
-                         ${
-                           selectedAvatar === index
-                             ? "bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 shadow-xl shadow-orange-500/70 -translate-y-1 ring-4 ring-yellow-300 scale-105"
-                             : "bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 hover:shadow-lg hover:shadow-slate-500/30"
-                         }`}
-            >
-              {selectedAvatar === index && (
-                <div
-                  className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full 
-                            flex items-center justify-center text-white text-sm font-bold
-                            shadow-lg shadow-orange-500/50 ring-2 ring-yellow-300/50"
-                >
-                  ⚔️
-                </div>
-              )}
-              <Image
-                src={`/avatars/${index}.png`}
-                alt={`Avatar ${index}`}
-                width={100}
-                height={100}
-                className={`w-full h-auto rounded object-cover bg-muted transition-all duration-200 ${
-                  selectedAvatar === index ? "scale-115 drop-shadow-lg" : ""
-                }`}
-              />
-            </button>
-          ))}
-          
-          {/* Custom Avatar Upload Option - Last position */}
-          <div
-            onClick={handleCustomAvatarSelect}
-            className={`relative rounded-lg p-1 text-center cursor-pointer overflow-hidden
-                       transition-all duration-200 hover:transform hover:-translate-y-1
-                       ${
-                         selectedAvatar === -1
-                           ? "bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 shadow-xl shadow-orange-500/70 -translate-y-1 ring-4 ring-yellow-300 scale-105"
-                           : "bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 hover:shadow-lg hover:shadow-slate-500/30"
-                       }`}
-          >
-            <ImageUploader
-              currentImageUrl={customAvatar || undefined}
-              onUploadSuccess={handleCustomAvatarUpload}
-              onUploadError={handleCustomAvatarError}
-              size="lg"
-              userId={userId}
-              alt="Custom avatar"
-              className={selectedAvatar === -1 ? "scale-115 drop-shadow-lg" : ""}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Next Button */}
-      {onComplete && (
-        <div className="mt-8 text-center">
-          <Button
-            onClick={onComplete}
-            disabled={!username.trim() || (selectedAvatar === null && !customAvatar)}
-            className={`px-8 py-3 text-lg font-medium rounded-xl transition-all duration-300 uppercase tracking-wide
-                       ${
-                         username.trim() && (selectedAvatar !== null || customAvatar)
-                           ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 shadow-lg shadow-primary/50"
-                           : "bg-muted text-muted-foreground cursor-not-allowed"
-                       }`}
-          >
-            {!username.trim() 
-              ? "Enter Username" 
-              : (selectedAvatar === null && !customAvatar) 
-                ? "Select Avatar" 
-                : "Next"}
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

@@ -11,7 +11,7 @@ interface GoogleSignInButtonProps {
 }
 
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
-  className = "w-full bg-background text-foreground border-border hover:bg-accent gap-2 h-11",
+  className = "w-full gap-2 h-11",
   children = "Sign in with Google to save your profile and history",
   username,
   selectedAvatar
