@@ -241,66 +241,9 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
           </h1>
         </div>
 
-        {/* Avatar Section: Preview + Selection */}
-        <div className="mb-12 overflow-hidden">
-          <div className="flex flex-col lg:flex-row items-center gap-8 mb-8">
-            {/* Avatar Preview */}
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 sm:w-48 sm:h-48 relative">
-                {selectedAvatar !== null ? (
-                  selectedAvatar === 999 && customAvatar ? (
-                    <div
-                      className="w-full h-full rounded-2xl overflow-hidden selected-gradient p-2 cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={handleAvatarPreviewClick}
-                    >
-                      <Image
-                        src={customAvatar}
-                        alt="Selected custom avatar"
-                        width={176}
-                        height={176}
-                        className="w-full h-full rounded-xl object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="w-full h-full rounded-2xl overflow-hidden selected-gradient p-2 cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={handleAvatarPreviewClick}
-                    >
-                      <Image
-                        src={`/avatars/${selectedAvatar}.png`}
-                        alt={`Selected Avatar ${selectedAvatar}`}
-                        width={176}
-                        height={176}
-                        className="w-full h-full rounded-xl object-cover"
-                      />
-                    </div>
-                  )
-                ) : (
-                  <div
-                    className="w-full h-full rounded-2xl border border-border cursor-pointer transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center text-muted-foreground hover:text-primary"
-                    onClick={handleAvatarPreviewClick}
-                  >
-                    <Upload className="w-8 h-8 mb-3" />
-                    <span className="text-sm font-medium mb-1">
-                      Upload Custom
-                    </span>
-                    <span className="text-xs opacity-70">Click to browse</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
-
-            {/* Avatar Selection Carousel */}
-            <div className="flex-1 px-16">
+        {/* Avatar Selection Carousel */}
+        <div className="mb-12">
+          <div className="px-16">
               <Carousel
                 opts={{
                   align: "start",
@@ -309,6 +252,22 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
                 className="w-full max-w-4xl mx-auto"
               >
                 <CarouselContent className="ml-0 md:ml-0 py-16 pl-3">
+                  {/* Upload Custom Avatar Item */}
+                  <CarouselItem className="pl-2 md:pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 px-2">
+                    <button
+                      onClick={handleAvatarPreviewClick}
+                      className="relative w-full cursor-pointer focus:outline-none rounded-xl"
+                      aria-label="Upload Custom Avatar"
+                    >
+                      <div className="w-full aspect-square rounded-xl p-2 border-gradient hover:shadow-xl hover:shadow-slate-500/30 transition-all duration-300 hover:transform hover:-translate-y-2 hover:scale-105 flex flex-col items-center justify-center text-muted-foreground hover:text-accent">
+                        <Upload className="w-8 h-8 mb-2" />
+                        <span className="text-sm font-medium mb-1">Upload</span>
+                        <span className="text-xs opacity-70">Custom</span>
+                      </div>
+                    </button>
+                  </CarouselItem>
+
+                  {/* Default Avatar Items */}
                   {Array.from({ length: 6 }, (_, index) => (
                     <CarouselItem
                       key={index}
@@ -338,12 +297,41 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
                       </button>
                     </CarouselItem>
                   ))}
+
+                  {/* Custom Avatar Item (if uploaded) */}
+                  {selectedAvatar === 999 && customAvatar && (
+                    <CarouselItem className="pl-2 md:pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 px-2">
+                      <button
+                        onClick={() => handleAvatarSelect(999)}
+                        className="relative w-full cursor-pointer focus:outline-none rounded-xl"
+                        aria-label="Select Custom Avatar"
+                      >
+                        <div className="w-full aspect-square rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105">
+                          <Image
+                            src={customAvatar}
+                            alt="Custom Avatar"
+                            width={160}
+                            height={160}
+                            className="w-full h-full rounded-lg object-cover bg-muted"
+                          />
+                        </div>
+                      </button>
+                    </CarouselItem>
+                  )}
                 </CarouselContent>
                 <CarouselPrevious className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
                 <CarouselNext className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
               </Carousel>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
             </div>
-          </div>
         </div>
 
         {/* Username Section */}
