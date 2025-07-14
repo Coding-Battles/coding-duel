@@ -1,14 +1,15 @@
-import React, {
-  useState,
-  useRef,
-  ChangeEvent,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { useState, useRef, ChangeEvent, useCallback } from "react";
 import Image from "next/image";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Shuffle, Upload, ChevronLeft, ChevronRight } from "lucide-react";
+import { Shuffle, Upload } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "./ui/carousel";
 
 interface ProfileCreatorProps {
   username: string;
@@ -39,10 +40,6 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   const [suggestedUsername, setSuggestedUsername] = useState<string>("");
   const [isGeneratingUsername, setIsGeneratingUsername] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [focusedAvatarIndex, setFocusedAvatarIndex] = useState<number | null>(
-    null
-  );
 
   // Type-safe debounce utility function
   function debounce<Args extends readonly unknown[]>(
@@ -170,7 +167,6 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   const handleAvatarSelect = useCallback(
     (index: number) => {
       onAvatarChange(index);
-      setFocusedAvatarIndex(index);
       // Clear custom avatar when selecting default avatar
       if (onCustomAvatarChange) {
         onCustomAvatarChange(null);
@@ -178,94 +174,6 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
     },
     [onAvatarChange, onCustomAvatarChange]
   );
-
-  // Scroll avatar into view
-  const scrollToAvatar = useCallback((index: number) => {
-    if (!scrollContainerRef.current) return;
-
-    const container = scrollContainerRef.current;
-    const avatarWidth = 150 + 16; // avatar width + gap
-    const containerWidth = container.clientWidth;
-    const scrollLeft = container.scrollLeft;
-
-    const avatarLeft = index * avatarWidth;
-    const avatarRight = avatarLeft + avatarWidth;
-
-    // Check if avatar is out of view and scroll to it
-    if (avatarLeft < scrollLeft) {
-      container.scrollTo({
-        left: avatarLeft - 16, // Add some padding
-        behavior: "smooth",
-      });
-    } else if (avatarRight > scrollLeft + containerWidth) {
-      container.scrollTo({
-        left: avatarRight - containerWidth + 16, // Add some padding
-        behavior: "smooth",
-      });
-    }
-  }, []);
-
-  // Scroll by one avatar at a time
-  const scrollByAvatar = useCallback((direction: "left" | "right") => {
-    if (!scrollContainerRef.current) return;
-
-    const container = scrollContainerRef.current;
-    const avatarWidth = 150 + 16; // avatar width + gap
-    const scrollAmount = direction === "left" ? -avatarWidth : avatarWidth;
-
-    container.scrollBy({
-      left: scrollAmount,
-      behavior: "smooth",
-    });
-  }, []);
-
-  // Keyboard navigation
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.target !== document.body) return; // Only handle when not in input
-
-      const avatarCount = 6; // Update this if you change the number of avatars
-      let newIndex = focusedAvatarIndex;
-
-      switch (e.key) {
-        case "ArrowLeft":
-          e.preventDefault();
-          newIndex =
-            focusedAvatarIndex === null
-              ? 0
-              : Math.max(0, focusedAvatarIndex - 1);
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          newIndex =
-            focusedAvatarIndex === null
-              ? 0
-              : Math.min(avatarCount - 1, focusedAvatarIndex + 1);
-          break;
-        case "Enter":
-        case " ":
-          if (focusedAvatarIndex !== null) {
-            e.preventDefault();
-            handleAvatarSelect(focusedAvatarIndex);
-          }
-          break;
-        default:
-          return;
-      }
-
-      if (newIndex !== null && newIndex !== focusedAvatarIndex) {
-        setFocusedAvatarIndex(newIndex);
-        scrollToAvatar(newIndex);
-      }
-    },
-    [focusedAvatarIndex, handleAvatarSelect, scrollToAvatar]
-  );
-
-  // Add keyboard event listeners
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
 
   const handleAvatarPreviewClick = () => {
     fileInputRef.current?.click();
@@ -392,80 +300,48 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
             </div>
 
             {/* Avatar Selection Carousel */}
-            <div className="flex-1 relative overflow-hidden">
-              {/* Navigation Arrows */}
-              <ChevronLeft
-                onClick={() => scrollByAvatar("left")}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) =>
-                  (e.key === "Enter" || e.key === " ") && scrollByAvatar("left")
-                }
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 h-16 w-10 text-primary cursor-pointer hover:scale-110 transition-transform duration-200"
-                aria-label="Scroll left"
-              />
-
-              <ChevronRight
-                onClick={() => scrollByAvatar("right")}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) =>
-                  (e.key === "Enter" || e.key === " ") &&
-                  scrollByAvatar("right")
-                }
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 h-16 w-10 text-primary cursor-pointer hover:scale-110 transition-transform duration-200"
-                aria-label="Scroll right"
-              />
-
-              {/* Fade edges for scroll indication */}
-              <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-
-              {/* Horizontal scrollable container */}
-              <div
-                ref={scrollContainerRef}
-                className="flex gap-4 overflow-x-auto scrollbar-hide py-4 px-12"
-                style={{
-                  scrollbarWidth: "none",
-                  msOverflowStyle: "none",
-                  WebkitOverflowScrolling: "touch",
+            <div className="flex-1 px-16">
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: false,
                 }}
-                onWheel={(e) => {
-                  // Enable horizontal scrolling with mouse wheel
-                  if (scrollContainerRef.current) {
-                    e.preventDefault();
-                    scrollContainerRef.current.scrollLeft += e.deltaY;
-                  }
-                }}
+                className="w-full max-w-4xl mx-auto"
               >
-                {/* Avatars */}
-                {Array.from({ length: 6 }, (_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleAvatarSelect(index)}
-                    onFocus={() => setFocusedAvatarIndex(index)}
-                    className="relative flex-shrink-0 cursor-pointer focus:outline-none rounded-xl"
-                    aria-label={`Select Avatar ${index + 1}`}
-                  >
-                    <div
-                      className={`w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 ${
-                        selectedAvatar === index
-                          ? "selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105"
-                          : "border-gradient hover:shadow-xl hover:shadow-slate-500/30 hover:scale-105"
-                      }`}
+                <CarouselContent className="ml-0 md:ml-0 py-16 pl-3">
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <CarouselItem
+                      key={index}
+                      className="pl-2 md:pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 px-2"
                     >
-                      <Image
-                        src={`/avatars/${index}.png`}
-                        alt={`Avatar ${index + 1}`}
-                        width={160}
-                        height={160}
-                        className="w-full h-full rounded-lg object-cover bg-muted"
-                        priority={index < 4} // Prioritize first 4 visible avatars
-                      />
-                    </div>
-                  </button>
-                ))}
-              </div>
+                      <button
+                        onClick={() => handleAvatarSelect(index)}
+                        className="relative w-full cursor-pointer focus:outline-none rounded-xl"
+                        aria-label={`Select Avatar ${index + 1}`}
+                      >
+                        <div
+                          className={`w-full aspect-square rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 ${
+                            selectedAvatar === index
+                              ? "selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105"
+                              : "border-gradient hover:shadow-xl hover:shadow-slate-500/30 hover:scale-105"
+                          }`}
+                        >
+                          <Image
+                            src={`/avatars/${index}.png`}
+                            alt={`Avatar ${index + 1}`}
+                            width={160}
+                            height={160}
+                            className="w-full h-full rounded-lg object-cover bg-muted"
+                            priority={index < 4}
+                          />
+                        </div>
+                      </button>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
+                <CarouselNext className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
+              </Carousel>
             </div>
           </div>
         </div>
