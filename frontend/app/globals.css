@@ -5,6 +5,7 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-background2: var(--background2);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-secondary: var(--secondary);
@@ -25,7 +26,9 @@
   --color-destructive-foreground: var(--background);
   --color-input: var(--background);
   --color-ring: var(--accent);
-  --color-border: var(--foreground);
+  --color-border: var(--border);
+  --color-player1: var(--player1);
+  --color-player2: var(--player2);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --radius-sm: calc(var(--radius) - 4px);
@@ -41,22 +44,74 @@ html {
 :root {
   --radius: 0.65rem;
   --background: oklch(0.98 0 0);
+  --background2: oklch(0.95 0.00002 271.152);
   --foreground: oklch(0.15 0 0);
+  --border: oklch(0.1 0.01262 333.851);
   --accent: oklch(0.4 0.15 250);
   --secondary: oklch(0.45 0.13 180);
   --selected: oklch(0.85 0.18 210);
   --success: oklch(0.5 0.15 140);
   --error: oklch(0.55 0.2 20);
+  --player1: oklch(60.286% 0.17192 253.986);
+  --player2: oklch(60.983% 0.22289 26.972);
 }
 
 .dark {
   --background: oklch(0.08 0 0);
+  --background2: oklch(15.434% 0.00002 271.152);
   --foreground: oklch(0.95 0 0);
+  --border: oklch(54.517% 0.00006 271.152);
   --accent: oklch(0.6 0.15 250);
   --secondary: oklch(0.55 0.13 180);
   --selected: oklch(0.3 0.18 210);
   --success: oklch(0.6 0.15 140);
   --error: oklch(0.65 0.2 20);
+  --player1: oklch(52.044% 0.16553 255.237);
+  --player2: oklch(55.451% 0.2213 28.616);
+
+}
+
+.wavyDiv {
+  position: relative;
+  padding: 4rem 2rem 2rem;
+  color: white;
+  margin-top: 60px;
+}
+
+.wavyDiv::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: var(--background2);
+  clip-path: polygon(
+    0% 100%,
+    2% 95%,
+    5% 85%,
+    8% 75%,
+    12% 65%,
+    16% 55%,
+    20% 50%,
+    25% 55%,
+    30% 65%,
+    35% 75%,
+    40% 80%,
+    45% 75%,
+    50% 65%,
+    55% 55%,
+    60% 50%,
+    65% 55%,
+    70% 65%,
+    75% 75%,
+    80% 80%,
+    85% 75%,
+    90% 65%,
+    95% 55%,
+    100% 50%,
+    100% 100%
+  );
 }
 
 @layer base {
