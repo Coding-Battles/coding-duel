@@ -1,4 +1,4 @@
-import React, { useState, useRef, ChangeEvent, useCallback } from "react";
+import React, { useState, useRef, useCallback, ChangeEvent } from "react";
 import Image from "next/image";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -10,6 +10,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "./ui/carousel";
+import { WheelGesturesPlugin } from "embla-carousel-wheel-gestures";
 
 interface ProfileCreatorProps {
   username: string;
@@ -40,6 +41,7 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
   const [suggestedUsername, setSuggestedUsername] = useState<string>("");
   const [isGeneratingUsername, setIsGeneratingUsername] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [carouselApi, setCarouselApi] = useState<any>(null);
 
   // Type-safe debounce utility function
   function debounce<Args extends readonly unknown[]>(
@@ -244,94 +246,99 @@ const ProfileCreator: React.FC<ProfileCreatorProps> = ({
         {/* Avatar Selection Carousel */}
         <div className="mb-12">
           <div className="px-16">
-              <Carousel
-                opts={{
-                  align: "start",
-                  loop: false,
-                }}
-                className="w-full max-w-4xl mx-auto"
-              >
-                <CarouselContent className="ml-0 md:ml-0 py-16 pl-3">
-                  {/* Upload Custom Avatar Item */}
-                  <CarouselItem className="pl-2 md:pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 px-2">
-                    <button
-                      onClick={handleAvatarPreviewClick}
-                      className="relative w-full cursor-pointer focus:outline-none rounded-xl"
-                      aria-label="Upload Custom Avatar"
-                    >
-                      <div className="w-full aspect-square rounded-xl p-2 border-gradient hover:shadow-xl hover:shadow-slate-500/30 transition-all duration-300 hover:transform hover:-translate-y-2 hover:scale-105 flex flex-col items-center justify-center text-muted-foreground hover:text-accent">
+            <Carousel
+              plugins={[WheelGesturesPlugin()]}
+              opts={{
+                align: "start",
+                loop: false,
+                skipSnaps: false,
+              }}
+              setApi={setCarouselApi}
+              className="w-full max-w-4xl mx-auto"
+            >
+              <CarouselContent className="ml-0 md:ml-0 py-16 pl-3">
+                {/* Upload Custom Avatar Item */}
+                <CarouselItem className="pl-2 md:pl-4 basis-1/3 px-2">
+                  <button
+                    onClick={handleAvatarPreviewClick}
+                    className="relative w-full cursor-pointer focus:outline-none rounded-xl"
+                    aria-label="Upload Custom Avatar"
+                  >
+                    <div className="w-full aspect-square rounded-xl p-2 border-gradient hover:shadow-xl hover:shadow-slate-500/30 transition-all duration-300 hover:transform hover:-translate-y-2 hover:scale-105">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground hover:text-accent">
                         <Upload className="w-8 h-8 mb-2" />
                         <span className="text-sm font-medium mb-1">Upload</span>
                         <span className="text-xs opacity-70">Custom</span>
                       </div>
+                    </div>
+                  </button>
+                </CarouselItem>
+
+                {/* Default Avatar Items */}
+                {Array.from({ length: 6 }, (_, index) => (
+                  <CarouselItem
+                    key={index}
+                    className="pl-2 md:pl-4 basis-1/3 px-2"
+                  >
+                    <button
+                      onClick={() => handleAvatarSelect(index)}
+                      className="relative w-full cursor-pointer focus:outline-none rounded-xl"
+                      aria-label={`Select Avatar ${index + 1}`}
+                    >
+                      <div
+                        className={`w-full aspect-square rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 ${
+                          selectedAvatar === index
+                            ? "selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105"
+                            : "border-gradient hover:shadow-xl hover:shadow-slate-500/30 hover:scale-105"
+                        }`}
+                      >
+                        <Image
+                          src={`/avatars/${index}.png`}
+                          alt={`Avatar ${index + 1}`}
+                          width={160}
+                          height={160}
+                          className="w-full h-full rounded-lg object-cover bg-muted"
+                          priority={index < 4}
+                        />
+                      </div>
                     </button>
                   </CarouselItem>
+                ))}
 
-                  {/* Default Avatar Items */}
-                  {Array.from({ length: 6 }, (_, index) => (
-                    <CarouselItem
-                      key={index}
-                      className="pl-2 md:pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 px-2"
+                {/* Custom Avatar Item (if uploaded) */}
+                {selectedAvatar === 999 && customAvatar && (
+                  <CarouselItem className="pl-2 md:pl-4 basis-1/3 px-2">
+                    <button
+                      onClick={() => handleAvatarSelect(999)}
+                      className="relative w-full cursor-pointer focus:outline-none rounded-xl"
+                      aria-label="Select Custom Avatar"
                     >
-                      <button
-                        onClick={() => handleAvatarSelect(index)}
-                        className="relative w-full cursor-pointer focus:outline-none rounded-xl"
-                        aria-label={`Select Avatar ${index + 1}`}
-                      >
-                        <div
-                          className={`w-full aspect-square rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 ${
-                            selectedAvatar === index
-                              ? "selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105"
-                              : "border-gradient hover:shadow-xl hover:shadow-slate-500/30 hover:scale-105"
-                          }`}
-                        >
-                          <Image
-                            src={`/avatars/${index}.png`}
-                            alt={`Avatar ${index + 1}`}
-                            width={160}
-                            height={160}
-                            className="w-full h-full rounded-lg object-cover bg-muted"
-                            priority={index < 4}
-                          />
-                        </div>
-                      </button>
-                    </CarouselItem>
-                  ))}
+                      <div className="w-full aspect-square rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105">
+                        <Image
+                          src={customAvatar}
+                          alt="Custom Avatar"
+                          width={160}
+                          height={160}
+                          className="w-full h-full rounded-lg object-cover bg-muted"
+                        />
+                      </div>
+                    </button>
+                  </CarouselItem>
+                )}
+              </CarouselContent>
+              <CarouselPrevious className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
+              <CarouselNext className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
+            </Carousel>
 
-                  {/* Custom Avatar Item (if uploaded) */}
-                  {selectedAvatar === 999 && customAvatar && (
-                    <CarouselItem className="pl-2 md:pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 px-2">
-                      <button
-                        onClick={() => handleAvatarSelect(999)}
-                        className="relative w-full cursor-pointer focus:outline-none rounded-xl"
-                        aria-label="Select Custom Avatar"
-                      >
-                        <div className="w-full aspect-square rounded-xl p-2 overflow-hidden transition-all duration-300 hover:transform hover:-translate-y-2 selected-gradient shadow-2xl shadow-accent/50 -translate-y-2 scale-105">
-                          <Image
-                            src={customAvatar}
-                            alt="Custom Avatar"
-                            width={160}
-                            height={160}
-                            className="w-full h-full rounded-lg object-cover bg-muted"
-                          />
-                        </div>
-                      </button>
-                    </CarouselItem>
-                  )}
-                </CarouselContent>
-                <CarouselPrevious className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
-                <CarouselNext className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
-              </Carousel>
-
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
         </div>
 
         {/* Username Section */}

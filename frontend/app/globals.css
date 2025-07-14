@@ -93,6 +93,12 @@ html {
       theme("colors.slate.300"),
       theme("colors.slate.400")
     );
+    padding: 2px;
+  }
+  
+  .selected-gradient > * {
+    background: var(--background);
+    border-radius: inherit;
   }
 
   /* Border gradient utility */
@@ -103,6 +109,12 @@ html {
       theme("colors.slate.400"),
       theme("colors.slate.500")
     );
+    padding: 2px;
+  }
+  
+  .border-gradient > * {
+    background: var(--background);
+    border-radius: inherit;
   }
   /* Completely consistent, minimal question styling */
   .leetcode-example {
