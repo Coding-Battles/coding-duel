@@ -135,23 +135,6 @@ export default function GameSetupPage() {
             onDifficultyChange={setSelectedDifficulties}
             onEditProfile={() => router.push("/profile")}
           />
-
-          {/* Find Game Button */}
-          <div className="mt-8 text-center">
-            <Button
-              onClick={handleFindGame}
-              disabled={!hasSelectedDifficulty}
-              variant="default"
-              className={`px-8 py-4 text-xl font-bold rounded-xl transition-all duration-300 uppercase tracking-wide
-                         ${
-                           hasSelectedDifficulty
-                             ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-1 shadow-lg shadow-primary/50"
-                             : "bg-muted text-muted-foreground cursor-not-allowed"
-                         }`}
-            >
-              {hasSelectedDifficulty ? "Find Game" : "Select Difficulty"}
-            </Button>
-          </div>
         </div>
       </div>
     </div>
