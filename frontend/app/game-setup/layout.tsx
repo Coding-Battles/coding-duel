@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, getAvatarUrl } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { User } from "better-auth";
@@ -69,6 +69,7 @@ export default function QueueLayout({
 
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [opponentData, setOpponentData] = useState<OpponentData>(() => {
     // Restore opponent data from sessionStorage
     if (typeof window !== "undefined") {
@@ -254,8 +255,10 @@ export default function QueueLayout({
         anonymous: false,
       });
 
-      // Navigate to queue page to show waiting state
-      router.push("/game-setup/queue");
+      // Only navigate to queue page if we're not already on the main game-setup page
+      if (pathname !== "/game-setup") {
+        router.push("/game-setup/queue");
+      }
     } catch (error) {
       console.error("Error joining queue:", error);
       // TODO: Show user-friendly error message
