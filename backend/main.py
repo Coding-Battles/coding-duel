@@ -149,10 +149,6 @@ app.include_router(questions_router.router, prefix="/api")
 app.include_router(code.router, prefix="/api")
 app.include_router(game.router, prefix="/api")
 
-# Include routes without /api prefix for frontend compatibility
-app.include_router(questions_router.router)
-app.include_router(code.router)
-app.include_router(game.router)
 
 # Create Socket.IO server with CORS and better connection settings
 sio = socketio.AsyncServer(

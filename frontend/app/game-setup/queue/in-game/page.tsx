@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Editor } from "@monaco-editor/react";
 import { Check } from "lucide-react";
 import React from "react";
-import { useGameContext } from "../layout";
+import { useGameContext } from "../../layout";
 import { useRouter } from "next/navigation";
 import {
   SidebarInset,

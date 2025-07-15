@@ -11,6 +11,7 @@ interface DifficultySelectorProps {
   selectedDifficulties: DifficultyState;
   onDifficultyChange: (difficulties: DifficultyState) => void;
   onEditProfile?: () => void;
+  onFindGame?: () => void;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   selectedDifficulties,
   onDifficultyChange,
   onEditProfile,
+  onFindGame,
   className = "",
 }) => {
   const difficulties = [
@@ -46,83 +48,104 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
     onDifficultyChange(newDifficulties);
   };
 
-  return (
-    <div
-      className={`bg-card rounded-3xl p-8 border border-border shadow-2xl relative ${className}`}
-    >
-      {/* Edit Profile Button */}
-      {onEditProfile && (
-        <Button variant="outline" size="sm" className="absolute top-4 right-4" onClick={onEditProfile}>
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          Edit Profile
-        </Button>
-      )}
+  // Check if any difficulty is selected
+  const hasSelectedDifficulty =
+    Object.values(selectedDifficulties).some(Boolean);
 
+  return (
+    <div className={`bg-card rounded-3xl p-8 shadow-2xl relative ${className}`}>
       {/* Step 3: Pick Your Poison */}
       <div className="mb-8">
-        <div className="text-center mb-4">
-          <h2 className="text-primary font-bold text-xl uppercase tracking-wide">
-            PICK YOUR POISON
-          </h2>
+        <div className="text-center pb-18">
+          <h1
+            className="text-4xl sm:text-6xl lg:text-8xl uppercase text-gradient font-bold tracking-wide gaming-title"
+            data-text="Pick your poison"
+          >
+            Pick your poison
+          </h1>
         </div>
         <div className="flex flex-col gap-4">
-          {/* Selection Count */}
-          <div className="text-center text-sm text-muted-foreground">
-            {Object.values(selectedDifficulties).filter(Boolean).length} of 3
-            difficulties selected
-          </div>
-
           <div className="grid grid-cols-3 gap-4">
             {difficulties.map((diff) => (
-              <button
-                key={diff.key}
-                onClick={() => handleDifficultySelect(diff.key)}
-                className={`relative rounded-lg p-4 text-center cursor-pointer
-                           transition-all duration-200 hover:transform hover:-translate-y-0.5 min-h-[120px]
-                           ${
-                             selectedDifficulties[diff.key]
-                               ? "border-2 border-selected bg-selected/10 shadow-xl ring-2 ring-selected/30"
-                               : "bg-background border-2 border-foreground/20 shadow-lg hover:shadow-xl hover:border-foreground/40"
-                           }`}
-              >
-                {/* Checkbox indicator */}
-                <div className="absolute top-3 left-3">
+              <div className="flex justify-center" key={diff.key}>
+                {" "}
+                {/* Add this wrapper */}
+                <button
+                  onClick={() => handleDifficultySelect(diff.key)}
+                  className={`relative cursor-pointer focus:outline-none rounded-xl transition-all duration-300 hover:transform hover:-translate-y-2 hover:scale-105 ${
+                    selectedDifficulties[diff.key]
+                      ? "shadow-2xl shadow-accent/50 -translate-y-2 scale-105"
+                      : ""
+                  }`}
+                  aria-label={`Select ${diff.label} difficulty`}
+                >
                   <div
-                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200
-                              ${
-                                selectedDifficulties[diff.key]
-                                  ? "bg-selected border-selected text-background"
-                                  : "border-muted-foreground bg-transparent"
-                              }`}
+                    className={`w-50 h-50 rounded-xl p-2 transition-all duration-300 ${
+                      selectedDifficulties[diff.key]
+                        ? "bg-gradient-to-r from-slate-500 via-slate-300 to-slate-500 hover:from-slate-400 hover:via-slate-200 hover:to-slate-400"
+                        : "border-gradient hover:shadow-xl hover:shadow-slate-500/30"
+                    }`}
                   >
-                    {selectedDifficulties[diff.key] && (
-                      <span className="text-xs font-bold">✓</span>
-                    )}
+                    <div className="w-full h-full rounded-lg bg-background flex items-center justify-center relative overflow-hidden">
+                      <span
+                        className={`font-bold text-xl uppercase tracking-wider transition-colors duration-300 relative z-10 ${
+                          selectedDifficulties[diff.key]
+                            ? "text-slate-200 hover:text-slate-100"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {diff.label}
+                      </span>
+                      {/* Shine effect for selected cards */}
+                      {selectedDifficulties[diff.key] && (
+                        <div className="absolute inset-0 -top-2 -left-2 bg-gradient-to-r from-transparent via-white/20 to-transparent rotate-45 w-8 h-20 animate-pulse opacity-50"></div>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="text-3xl mb-2">{diff.emoji}</div>
-                  <div className="font-bold text-sm text-foreground">
-                    {diff.label}
-                  </div>
-                </div>
-              </button>
+                </button>
+              </div>
             ))}
           </div>
         </div>
+
+        {/* Find Game Button */}
+        {true && (
+          <div className="text-center mt-20">
+            <button
+              onClick={onFindGame}
+              disabled={!hasSelectedDifficulty}
+              className={`relative cursor-pointer h-16 w-64 font-bold uppercase tracking-wider transition-all duration-300 transform hover:scale-105 focus:outline-none disabled:cursor-not-allowed overflow-hidden rounded-lg ${
+                !hasSelectedDifficulty ? "" : "shadow-2xl shadow-accent/50"
+              }`}
+            >
+              {/* Gradient border effect - always present */}
+              <div
+                className={`absolute inset-0 rounded-lg p-[2px] transition-all duration-300 ${
+                  !hasSelectedDifficulty
+                    ? "bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800"
+                    : "bg-gradient-to-r from-slate-500 via-slate-300 to-slate-500 hover:from-slate-400 hover:via-slate-200 hover:to-slate-400"
+                }`}
+              >
+                <div className="w-full h-full rounded-md bg-background flex items-center justify-center">
+                  <span
+                    className={`relative z-10 transition-colors duration-300 ${
+                      !hasSelectedDifficulty
+                        ? "text-slate-500"
+                        : "text-slate-200 hover:text-slate-100"
+                    }`}
+                  >
+                    Find Game
+                  </span>
+                </div>
+              </div>
+
+              {/* Shine effect when ready */}
+              {hasSelectedDifficulty && (
+                <div className="absolute inset-0 -top-2 -left-2 bg-gradient-to-r from-transparent via-white/20 to-transparent rotate-45 w-8 h-20 animate-pulse opacity-50"></div>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

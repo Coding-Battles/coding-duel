@@ -56,8 +56,8 @@ async def is_username_taken(username: str) -> bool:
     )
 
     try:
-        # Query to check if username exists
-        query = 'SELECT COUNT(*) FROM "user" WHERE username = $1'
+        # Query to check if username exists (case-insensitive)
+        query = 'SELECT COUNT(*) FROM "user" WHERE LOWER(username) = LOWER($1)'
         count = await conn.fetchval(query, username)
         return count > 0
     finally:
@@ -154,13 +154,15 @@ async def batch_check_usernames_availability(usernames: List[str]) -> dict[str, 
     )
 
     try:
-        # Check all usernames in one query using ANY
-        query = 'SELECT username FROM "user" WHERE username = ANY($1)'
-        taken_usernames = await conn.fetch(query, usernames)
-        taken_set = {row["username"] for row in taken_usernames}
+        # Check all usernames in one query using ANY (case-insensitive)
+        # Convert usernames to lowercase for comparison
+        lowercase_usernames = [username.lower() for username in usernames]
+        query = 'SELECT username FROM "user" WHERE LOWER(username) = ANY($1)'
+        taken_usernames = await conn.fetch(query, lowercase_usernames)
+        taken_set = {row["username"].lower() for row in taken_usernames}
 
-        # Return availability dict
-        return {username: username not in taken_set for username in usernames}
+        # Return availability dict (case-insensitive comparison)
+        return {username: username.lower() not in taken_set for username in usernames}
     finally:
         await conn.close()
 
@@ -209,18 +211,20 @@ async def batch_check_usernames_availability_with_connection(
     if not usernames:
         return {}
 
-    query = 'SELECT username FROM "user" WHERE username = ANY($1)'
-    taken_usernames = await conn.fetch(query, usernames)
-    taken_set = {row["username"] for row in taken_usernames}
+    # Convert usernames to lowercase for comparison
+    lowercase_usernames = [username.lower() for username in usernames]
+    query = 'SELECT username FROM "user" WHERE LOWER(username) = ANY($1)'
+    taken_usernames = await conn.fetch(query, lowercase_usernames)
+    taken_set = {row["username"].lower() for row in taken_usernames}
 
-    return {username: username not in taken_set for username in usernames}
+    return {username: username.lower() not in taken_set for username in usernames}
 
 
 async def find_next_available_numbered_username(base_username: str, conn) -> str:
     """Find next available numbered version using existing connection."""
     for i in range(1, 10000):
         variant = f"{base_username}{i}"
-        query = 'SELECT COUNT(*) FROM "user" WHERE username = $1'
+        query = 'SELECT COUNT(*) FROM "user" WHERE LOWER(username) = LOWER($1)'
         count = await conn.fetchval(query, variant)
         if count == 0:
             return variant

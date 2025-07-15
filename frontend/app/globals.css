@@ -26,6 +26,8 @@
   --color-destructive-foreground: var(--background);
   --color-input: var(--background);
   --color-ring: var(--accent);
+  --color-border: var(--secondary);
+  --font-sans: var(--font-inter);
   --color-border: var(--border);
   --color-player1: var(--player1);
   --color-player2: var(--player2);
@@ -43,6 +45,9 @@ html {
 
 :root {
   --radius: 0.65rem;
+  --background: oklch(0.89 0 0);
+  --foreground: oklch(0.22 0.03 210);
+  --accent: oklch(0.6 0.015 60);
   --background: oklch(0.98 0 0);
   --background2: oklch(0.95 0.00002 271.152);
   --foreground: oklch(0.15 0 0);
@@ -57,6 +62,13 @@ html {
 }
 
 .dark {
+  --background: oklch(0.15 0.01 240);
+  --foreground: oklch(0.92 0.005 240);
+  --accent: oklch(0.82 0.04 240);
+  --secondary: oklch(0.7 0.03 240);
+  --friendly: oklch(0.45 0.2 260);
+  --opponent: oklch(0.5 0.25 25);
+  --selected: oklch(0.7 0.18 55);
   --background: oklch(0.08 0 0);
   --background2: oklch(15.434% 0.00002 271.152);
   --foreground: oklch(0.95 0 0);
@@ -65,6 +77,7 @@ html {
   --secondary: oklch(0.55 0.13 180);
   --selected: oklch(0.3 0.18 210);
   --success: oklch(0.6 0.15 140);
+  --error: oklch(0.55 0.22 10);
   --error: oklch(0.65 0.2 20);
   --player1: oklch(52.044% 0.16553 255.237);
   --player2: oklch(55.451% 0.2213 28.616);
@@ -124,6 +137,83 @@ html {
 }
 
 @layer utilities {
+  /* Reusable gradient text utility */
+  .text-gradient {
+    background: linear-gradient(
+      to right,
+      theme("colors.slate.400"),
+      theme("colors.slate.300"),
+      theme("colors.slate.400")
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Selected gradient utility */
+  .selected-gradient {
+    background: linear-gradient(
+      to right,
+      theme("colors.slate.400"),
+      theme("colors.slate.300"),
+      theme("colors.slate.400")
+    );
+    padding: 2px;
+  }
+  
+  .selected-gradient > * {
+    background: var(--background);
+    border-radius: inherit;
+  }
+
+  /* Border gradient utility */
+  .border-gradient {
+    background: linear-gradient(
+      to right,
+      theme("colors.slate.500"),
+      theme("colors.slate.400"),
+      theme("colors.slate.500")
+    );
+    padding: 2px;
+  }
+  
+  .border-gradient > * {
+    background: var(--background);
+    border-radius: inherit;
+  }
+
+  /* SVG/Stroke gradient utilities */
+  .stroke-gradient {
+    stroke: theme("colors.slate.400");
+  }
+
+  .stroke-gradient-hover {
+    stroke: theme("colors.slate.400");
+    transition: stroke 0.2s ease;
+  }
+
+  .stroke-gradient-hover:hover {
+    stroke: theme("colors.slate.300");
+  }
+
+  .stroke-gradient-selected {
+    stroke: theme("colors.slate.300");
+  }
+
+  /* Fill gradient utilities */
+  .fill-gradient {
+    fill: theme("colors.slate.400");
+  }
+
+  .fill-gradient-hover {
+    fill: theme("colors.slate.400");
+    transition: fill 0.2s ease;
+  }
+
+  .fill-gradient-hover:hover {
+    fill: theme("colors.slate.300");
+  }
   /* Completely consistent, minimal question styling */
   .leetcode-example {
     @apply py-3;
@@ -167,5 +257,176 @@ html {
 
   .leetcode-difficulty-hard {
     @apply text-sm font-medium text-error;
+  }
+
+  /* RGB glitch effect only */
+  .gaming-title {
+    position: relative;
+  }
+
+  .gaming-title::before,
+  .gaming-title::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gaming-title::before {
+    color: #ff0040;
+    animation: glitch-1 2s ease-out;
+    animation-iteration-count: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  }
+
+  .gaming-title::after {
+    color: #00ffff;
+    animation: glitch-2 2s ease-out;
+    animation-iteration-count: 1;
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  }
+
+  @keyframes glitch-1 {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-2px, 1px);
+    }
+    16%, 29% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    30% {
+      opacity: 1;
+      transform: translate(-18px, -5px);
+    }
+    31%, 49% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-3px, -1px);
+    }
+    51%, 64% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    65% {
+      opacity: 1;
+      transform: translate(-1px, 2px);
+    }
+    66%, 79% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    80% {
+      opacity: 1;
+      transform: translate(-22px, 4px);
+    }
+    81%, 100% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+  }
+
+  @keyframes glitch-2 {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+    22% {
+      opacity: 1;
+      transform: translate(3px, -1px);
+    }
+    23%, 39% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    40% {
+      opacity: 1;
+      transform: translate(1px, 2px);
+    }
+    41%, 54% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    55% {
+      opacity: 1;
+      transform: translate(20px, 6px);
+    }
+    56%, 69% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    70% {
+      opacity: 1;
+      transform: translate(2px, -1px);
+    }
+    71%, 84% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    85% {
+      opacity: 1;
+      transform: translate(24px, -3px);
+    }
+    86%, 100% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+  }
+
+
+  /* Battle-ready button effects */
+  .battle-button-standby {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  .battle-button-armed {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 0 15px rgba(245,158,11,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .battle-button-ready {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 0 20px rgba(239,68,68,0.5), inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.3);
+    animation: battle-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes battle-pulse {
+    0%, 100% {
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 0 20px rgba(239,68,68,0.5), inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.3);
+    }
+    50% {
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 0 30px rgba(239,68,68,0.8), inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 12px rgba(0,0,0,0.4);
+    }
+  }
+
+  /* Gaming grid pattern background */
+  .bg-grid-pattern {
+    background-image: linear-gradient(
+        rgba(148, 163, 184, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Hide scrollbars for avatar carousel */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

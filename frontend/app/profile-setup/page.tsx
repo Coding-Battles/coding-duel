@@ -45,11 +45,11 @@ export default function ProfileSetupPage() {
       // Save profile data
       await updateUserProfile({
         username: username.trim(),
-        selectedPfp: selectedAvatar ?? undefined
+        selectedPfp: selectedAvatar ?? undefined,
       });
 
       console.log("Profile saved successfully");
-      
+
       // Navigate to game setup
       router.push("/game-setup");
     } catch (error) {
@@ -61,35 +61,24 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto px-6 py-20">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Create Your Profile
-          </h1>
-          <p className="text-foreground/70 text-lg">
-            Choose your username and avatar to get started
-          </p>
-        </div>
+    <div className="min-h-screen bg-background text-foreground px-6 flex items-center">
+      <div className="max-w-4xl mx-auto">
+        <ProfileCreator
+          username={username}
+          onUsernameChange={setUsername}
+          selectedAvatar={selectedAvatar}
+          onAvatarChange={setSelectedAvatar}
+          customAvatar={customAvatar}
+          onCustomAvatarChange={setCustomAvatar}
+          userId={session?.user?.id}
+          onComplete={isSaving ? undefined : handleComplete}
+        />
 
-        <div className="max-w-4xl mx-auto">
-          <ProfileCreator
-            username={username}
-            onUsernameChange={setUsername}
-            selectedAvatar={selectedAvatar}
-            onAvatarChange={setSelectedAvatar}
-            customAvatar={customAvatar}
-            onCustomAvatarChange={setCustomAvatar}
-            userId={session?.user?.id}
-            onComplete={isSaving ? undefined : handleComplete}
-          />
-          
-          {isSaving && (
-            <div className="text-center mt-4">
-              <p className="text-foreground/60">Saving your profile...</p>
-            </div>
-          )}
-        </div>
+        {isSaving && (
+          <div className="text-center mt-4">
+            <p className="text-foreground/60">Saving your profile...</p>
+          </div>
+        )}
       </div>
     </div>
   );

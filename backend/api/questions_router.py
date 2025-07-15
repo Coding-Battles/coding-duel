@@ -142,23 +142,6 @@ async def debug_run():
         logger.error(f"🔋 [DEBUG] debug-run failed after {total_time:.0f}ms: {str(e)}")
         return {"success": False, "error": str(e), "total_time_ms": total_time}
 
-@router.post("/image/{player_id}")
-async def change_image(player_id: str, image: UploadFile = File(...)):
-    # Save file
-    os.makedirs("backend/uploads", exist_ok=True)
-    filename = f"player_{player_id}_{image.filename}"
-    file_path = f"backend/uploads/{filename}"
-    public_url = f"http://localhost:8000/uploads/{filename}"
-
-    with open(file_path, "wb") as f:
-        shutil.copyfileobj(image.file, f)
-
-    # Update DB using raw SQL
-    query = 'UPDATE "user" SET image = :image_url WHERE id = :id'
-    values = {"image_url": public_url, "id": player_id}
-    await database.execute(query=query, values=values)
-
-    return {"message": "Image updated", "path": file_path}
 
 def set_database(db):
     """Set the database instance from main.py"""
