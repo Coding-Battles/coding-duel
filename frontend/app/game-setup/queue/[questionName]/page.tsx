@@ -5,7 +5,7 @@ import EditorWithTerminal from "@/components/EditorWithTerminal";
 import { Language, getLanguageConfig } from "@/types/languages";
 import { TestResultsData } from "@/components/TestResults";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
@@ -22,50 +22,92 @@ import {
   getDifficultyClass,
 } from "@/lib/leetcode-html-transformer";
 
+type AlertType = { id: string; message: string; variant?: string };
+
 export default function InGamePage() {
+  // ALL HOOKS MUST BE DECLARED AT THE TOP - NO CONDITIONAL LOGIC BEFORE HOOKS
   const { resolvedTheme } = useTheme();
   const monacoTheme = resolvedTheme === "dark" ? "vs-dark" : "vs";
-  const [selectedLanguage, setSelectedLanguage] =
-    React.useState<Language>("python");
+  
+  // All useState hooks
+  const [selectedLanguage, setSelectedLanguage] = React.useState<Language>("python");
   const [userCode, setUserCode] = React.useState<string>("");
-  const [questionData, setQuestionData] = React.useState<QuestionData | null>(
-    null
-  );
+  const [questionData, setQuestionData] = React.useState<QuestionData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [testResults, setTestResults] = React.useState<
-    TestResultsData | undefined
-  >(undefined);
-  const opponentTestStatsRef = useRef<TestResultsData | undefined>(undefined);
-
-  const context = useGameContext();
-  const router = useRouter();
-  const params = useParams();
-  const questionName = params?.questionName;
-  type AlertType = { id: string; message: string; variant?: string };
+  const [testResults, setTestResults] = React.useState<TestResultsData | undefined>(undefined);
   const [alerts, setAlerts] = React.useState<AlertType[]>([]);
-  const timeRef = useRef<number>(0);
-
-  console.log(testResults)
-
-  // Initialize timer
-  useEffect(() => {
-    timeRef.current = 0;
-  }, []);
+  const [leftWidth, setLeftWidth] = useState(33.33);
+  const [rightWidth, setRightWidth] = useState(25);
   const [gameFinished, setGameFinished] = React.useState(false);
   const [isRunning, setIsRunning] = React.useState(false);
   const [hasResults, setHasResults] = React.useState(false);
   const [opponentStatus, setOpponentStatus] = React.useState<string | null>(null);
 
-  const session = context?.socket;
+  // All useRef hooks
+  const opponentTestStatsRef = useRef<TestResultsData | undefined>(undefined);
+  const timeRef = useRef<number>(0);
+  const isDraggingLeft = useRef(false);
+  const isDraggingRight = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // All useContext hooks
+  const context = useGameContext();
+  const router = useRouter();
+  const params = useParams();
   const { data: userSession } = useSession();
 
-  console.log("InGamePage session:", userSession);
+  // All useCallback hooks
+  const handleLeftMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    isDraggingLeft.current = true;
+    e.preventDefault();
+  }, []);
 
-  console.log("id:", context?.anonymousId);
-  console.log("is anonymous:", context?.isAnonymous);
+  const handleRightMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    isDraggingRight.current = true;
+    e.preventDefault();
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!containerRef.current) return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const mouseX = e.clientX - containerRect.left;
+    const percentage = (mouseX / containerWidth) * 100;
+
+    if (isDraggingLeft.current) {
+      const newLeftWidth = Math.min(Math.max(percentage, 20), 60);
+      setLeftWidth(newLeftWidth);
+    } else if (isDraggingRight.current) {
+      const rightPercentage = ((containerWidth - mouseX) / containerWidth) * 100;
+      const newRightWidth = Math.min(Math.max(rightPercentage, 15), 40);
+      setRightWidth(newRightWidth);
+    }
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    isDraggingLeft.current = false;
+    isDraggingRight.current = false;
+  }, []);
+
+  // All useEffect hooks
+  React.useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
 
   useEffect(() => {
+    timeRef.current = 0;
+  }, []);
+
+  useEffect(() => {
+    const session = context?.socket;
     if (!session) {
       console.warn("Socket not ready yet, waiting...");
       return;
@@ -74,12 +116,7 @@ export default function InGamePage() {
     const handleOpponentSubmitted = (data: TestResultsData) => {
       console.log("🔍 [OPPONENT DEBUG] Frontend received opponent_submitted event");
       console.log("🔍 [OPPONENT DEBUG] Data:", data);
-      console.log("🔍 [OPPONENT DEBUG] Message:", data.message);
-      console.log("🔍 [OPPONENT DEBUG] Success:", data.success);
-      console.log("🔍 [OPPONENT DEBUG] Total passed:", data.total_passed);
-      console.log("🔍 [OPPONENT DEBUG] Opponent ID:", data.opponent_id);
       
-      // Set permanent opponent status
       if (data.success) {
         setOpponentStatus(`🎉 Opponent finished! All ${data.total_passed} tests passed (${data.complexity || 'N/A'} complexity)`);
       } else {
@@ -89,14 +126,13 @@ export default function InGamePage() {
       setAlerts((prev) => [
         ...prev,
         {
-          id: `opponent-${Date.now()}-${Math.random()}`, // Generate unique ID
+          id: `opponent-${Date.now()}-${Math.random()}`,
           message: `Opponent ${data.opponent_id} submitted code: ${data.message}`,
           variant: "default",
         },
       ]);
 
       opponentTestStatsRef.current = data;
-      console.log("🔍 [OPPONENT DEBUG] Alert added and opponentTestStatsRef updated");
     };
 
     const handleGameCompleted = (data: { message: string }) => {
@@ -105,16 +141,13 @@ export default function InGamePage() {
       setAlerts((prev) => [
         ...prev,
         {
-          id: `game-completed-${Date.now()}-${Math.random()}`, // Generate unique ID
+          id: `game-completed-${Date.now()}-${Math.random()}`,
           message: `Game completed: ${data.message}`,
           variant: "destructive",
         },
       ]);
 
       setTimeout(() => {
-        console.log("userSession:", userSession);
-        console.log("opponentTestStatsRef:", opponentTestStatsRef.current);
-        console.log("testResults:", testResults);
         setGameFinished(true);
       }, 5000);
     };
@@ -122,12 +155,11 @@ export default function InGamePage() {
     session.on("opponent_submitted", handleOpponentSubmitted);
     session.on("game_completed", handleGameCompleted);
 
-    // Cleanup function
     return () => {
       session.off("opponent_submitted", handleOpponentSubmitted);
       session.off("game_completed", handleGameCompleted);
     };
-  }, [session]);
+  }, [context?.socket]);
 
   useEffect(() => {
     if (!context) {
@@ -135,7 +167,6 @@ export default function InGamePage() {
       return;
     }
     
-    // Only redirect if we're sure the context is stable but invalid
     if (context && !context.socket && !context.loading) {
       console.log("Context is stable but socket is missing, redirecting to queue");
       router.push("/queue");
@@ -143,6 +174,7 @@ export default function InGamePage() {
   }, [context, router]);
 
   useEffect(() => {
+    const questionName = params?.questionName;
     const fetchQuestion = async () => {
       try {
         setLoading(true);
@@ -169,10 +201,11 @@ export default function InGamePage() {
       }
     };
 
-    fetchQuestion();
-  }, [questionName]);
+    if (questionName) {
+      fetchQuestion();
+    }
+  }, [params?.questionName]);
 
-  // Set initial starter code when question data loads
   useEffect(() => {
     if (questionData && questionData.starter_code) {
       const starterCode = questionData.starter_code[selectedLanguage];
@@ -182,6 +215,7 @@ export default function InGamePage() {
     }
   }, [questionData, selectedLanguage]);
 
+  // NOW all conditional returns can happen AFTER all hooks are declared
   if (!context) {
     return <div>Loading game context...</div>;
   }
@@ -206,7 +240,9 @@ export default function InGamePage() {
     );
   }
 
+  // Rest of your component logic...
   const { socket } = context;
+  const questionName = params?.questionName;
 
   const handleLanguageChange = (language: Language) => {
     setSelectedLanguage(language);
@@ -220,33 +256,20 @@ export default function InGamePage() {
 
   const runSampleTests = async (code: string): Promise<TestResultsData> => {
     setIsRunning(true);
-    setTestResults(undefined); // Clear previous results for immediate feedback
+    setTestResults(undefined);
 
     try {
-      console.log("🔍 Debug info:", {
-        questionName,
-        selectedLanguage,
-        codeLength: code?.length || 0,
-        timerValue: timeRef.current,
-      });
-
       if (!questionName) {
         throw new Error("Question name not found in URL");
       }
 
       const requestPayload = {
-        player_id: "sample-test-user", // For sample tests, use a generic ID
+        player_id: "sample-test-user",
         code: code,
         question_name: questionName,
         language: selectedLanguage,
         timer: timeRef.current,
       };
-
-      console.log("🚀 Request payload:", requestPayload);
-      console.log(
-        "🌐 API URL:",
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-sample-tests`
-      );
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-sample-tests`,
@@ -260,12 +283,10 @@ export default function InGamePage() {
       );
 
       const result = await response.json();
-      console.log("Test execution result:", result);
       setTestResults(result);
       setHasResults(true);
       return result;
     } catch (error) {
-      console.log("Error running tests:", error);
       const errorResult: TestResultsData = {
         success: false,
         test_results: [],
@@ -287,7 +308,7 @@ export default function InGamePage() {
 
   const runAllTests = async (code: string): Promise<TestResultsData> => {
     setIsRunning(true);
-    setTestResults(undefined); // Clear previous results for immediate feedback
+    setTestResults(undefined);
 
     try {
       const playerId = context.isAnonymous
@@ -302,15 +323,8 @@ export default function InGamePage() {
         throw new Error("Game ID not found. Please return to the queue.");
       }
 
-      console.log("Request body:", {
-        player_id: playerId,
-        code: code,
-        question_name: questionName,
-        language: selectedLanguage,
-        timer: timeRef.current,
-      });
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/${context.gameId}/run-all-tests`, //have to pass in gameId so that the game room can be pinged
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/${context.gameId}/run-all-tests`,
         {
           method: "POST",
           headers: {
@@ -327,12 +341,10 @@ export default function InGamePage() {
       );
 
       const result = await response.json();
-      console.log("Full test execution result:", result);
       setTestResults(result);
       setHasResults(true);
       return result;
     } catch (error) {
-      console.log("Error running all tests:", error);
       const errorResult: TestResultsData = {
         success: false,
         test_results: [],
@@ -357,14 +369,19 @@ export default function InGamePage() {
     setHasResults(false);
   };
 
-  return (
-    <div className="flex w-screen h-screen">
-      <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
+  const middleWidth = 100 - leftWidth - rightWidth;
 
+  return (
+    <div ref={containerRef} className="flex w-screen h-screen">
+      <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
+      
       {!gameFinished ? (
         <div className="flex w-full h-full">
           {/* Left Column - Question */}
-          <div className="w-1/3 overflow-y-auto border-r">
+          <div 
+            className="relative overflow-y-auto border-r"
+            style={{ width: `${leftWidth}%` }}
+          >
             <div className="p-4">
               {questionData ? (
                 <div className="space-y-4">
@@ -391,13 +408,24 @@ export default function InGamePage() {
             </div>
           </div>
 
+          {/* Left Resizer */}
+          <div
+            className="relative w-1 transition-colors duration-200 bg-gray-300 hover:bg-blue-500 cursor-col-resize group"
+            onMouseDown={handleLeftMouseDown}
+          >
+            <div className="absolute inset-0 w-3 -ml-1" />
+            <div className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 bg-gray-400 rounded top-1/2 left-1/2 group-hover:bg-blue-600" />
+          </div>
+
           {/* Middle Column - Editor */}
-          <div className="flex-1 h-full">
+          <div 
+            className="h-full"
+            style={{ width: `${middleWidth}%` }}
+          >
             <EditorWithTerminal
               code={userCode}
               onCodeChange={(value) => {
                 setUserCode(value || "");
-                console.log("User code:", value);
               }}
               language={getLanguageConfig(selectedLanguage).monacoLanguage}
               theme={monacoTheme}
@@ -413,10 +441,21 @@ export default function InGamePage() {
             />
           </div>
 
+          {/* Right Resizer */}
+          <div
+            className="relative w-1 transition-colors duration-200 bg-gray-300 hover:bg-blue-500 cursor-col-resize group"
+            onMouseDown={handleRightMouseDown}
+          >
+            <div className="absolute inset-0 w-3 -ml-1" />
+            <div className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 bg-gray-400 rounded top-1/2 left-1/2 group-hover:bg-blue-600" />
+          </div>
+
           {/* Right Column - DuelInfo */}
-          <div className="w-1/4 overflow-y-auto border-l">
+          <div 
+            className="relative overflow-y-auto"
+            style={{ width: `${rightWidth}%` }}
+          >
             <div className="p-4">
-              {/* Permanent opponent status display */}
               {opponentStatus && (
                 <div className="p-3 mb-4 border rounded-lg bg-accent/10 border-accent/20">
                   <p className="text-sm font-medium text-accent">
