@@ -70,7 +70,7 @@ const LeetCodeProfile: React.FC = () => {
 
   const getUserGameHistory = async () => {
     fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${session?.user.id}/game-history`
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${session?.user.id}/game-history`
     )
       .then((response) => response.json())
       .then((data) => {

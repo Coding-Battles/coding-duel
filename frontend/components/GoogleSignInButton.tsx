@@ -11,10 +11,10 @@ interface GoogleSignInButtonProps {
 }
 
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
-  className = "w-full gap-2 h-11",
+  className = "w-full gap-2 border-2 bg-background text-foreground border-border hover:bg-accent h-11",
   children = "Sign in with Google to save your profile and history",
   username,
-  selectedAvatar
+  selectedAvatar,
 }) => {
   const handleSignIn = async () => {
     try {
@@ -22,12 +22,12 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       if (username || selectedAvatar !== undefined) {
         const profileData = {
           ...(username && { username }),
-          ...(selectedAvatar !== undefined && { selectedPfp: selectedAvatar })
+          ...(selectedAvatar !== undefined && { selectedPfp: selectedAvatar }),
         };
         localStorage.setItem("pendingProfileData", JSON.stringify(profileData));
         console.log("Stored pending profile data:", profileData);
       }
-      
+
       await signInWithGoogle();
     } catch (error) {
       console.error("Google sign-in failed:", error);

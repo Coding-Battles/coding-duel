@@ -46,6 +46,7 @@ type GameContextType = {
   selectedDifficulties?: DifficultyState;
   setSelectedDifficulties?: React.Dispatch<React.SetStateAction<DifficultyState>>;
   handleFindGame?: () => void;
+  clearGameData?: () => void;
 
 };
 
@@ -68,11 +69,21 @@ export default function QueueLayout({
 
   const { data: session } = useSession();
   const router = useRouter();
-  const [opponentData, setOpponentData] = useState<OpponentData>({
-    image_url: "",
-    name: "",
+  const [opponentData, setOpponentData] = useState<OpponentData>(() => {
+    // Restore opponent data from sessionStorage
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("game_opponent_data");
+      return saved ? JSON.parse(saved) : { image_url: "", name: "" };
+    }
+    return { image_url: "", name: "" };
   });
-  const [gameId, setGameId] = useState<string>("");
+  const [gameId, setGameId] = useState<string>(() => {
+    // Restore game ID from sessionStorage
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("game_id") || "";
+    }
+    return "";
+  });
   const [anonymousId, setAnonymousId] = useState<string>("");
   const [isAnonymous, setIsAnonymous] = useState<boolean>(true); // Default to anonymous until session is loaded
   
@@ -82,6 +93,31 @@ export default function QueueLayout({
       medium: false,
       hard: false,
     });
+
+  // Custom setters that persist to sessionStorage
+  const setOpponentDataPersistent = (data: OpponentData) => {
+    setOpponentData(data);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("game_opponent_data", JSON.stringify(data));
+    }
+  };
+
+  const setGameIdPersistent = (id: string) => {
+    setGameId(id);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("game_id", id);
+    }
+  };
+
+  // Clear game data (useful for cleanup)
+  const clearGameData = () => {
+    setOpponentData({ image_url: "", name: "" });
+    setGameId("");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("game_opponent_data");
+      sessionStorage.removeItem("game_id");
+    }
+  };
 
 
   // Initialize socket connection once
@@ -108,38 +144,6 @@ export default function QueueLayout({
     socket.on("connect", () => {
       console.log("Connected to server with SID:", socket.id);
       setLoadingState(false);
-      
-      // Join queue immediately when socket connects
-      const currentlyAnonymous = !session?.user?.id;
-      const newAnonymousId = currentlyAnonymous 
-        ? "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now()
-        : "";
-      
-      if (currentlyAnonymous) {
-        console.log("🔴 Setting anonymous ID on connect:", newAnonymousId);
-        setAnonymousId(newAnonymousId);
-        setIsAnonymous(true);
-      } else {
-        console.log("✅ Using session data on connect:", session);
-        setIsAnonymous(false);
-      }
-
-      const username = (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
-      const avatarUrl = getAvatarUrl(session?.user as CustomUser);
-      
-      // console.log("Joining queue on connect with data:", {
-      //   name: username,
-      //   imageURL: avatarUrl,
-      //   id: session?.user?.id || newAnonymousId,
-      //   anonymous: currentlyAnonymous,
-      // });
-
-      // socket.emit("join_queue", {
-      //   name: username,
-      //   imageURL: avatarUrl,
-      //   id: session?.user?.id || newAnonymousId,
-      //   anonymous: currentlyAnonymous,
-      // });
     });
 
     socket.on("disconnect", (reason) => {
@@ -166,11 +170,11 @@ export default function QueueLayout({
     socket.on("match_found", (data: MatchFoundData) => {
       console.log("Match found!", data);
       setTimeout(() => {
-        setOpponentData({
+        setOpponentDataPersistent({
           name: data.opponentName,
           image_url: data.opponentImageURL || "",
         });
-        setGameId(data.game_id);
+        setGameIdPersistent(data.game_id);
         router.push("/game-setup/queue/" + data.question_name);
       }, 5000);
     });
@@ -185,75 +189,77 @@ export default function QueueLayout({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [router, session]); // Add router and session as dependencies
+  }, [router]); // Only depend on router
 
-  // Handle session changes separately without reconnecting
+  // Handle session changes and set authentication state
   useEffect(() => {
-    if (!socketRef.current) return;
-
     console.log("=== HANDLING SESSION CHANGE ===");
     console.log("Session:", session);
     
     const currentlyAnonymous = !session?.user?.id;
     setIsAnonymous(currentlyAnonymous);
     
-    // Only update queue data if socket is connected and session has actually changed
-    if (socketRef.current.connected) {
-      const newAnonymousId = currentlyAnonymous 
-        ? "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now()
-        : "";
-      
-      if (currentlyAnonymous) {
-        console.log("🔴 Updating anonymous ID:", newAnonymousId);
-        setAnonymousId(newAnonymousId);
-      } else {
-        console.log("✅ Updating session data:", session);
-      }
-
-      const username = (session?.user as CustomUser)?.username || session?.user?.name || "Guest";
-      const avatarUrl = getAvatarUrl(session?.user as CustomUser);
-      
-      console.log("Updating queue with new session data:", {
-        name: username,
-        imageURL: avatarUrl,
-        id: session?.user?.id || newAnonymousId,
-        anonymous: currentlyAnonymous,
-      });
-
-      // // Re-join queue with updated session data
-      // socketRef.current.emit("join_queue", {
-      //   name: username,
-      //   imageURL: avatarUrl,
-      //   id: session?.user?.id || newAnonymousId,
-      //   easy: 
-      //   anonymous: currentlyAnonymous,
-      // });
+    if (currentlyAnonymous) {
+      // Generate anonymous ID only once per session
+      const newAnonymousId = "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now();
+      console.log("🔴 Setting anonymous ID:", newAnonymousId);
+      setAnonymousId(newAnonymousId);
+    } else {
+      console.log("✅ User authenticated:", session?.user?.name);
+      setAnonymousId(""); // Clear anonymous ID when user is authenticated
     }
   }, [session]); // Only depend on session 
   
   const handleFindGame = () => {
-    if (!socketRef.current || !session?.user) {
-      console.error("Socket not connected or user not authenticated");
+    // Check if socket is connected
+    if (!socketRef.current) {
+      console.error("Socket not connected");
+      // TODO: Show user-friendly error message
+      return;
+    }
+
+    if (!socketRef.current.connected) {
+      console.error("Socket not connected to server");
+      // TODO: Show user-friendly error message
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!session?.user) {
+      console.error("User not authenticated");
+      // TODO: Redirect to login or show auth error
+      router.push("/");
+      return;
+    }
+
+    // Check if at least one difficulty is selected
+    const hasSelectedDifficulty = Object.values(selectedDifficulties).some(Boolean);
+    if (!hasSelectedDifficulty) {
+      console.error("No difficulty selected");
+      // TODO: Show user-friendly error message
       return;
     }
 
     console.log("Finding game with difficulties:", selectedDifficulties);
 
-    // Emit join_queue event with user data (following existing pattern)
-    socketRef.current.emit("join_queue", {
-      id: session.user.id,
-      name: (session.user as CustomUser)?.username || session.user.name,
-      easy: selectedDifficulties.easy,
-      medium: selectedDifficulties.medium,
-      hard: selectedDifficulties.hard,
-      imageURL: getAvatarUrl(session.user as CustomUser),
-      anonymous: false,
-      // Note: Backend may need to be updated to handle difficulty preferences
-      // For now, following existing pattern that randomly selects questions
-    });
+    try {
+      // Emit join_queue event with user data
+      socketRef.current.emit("join_queue", {
+        id: session.user.id,
+        name: (session.user as CustomUser)?.username || session.user.name,
+        easy: selectedDifficulties.easy,
+        medium: selectedDifficulties.medium,
+        hard: selectedDifficulties.hard,
+        imageURL: getAvatarUrl(session.user as CustomUser),
+        anonymous: false,
+      });
 
-    // Navigate to queue page to show waiting state
-    router.push("/game-setup/queue");
+      // Navigate to queue page to show waiting state
+      router.push("/game-setup/queue");
+    } catch (error) {
+      console.error("Error joining queue:", error);
+      // TODO: Show user-friendly error message
+    }
   };
 
   return (
@@ -269,6 +275,7 @@ export default function QueueLayout({
         selectedDifficulties: selectedDifficulties,
         setSelectedDifficulties: setSelectedDifficulties,
         handleFindGame: handleFindGame,
+        clearGameData: clearGameData,
       }}
     >
       <div className="flex h-[100%] w-[100%] items-center justify-center">

@@ -95,7 +95,7 @@ export default function ImageUploader({
       const formData = new FormData();
       formData.append('image', file);
 
-      const endpoint = uploadEndpoint || `${process.env.NEXT_PUBLIC_API_BASE_URL}/image/${userId}`;
+      const endpoint = uploadEndpoint || `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/image/${userId}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,

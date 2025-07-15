@@ -183,7 +183,7 @@ export default function InGamePage() {
             "No question name found in URL. Please check the URL and try again."
           );
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/get-question/${questionName}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-question/${questionName}`
         );
 
         if (!response.ok) {
@@ -272,7 +272,7 @@ export default function InGamePage() {
       };
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/run-sample-tests`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/run-sample-tests`,
         {
           method: "POST",
           headers: {
@@ -324,7 +324,7 @@ export default function InGamePage() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/${context.gameId}/run-all-tests`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${context.gameId}/run-all-tests`,
         {
           method: "POST",
           headers: {

@@ -26,7 +26,7 @@ export function QuestionSidebar({ questionName }: QuestionSidebarProps) {
     const fetchQuestion = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/get-question/${questionName}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-question/${questionName}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch question: ${response.statusText}`);

@@ -69,6 +69,7 @@ export default function GameSetupPage() {
             selectedDifficulties={selectedDifficulties}
             onDifficultyChange={setSelectedDifficulties}
             onEditProfile={() => router.push("/profile")}
+            onFindGame={handleFindGame}
           />
         </div>
       </div>
