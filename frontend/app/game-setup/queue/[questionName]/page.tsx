@@ -371,6 +371,7 @@ export default function InGamePage() {
 
   const middleWidth = 100 - leftWidth - rightWidth;
 
+  console.log("context: ", context);
   return (
     <div ref={containerRef} className="flex w-screen h-screen">
       <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
@@ -463,7 +464,7 @@ export default function InGamePage() {
                   </p>
                 </div>
               )}
-              <DuelInfo timeRef={timeRef} />
+              <DuelInfo timeRef={timeRef} opponentData={context.opponent} user={context.user ?? undefined} socket={context.socket ?? undefined} gameId={context.gameId ?? undefined} />
             </div>
           </div>
         </div>

@@ -21,6 +21,11 @@ database = None
 sio = None
 
 @dataclass
+class EmojiRequest:
+    emoji: str
+    player1: str
+
+@dataclass
 class PlayerInfo:
     id: str
     sid: str
@@ -153,6 +158,32 @@ async def save_game_to_history(players: List[PlayerInfo]):
     except Exception as e:
         logger.error(f"Database error while saving game history: {str(e)}")
 
+@router.post("/{game_id}/send-emoji")
+async def send_emoji(game_id: str, data: EmojiRequest):
+    player1 = data.player1
+    emoji = data.emoji
+    """Endpoint to send emoji from player to opponent."""
+    logger.info(f"🚀 [ENTRY DEBUG] /send-emoji called for game {game_id} by player {player1} with emoji {emoji}")
+    if game_id not in game_states:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    game_state = game_states[game_id]
+    players = list(game_state.players.values())
+    
+    if len(players) != 2:
+        raise HTTPException(status_code=400, detail="Emoji can only be sent in 2-player games")
+    
+    opponent_id = game_state.get_opponent_id(player1)
+    if (opponent_id is None) or (opponent_id not in game_state.players):
+        raise HTTPException(status_code=404, detail="Opponent not found in game")
+    
+    opponent_sid = game_state.players[opponent_id].sid
+    
+    # Emit emoji to opponent
+    await sio.emit("emoji_received", {"emoji": emoji, "from": player1}, room=opponent_sid)
+    
+    return {"message": "Emoji sent successfully"}
+
 @router.post("/{game_id}/run-all-tests", response_model=CodeTestResult)
 async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     print(f"🚀 [ENTRY DEBUG] /run-all-tests called for game {game_id}")
@@ -177,7 +208,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
         logger.error(f"🚀 [ENTRY DEBUG] Player {player_id} not in game {game_id}")
         raise HTTPException(status_code=403, detail="Player not in this game")
         
-    logger.info(f"🚀 [ENTRY DEBUG] Player verified, starting test execution")
+    logger.info(f"🚀 [ENTRY DEBUG] Player verified, starting test execution") #need to replace opponent_id with array of ids for multiple players
     try: 
         test_results = TestExecutionService.execute_test_cases(request)
 
