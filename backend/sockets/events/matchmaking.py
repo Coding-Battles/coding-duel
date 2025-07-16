@@ -18,35 +18,40 @@ def register_events(sio):
         try:
             # Add player to queue
             player = matchmaking_service.add_player_to_queue(data, sid)
+            total_players = len(matchmaking_service.waiting_players_easy) + len(matchmaking_service.waiting_players_medium) + len(matchmaking_service.waiting_players_hard)
             logger.info(
-                f"Player {player.name} joined queue. Total players: {len(matchmaking_service.waiting_players)}"
+                f"Player {player.name} joined queue. Total players in queue: easy={len(matchmaking_service.waiting_players_easy)}, medium={len(matchmaking_service.waiting_players_medium)}, hard={len(matchmaking_service.waiting_players_hard)}"
             )
 
             # Try to create a match
             match_result = matchmaking_service.try_create_match()
 
             if match_result:
-                player1, player2, game_id = match_result
+                player1, player2, game_id, difficulty, question_slug = match_result
 
                 # Send match found to both players
                 match_response1 = MatchFoundResponse(
                     game_id=game_id,
-                    opponent=player2.name,
-                    question_name="two-sum",  # TODO: Dynamic question selection
+                    opponent_Name=player2.name,
+                    opponentImageURL=player2.imageURL,
+                    question_name=question_slug,
                 )
                 await sio.emit(
                     "match_found", match_response1.model_dump(), room=player1.sid
                 )
 
                 match_response2 = MatchFoundResponse(
-                    game_id=game_id, opponent=player1.name, question_name="two-sum"
+                    game_id=game_id, 
+                    opponent_Name=player1.name, 
+                    opponentImageURL=player1.imageURL,
+                    question_name=question_slug
                 )
                 await sio.emit(
                     "match_found", match_response2.model_dump(), room=player2.sid
                 )
 
                 logger.info(
-                    f"Match created: {player1.name} vs {player2.name} (Game: {game_id})"
+                    f"Match created: {player1.name} vs {player2.name} in {difficulty} difficulty with question {question_slug} (Game: {game_id})"
                 )
             else:
                 # Send queue status
@@ -66,21 +71,24 @@ def register_events(sio):
         try:
             logger.info(f"[leave_queue] Called with sid: {sid}")
             # Print all waiting players with their sids and names
+            # Log current queue state
             logger.info(
-                f"[leave_queue] Waiting players before removal: {[{'sid': p.sid, 'name': getattr(p, 'name', None)} for p in getattr(matchmaking_service, 'waiting_players', [])]}"
+                f"[leave_queue] Current queue sizes - easy: {len(matchmaking_service.waiting_players_easy)}, medium: {len(matchmaking_service.waiting_players_medium)}, hard: {len(matchmaking_service.waiting_players_hard)}"
             )
+            
             removed = matchmaking_service.remove_player_from_queue(sid)
+            
             logger.info(
-                f"[leave_queue] Waiting players after removal: {[{'sid': p.sid, 'name': getattr(p, 'name', None)} for p in getattr(matchmaking_service, 'waiting_players', [])]}"
+                f"[leave_queue] Queue sizes after removal - easy: {len(matchmaking_service.waiting_players_easy)}, medium: {len(matchmaking_service.waiting_players_medium)}, hard: {len(matchmaking_service.waiting_players_hard)}"
             )
             logger.info(f"[leave_queue] Removed: {removed}")
+            
             if removed:
-                logger.info(
-                    f"Player with sid {sid} left the queue. Remaining: {len(matchmaking_service.waiting_players)}"
-                )
+                total_remaining = len(matchmaking_service.waiting_players_easy) + len(matchmaking_service.waiting_players_medium) + len(matchmaking_service.waiting_players_hard)
+                logger.info(f"Player with sid {sid} left the queue. Total remaining: {total_remaining}")
                 await sio.emit("queue_left", {"status": "success"}, room=sid)
             else:
-                logger.info(f"[leave_queue] Player with sid {sid} not found in queue.")
+                logger.info(f"[leave_queue] Player with sid {sid} not found in any queue.")
                 await sio.emit("queue_left", {"status": "not_in_queue"}, room=sid)
         except Exception as e:
             logger.error(f"Error in leave_queue: {e}")

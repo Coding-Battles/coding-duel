@@ -9,13 +9,19 @@ from pydantic import BaseModel
 class Player(BaseModel):
     id: str  # Player's custom ID
     name: str
+    easy: bool  # Whether the player wants to play easy mode
+    medium: bool  # Whether the player wants to play medium mode
+    hard: bool  # Whether the player wants to play hard mode
+    imageURL: str
+    anonymous: bool = True  # Whether the player is anonymous or not
     sid: str  # Socket connection ID
     joined_at: float  # Timestamp when joined queue
 
 
 class MatchFoundResponse(BaseModel):
     game_id: str
-    opponent: str
+    opponent_Name: str
+    opponentImageURL: str | None = None
     question_name: str
 
 
@@ -28,7 +34,9 @@ class MatchmakingService:
     """Service for managing player queues and creating matches."""
     
     def __init__(self):
-        self.waiting_players: List[Player] = []
+        self.waiting_players_easy: List[Player] = []
+        self.waiting_players_medium: List[Player] = []
+        self.waiting_players_hard: List[Player] = []
         self.active_games: Dict[str, Dict[str, Any]] = {}
     
     def add_player_to_queue(self, player_data: Dict[str, Any], sid: str) -> Player:
@@ -40,40 +48,92 @@ class MatchmakingService:
             sid=sid,
             joined_at=time.time()
         )
-        self.waiting_players.append(player)
+        
+        # Add to appropriate difficulty queues
+        if player.easy:
+            self.waiting_players_easy.append(player)
+        if player.medium:
+            self.waiting_players_medium.append(player)
+        if player.hard:
+            self.waiting_players_hard.append(player)
+            
         return player
     
     def remove_player_from_queue(self, sid: str) -> bool:
-        """Remove a player from the queue by socket ID."""
-        initial_count = len(self.waiting_players)
-        self.waiting_players = [p for p in self.waiting_players if p.sid != sid]
-        return len(self.waiting_players) < initial_count
+        """Remove a player from all queues by socket ID."""
+        removed = False
+        
+        # Remove from all difficulty queues
+        for queue_list in [self.waiting_players_easy, self.waiting_players_medium, self.waiting_players_hard]:
+            initial_count = len(queue_list)
+            queue_list[:] = [p for p in queue_list if p.sid != sid]
+            if len(queue_list) < initial_count:
+                removed = True
+                
+        return removed
     
-    def try_create_match(self) -> Optional[tuple[Player, Player, str]]:
+    def try_create_match(self) -> Optional[tuple[Player, Player, str, str, str]]:
         """Try to create a match if 2+ players are in queue."""
         import time
+        import random
+        import json
         
-        if len(self.waiting_players) >= 2:
-            player1 = self.waiting_players.pop(0)
-            player2 = self.waiting_players.pop(0)
+        # Check each difficulty for possible matches
+        difficulties = [
+            ("easy", self.waiting_players_easy),
+            ("medium", self.waiting_players_medium), 
+            ("hard", self.waiting_players_hard)
+        ]
+        
+        available_difficulties = [(name, queue) for name, queue in difficulties if len(queue) >= 2]
+        
+        if available_difficulties:
+            # Randomly select a difficulty that has matches available
+            difficulty_name, selected_queue = random.choice(available_difficulties)
+            
+            player1 = selected_queue.pop(0)
+            player2 = selected_queue.pop(0)
+            
+            # Remove players from all other queues they might be in
+            for queue_list in [self.waiting_players_easy, self.waiting_players_medium, self.waiting_players_hard]:
+                queue_list[:] = [p for p in queue_list if p.sid not in [player1.sid, player2.sid]]
+            
             game_id = f"game_{uuid.uuid4().hex[:12]}"
+            
+            # Dynamic question selection
+            try:
+                with open("backend/data/questions.json", "r") as f:
+                    questions_data = json.load(f)
+                
+                # Select random question from the difficulty
+                if difficulty_name in questions_data["questions"] and questions_data["questions"][difficulty_name]:
+                    question = random.choice(questions_data["questions"][difficulty_name])
+                    question_slug = question["slug"]
+                else:
+                    # Fallback to two-sum if no questions available for difficulty
+                    question_slug = "two-sum"
+            except Exception as e:
+                # Fallback to two-sum if file reading fails
+                question_slug = "two-sum"
             
             # Store active game
             self.active_games[game_id] = {
                 "players": [player1.model_dump(), player2.model_dump()],
-                "question_name": "two-sum",  # TODO: Random question selection
+                "question_name": question_slug,
+                "difficulty": difficulty_name,
                 "created_at": time.time(),
                 "status": "active"
             }
             
-            return player1, player2, game_id
+            return player1, player2, game_id, difficulty_name, question_slug
         return None
     
     def get_queue_status(self) -> QueueStatusResponse:
         """Get current queue status."""
+        total_waiting = len(self.waiting_players_easy) + len(self.waiting_players_medium) + len(self.waiting_players_hard)
         return QueueStatusResponse(
-            status="waiting" if self.waiting_players else "empty",
-            queue_size=len(self.waiting_players)
+            status="waiting" if total_waiting > 0 else "empty",
+            queue_size=max(len(self.waiting_players_easy), len(self.waiting_players_medium), len(self.waiting_players_hard))
         )
     
     def get_game_info(self, game_id: str) -> Optional[Dict[str, Any]]:

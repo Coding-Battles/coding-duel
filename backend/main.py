@@ -40,7 +40,7 @@ from backend.api import code
 from backend.api import game
 
 # Import socket functionality
-from backend.socket_integration import setup_socket_events
+from backend.sockets.socket_app import create_socket_app
 
 # Import services
 from backend.services.user_service import initialize_username_pool
@@ -161,17 +161,7 @@ app.include_router(game.router, prefix="/api")
 
 
 # Create Socket.IO server with CORS and better connection settings
-sio = socketio.AsyncServer(
-    cors_allowed_origins="*",
-    async_mode="asgi",
-    ping_timeout=60,  # 60 seconds before considering client disconnected
-    ping_interval=25,  # Send ping every 25 seconds
-    logger=True,  # Enable logging for debugging
-    engineio_logger=True,
-)
-
-# Set up socket events with game state integration
-sio = setup_socket_events(sio, database, game_states, player_to_game)
+sio = create_socket_app(database, game_states, player_to_game)
 
 # Now set the socket instance for game router
 game.set_dependencies(database, sio, game_states)
