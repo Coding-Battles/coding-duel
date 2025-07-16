@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { useSession, getAvatarUrl } from "@/lib/auth-client";
 import AvatarCard from "./AvatarCard";
 import OpponentPlaceholder from "./OpponentPlaceholder";
-import { useRouter } from "next/navigation";
 
 interface CustomUser {
   username?: string;
@@ -24,10 +23,33 @@ interface QueueWaitingRoomProps {
 export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
   const context = useGameContext();
   const { data: session } = useSession();
-  const router = useRouter();
   const [key, setKey] = useState(0); // used to loop the type animation
   const [timer, setTimer] = useState(0);
   const [playerFound] = useState(false);
+
+  // Funny roasting messages for queue waiting
+  const queueMessages = [
+    "Lowering standards...",
+    "Finding someone easier...",
+    "Looking for noobs...",
+    "Difficulty: Potato mode...",
+    "Still no takers...",
+    "Crickets chirping...",
+    "Even bots are avoiding you...",
+    "Maybe try easier mode?",
+    "Your reputation precedes you...",
+    "Loading disappointment...",
+    "Charging up the L...",
+    "Buffering your loss...",
+    "Questioning life choices...",
+    "Reconsidering career paths...",
+  ];
+
+  // Function to get random roasting message
+  const getRandomMessage = () => {
+    const randomIndex = Math.floor(Math.random() * queueMessages.length);
+    return queueMessages[randomIndex];
+  };
 
   // Helper function to get user avatar with proper fallbacks
   const getUserAvatar = () => {
@@ -36,14 +58,10 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
     return getAvatarUrl(user);
   };
 
-  const handleProfileClick = () => {
-    router.push('/profile');
-  };
-
   // Timer effect - must be before conditional returns
   useEffect(() => {
     if (!context?.socket) return;
-    
+
     const interval = setInterval(() => {
       setTimer((prev) => prev + 1);
     }, 1000);
@@ -82,90 +100,100 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
               </span>
             </span>
             {!playerFound ? (
-              <Badge
-                variant="outline"
-                className="border-accent text-accent"
-              >
+              <Badge variant="outline" className="border-accent text-accent">
                 Finding Opponent...
               </Badge>
             ) : (
-              <Badge
-                variant="outline"
-                className="border-success text-success"
-              >
+              <Badge variant="outline" className="border-success text-success">
                 Opponent Found
               </Badge>
             )}
           </div>
         </div>
-        
+
         {/* Cancel Button in Header */}
         {onCancel && (
-          <Button
-            onClick={onCancel}
-            variant="ghost"
-            size="sm"
-          >
+          <Button onClick={onCancel} variant="ghost" size="sm">
             Cancel
           </Button>
         )}
       </div>
 
+      {/* Status Display */}
+      <div className="flex justify-center p-4">
+        <div className="text-center font-mono text-sm bg-foreground/5 px-4 py-2 rounded-lg whitespace-nowrap">
+          <div className="text-accent">
+            {!playerFound ? (
+              <TypeIt
+                key={key} // use key to reset TypeIt instance
+                options={{
+                  speed: 50,
+                  deleteSpeed: 30,
+                }}
+                getBeforeInit={(instance) => {
+                  const message1 = getRandomMessage();
+                  const message2 = getRandomMessage();
+                  instance
+                    .type(`<span style="color: orange;">${message1}</span>`)
+                    .pause(400)
+                    .delete(message1.length)
+                    .type(`<span style="color: orange;">${message2}</span>`)
+                    .pause(600)
+                    .delete(message2.length)
+                    .exec(() => {
+                      setKey((prevKey) => prevKey + 1); // trigger re-render to reset TypeIt
+                    });
+                  return instance;
+                }}
+              />
+            ) : (
+              <TypeIt
+                getBeforeInit={(instance) => {
+                  instance
+                    .type('<span style="color: orange;">Player Found!</span>')
+                    .pause(2000)
+                    .exec(() => {
+                      // Navigate to game with question name from match_found event
+                      // This will be handled by the layout's match_found listener
+                    });
+                  return instance;
+                }}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Main Battle Area */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 lg:gap-16 w-full max-w-4xl">
+        <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20 lg:gap-32 w-full max-w-6xl">
           {/* User Avatar */}
           <div className="flex-shrink-0">
             <AvatarCard
               src={getUserAvatar()}
-              alt={`${(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "User"} Avatar`}
-              name={(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "Guest"}
+              alt={`${
+                (context?.user as CustomUser)?.username ||
+                context?.user?.name ||
+                (session?.user as CustomUser)?.username ||
+                session?.user?.name ||
+                "User"
+              } Avatar`}
+              name={
+                (context?.user as CustomUser)?.username ||
+                context?.user?.name ||
+                (session?.user as CustomUser)?.username ||
+                session?.user?.name ||
+                "Guest"
+              }
               size="lg"
               player="player1"
-              onClick={handleProfileClick}
-              clickable={true}
             />
           </div>
 
           {/* VS Section */}
           <div className="flex flex-col items-center gap-4 flex-shrink-0">
-            <div className="text-2xl md:text-4xl font-bold text-foreground/60">VS</div>
-            
-            {/* Status Display */}
-            <div className="text-center font-mono text-sm bg-foreground/5 px-4 py-2 rounded-lg whitespace-nowrap min-w-[8rem]">
-              <div className="text-accent">
-                {!playerFound ? (
-                  <TypeIt
-                    key={key} // use key to reset TypeIt instance
-                    getBeforeInit={(instance) => {
-                      instance
-                        .type('<span style="color: orange;">Searching...</span>')
-                        .pause(750)
-                        .delete(11)
-                        .type('<span style="color: orange;">Searching!</span>')
-                        .pause(1000)
-                        .delete(11)
-                        .exec(() => {
-                          setKey((prevKey) => prevKey + 1); // trigger re-render to reset TypeIt
-                        });
-                      return instance;
-                    }}
-                  />
-                ) : (
-                  <TypeIt
-                    getBeforeInit={(instance) => {
-                      instance
-                        .type('<span style="color: orange;">Player Found!</span>')
-                        .pause(2000)
-                        .exec(() => {
-                          // Navigate to game with question name from match_found event
-                          // This will be handled by the layout's match_found listener
-                        });
-                      return instance;
-                    }}
-                  />
-                )}
-              </div>
+            <div className="text-2xl md:text-4xl font-bold text-foreground/60">
+              VS
             </div>
           </div>
 
@@ -180,9 +208,7 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
                 player="player2"
               />
             ) : (
-              <OpponentPlaceholder
-                size="lg"
-              />
+              <OpponentPlaceholder size="lg" />
             )}
           </div>
         </div>
