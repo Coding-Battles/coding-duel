@@ -58,7 +58,7 @@ export default function AvatarCard({
         className={cn(
           "relative rounded-xl",
           sizeClasses.container,
-          (clickable || onClick) && "cursor-pointer transition-transform hover:scale-105"
+          (clickable || onClick) && "cursor-pointer"
         )}
         onClick={handleClick}
       >

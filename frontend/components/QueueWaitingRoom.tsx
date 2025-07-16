@@ -132,7 +132,7 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
             <div className="text-2xl md:text-4xl font-bold text-foreground/60">VS</div>
             
             {/* Status Display */}
-            <div className="text-center font-mono text-sm bg-foreground/5 px-4 py-2 rounded-lg whitespace-nowrap">
+            <div className="text-center font-mono text-sm bg-foreground/5 px-4 py-2 rounded-lg whitespace-nowrap min-w-[8rem]">
               <div className="text-accent">
                 {!playerFound ? (
                   <TypeIt
