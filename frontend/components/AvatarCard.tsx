@@ -9,6 +9,9 @@ interface AvatarCardProps {
   size?: 'sm' | 'md' | 'lg';
   showName?: boolean;
   className?: string;
+  player?: 'player1' | 'player2';
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
 const sizeVariants = {
@@ -35,17 +38,31 @@ export default function AvatarCard({
   name, 
   size = 'md',
   showName = true,
-  className = "" 
+  className = "",
+  player = 'player2',
+  onClick,
+  clickable = false
 }: AvatarCardProps) {
   const sizeClasses = sizeVariants[size];
+  const borderClass = player === 'player1' ? 'border-gradient-player1' : 'border-gradient';
+
+  const handleClick = () => {
+    if (onClick && (clickable || onClick)) {
+      onClick();
+    }
+  };
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
-      <div className={cn(
-        "relative cursor-pointer focus:outline-none rounded-xl transition-all duration-300 hover:transform hover:-translate-y-2 hover:scale-105",
-        sizeClasses.container
-      )}>
-        <div className="w-full h-full rounded-xl p-2 border-gradient hover:shadow-xl hover:shadow-slate-500/30">
+      <div 
+        className={cn(
+          "relative rounded-xl",
+          sizeClasses.container,
+          (clickable || onClick) && "cursor-pointer transition-transform hover:scale-105"
+        )}
+        onClick={handleClick}
+      >
+        <div className={cn("w-full h-full rounded-xl p-2", borderClass)}>
           <Image
             src={src}
             alt={alt}

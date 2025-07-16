@@ -177,7 +177,39 @@ html {
     padding: 2px;
   }
 
+  /* Player 1 border gradient utility */
+  .border-gradient-player1 {
+    background: linear-gradient(
+      to right,
+      var(--player1),
+      var(--player1),
+      var(--player1)
+    );
+    padding: 2px;
+  }
+
+  /* Player 2 border gradient utility */
+  .border-gradient-player2 {
+    background: linear-gradient(
+      to right,
+      var(--player2),
+      var(--player2),
+      var(--player2)
+    );
+    padding: 2px;
+  }
+
   .border-gradient > * {
+    background: var(--background);
+    border-radius: inherit;
+  }
+
+  .border-gradient-player1 > * {
+    background: var(--background);
+    border-radius: inherit;
+  }
+
+  .border-gradient-player2 > * {
     background: var(--background);
     border-radius: inherit;
   }
@@ -444,5 +476,189 @@ html {
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Professional Matrix Rain Effect */
+  .matrix-rain-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* Matrix rain columns */
+  .matrix-rain-container::before,
+  .matrix-rain-container::after {
+    content: '01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    line-height: 1.0;
+    color: var(--player2);
+    opacity: 0.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+    z-index: 1;
+    pointer-events: none;
+    writing-mode: vertical-lr;
+    text-orientation: upright;
+  }
+
+  .matrix-rain-container::before {
+    animation: matrix-fall-1 8s linear infinite;
+    left: 0%;
+    opacity: 0.4;
+  }
+
+  .matrix-rain-container::after {
+    animation: matrix-fall-2 12s linear infinite;
+    left: 0%;
+    opacity: 0.3;
+  }
+
+  /* Additional matrix columns using CSS variables */
+  .matrix-column-1,
+  .matrix-column-2,
+  .matrix-column-3 {
+    position: absolute;
+    top: -100%;
+    width: 100%;
+    height: 200%;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    line-height: 1.0;
+    color: var(--player2);
+    white-space: pre-wrap;
+    word-break: break-all;
+    z-index: 1;
+    pointer-events: none;
+    writing-mode: vertical-lr;
+    text-orientation: upright;
+  }
+
+  .matrix-column-1 {
+    left: 0%;
+    opacity: 0.5;
+    animation: matrix-fall-3 10s linear infinite;
+  }
+
+  .matrix-column-2 {
+    left: 0%;
+    opacity: 0.3;
+    animation: matrix-fall-4 14s linear infinite;
+  }
+
+  .matrix-column-3 {
+    left: 0%;
+    opacity: 0.4;
+    animation: matrix-fall-5 9s linear infinite;
+  }
+
+  @keyframes matrix-fall-1 {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.4;
+    }
+    90% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes matrix-fall-2 {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    15% {
+      opacity: 0.3;
+    }
+    85% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes matrix-fall-3 {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.5;
+    }
+    88% {
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes matrix-fall-4 {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    8% {
+      opacity: 0.3;
+    }
+    92% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes matrix-fall-5 {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    11% {
+      opacity: 0.4;
+    }
+    89% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  /* Centered question mark with professional styling */
+  .matrix-question-mark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--player2);
+    text-shadow: 
+      0 0 10px var(--player2),
+      0 0 20px var(--player2),
+      0 0 30px var(--player2);
+    z-index: 10;
+    font-weight: bold;
   }
 }

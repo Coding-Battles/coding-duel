@@ -1,11 +1,13 @@
 "use client";
 import TypeIt from "typeit-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { useGameContext } from "@/app/game-setup/layout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useSession, getAvatarUrl } from "@/lib/auth-client";
 import AvatarCard from "./AvatarCard";
+import OpponentPlaceholder from "./OpponentPlaceholder";
+import { useRouter } from "next/navigation";
 
 interface CustomUser {
   username?: string;
@@ -22,6 +24,7 @@ interface QueueWaitingRoomProps {
 export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
   const context = useGameContext();
   const { data: session } = useSession();
+  const router = useRouter();
   const [key, setKey] = useState(0); // used to loop the type animation
   const [timer, setTimer] = useState(0);
   const [playerFound] = useState(false);
@@ -31,6 +34,10 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
     // Try context user first, then session user
     const user = context?.user || (session?.user as CustomUser);
     return getAvatarUrl(user);
+  };
+
+  const handleProfileClick = () => {
+    router.push('/profile');
   };
 
   // Timer effect - must be before conditional returns
@@ -57,15 +64,16 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
   const { opponent } = context;
 
   return (
-    <div className="flex h-[100%] w-[100%] items-center justify-center flex-col">
-      <Card className="mt-16 shadow-2xl bg-background border-foreground/20 animate-float">
-        <div className="flex items-center justify-between px-4 py-3 rounded-t-lg bg-foreground/10">
+    <div className="flex h-[100%] w-[100%] flex-col">
+      {/* Header with Status and Cancel */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-foreground/10 gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-error" />
             <div className="w-3 h-3 rounded-full bg-accent" />
             <div className="w-3 h-3 rounded-full bg-success" />
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm">
             <span className="text-foreground/60">
               Time:{" "}
               <span className="font-mono text-foreground">
@@ -90,83 +98,95 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
             )}
           </div>
         </div>
-        <CardContent className="p-6 font-mono text-sm">
-          <div className="ml-4 text-accent">
-            const <span className="text-foreground">Status</span> ={" "}
-            <span className="text-accent">&quot;</span>
-            {!playerFound ? (
-              <TypeIt
-                key={key} // use key to reset TypeIt instance
-                getBeforeInit={(instance) => {
-                  instance
-                    .type('<span style="color: orange;">loading...</span>')
-                    .pause(750)
-                    .delete(10)
-                    .type('<span style="color: orange;">loading!</span>')
-                    .pause(1000)
-                    .delete(8)
-                    .exec(() => {
-                      setKey((prevKey) => prevKey + 1); // trigger re-render to reset TypeIt
-                    });
-                  return instance;
-                }}
-              />
-            ) : (
-              <TypeIt
-                getBeforeInit={(instance) => {
-                  instance
-                    .type('<span style="color: orange;">Player Found!</span>')
-                    .pause(2000)
-                    .exec(() => {
-                      // Navigate to game with question name from match_found event
-                      // This will be handled by the layout's match_found listener
-                    });
-                  return instance;
-                }}
-              />
-            )}
-            <span className="text-accent">&quot;</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex gap-8 mt-16">
-        <AvatarCard
-          src={getUserAvatar()}
-          alt={`${(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "User"} Avatar`}
-          name={(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "Guest"}
-          size="lg"
-        />
-
-        <AvatarCard
-          src={opponent.image_url || "/avatars/0.png"}
-          alt={`${opponent.name || "Opponent"} Avatar`}
-          name={opponent.name || "Finding"}
-          size="lg"
-        />
+        
+        {/* Cancel Button in Header */}
+        {onCancel && (
+          <Button
+            onClick={onCancel}
+            variant="ghost"
+            size="sm"
+          >
+            Cancel
+          </Button>
+        )}
       </div>
 
-      {/* Cancel Button */}
-      {onCancel && (
-        <div className="text-center mt-8">
-          <button
-            onClick={onCancel}
-            className="relative cursor-pointer h-12 w-48 font-bold uppercase tracking-wider transition-all duration-300 transform hover:scale-105 focus:outline-none overflow-hidden rounded-lg shadow-lg shadow-slate-500/30"
-          >
-            {/* Gradient border effect */}
-            <div className="absolute inset-0 rounded-lg p-[2px] bg-gradient-to-r from-slate-500 via-slate-300 to-slate-500 hover:from-slate-400 hover:via-slate-200 hover:to-slate-400 transition-all duration-300">
-              <div className="w-full h-full rounded-md bg-background flex items-center justify-center">
-                <span className="relative z-10 text-slate-200 hover:text-slate-100 transition-colors duration-300">
-                  Cancel
-                </span>
+      {/* Main Battle Area */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 lg:gap-16 w-full max-w-4xl">
+          {/* User Avatar */}
+          <div className="flex-shrink-0">
+            <AvatarCard
+              src={getUserAvatar()}
+              alt={`${(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "User"} Avatar`}
+              name={(context?.user as CustomUser)?.username || context?.user?.name || (session?.user as CustomUser)?.username || session?.user?.name || "Guest"}
+              size="lg"
+              player="player1"
+              onClick={handleProfileClick}
+              clickable={true}
+            />
+          </div>
+
+          {/* VS Section */}
+          <div className="flex flex-col items-center gap-4 flex-shrink-0">
+            <div className="text-2xl md:text-4xl font-bold text-foreground/60">VS</div>
+            
+            {/* Status Display */}
+            <div className="text-center font-mono text-sm bg-foreground/5 px-4 py-2 rounded-lg whitespace-nowrap">
+              <div className="text-accent">
+                {!playerFound ? (
+                  <TypeIt
+                    key={key} // use key to reset TypeIt instance
+                    getBeforeInit={(instance) => {
+                      instance
+                        .type('<span style="color: orange;">Searching...</span>')
+                        .pause(750)
+                        .delete(11)
+                        .type('<span style="color: orange;">Searching!</span>')
+                        .pause(1000)
+                        .delete(11)
+                        .exec(() => {
+                          setKey((prevKey) => prevKey + 1); // trigger re-render to reset TypeIt
+                        });
+                      return instance;
+                    }}
+                  />
+                ) : (
+                  <TypeIt
+                    getBeforeInit={(instance) => {
+                      instance
+                        .type('<span style="color: orange;">Player Found!</span>')
+                        .pause(2000)
+                        .exec(() => {
+                          // Navigate to game with question name from match_found event
+                          // This will be handled by the layout's match_found listener
+                        });
+                      return instance;
+                    }}
+                  />
+                )}
               </div>
             </div>
+          </div>
 
-            {/* Shine effect */}
-            <div className="absolute inset-0 -top-2 -left-2 bg-gradient-to-r from-transparent via-white/20 to-transparent rotate-45 w-8 h-20 animate-pulse opacity-50"></div>
-          </button>
+          {/* Opponent Avatar */}
+          <div className="flex-shrink-0">
+            {opponent.image_url && opponent.name && playerFound ? (
+              <AvatarCard
+                src={opponent.image_url}
+                alt={`${opponent.name} Avatar`}
+                name={opponent.name}
+                size="lg"
+                player="player2"
+              />
+            ) : (
+              <OpponentPlaceholder
+                size="lg"
+              />
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

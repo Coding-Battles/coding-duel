@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "./ui/button";
 import AvatarCard from "./AvatarCard";
+import { useRouter } from "next/navigation";
 
 export interface DifficultyState {
   easy: boolean;
@@ -27,6 +28,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   userName,
   className = "",
 }) => {
+  const router = useRouter();
   const difficulties = [
     {
       key: "easy" as const,
@@ -57,6 +59,10 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   const hasSelectedDifficulty =
     Object.values(selectedDifficulties).some(Boolean);
 
+  const handleProfileClick = () => {
+    router.push('/profile');
+  };
+
   return (
     <div className={`bg-card rounded-3xl p-8 shadow-2xl relative ${className}`}>
       {/* Step 3: Pick Your Poison */}
@@ -81,6 +87,8 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                 alt={`${userName} Avatar`}
                 name={userName}
                 size="md"
+                onClick={handleProfileClick}
+                clickable={true}
               />
             </div>
           )}

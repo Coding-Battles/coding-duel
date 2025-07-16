@@ -78,6 +78,10 @@ export default function GameSetupPage() {
 
   // Local handleFindGame that updates queue status instead of navigating
   const handleFindGame = () => {
+    // Clear any previous opponent data to ensure fresh queue experience
+    if (context?.clearGameData) {
+      context.clearGameData();
+    }
     setQueueStatus("searching");
     // Call the context handleFindGame but don't navigate
     if (contextHandleFindGame) {
@@ -90,6 +94,10 @@ export default function GameSetupPage() {
     // Emit leave_queue to backend to properly remove user from queue
     if (context?.socket) {
       context.socket.emit("leave_queue");
+    }
+    // Clear any opponent data when canceling
+    if (context?.clearGameData) {
+      context.clearGameData();
     }
     setQueueStatus("idle");
   };
