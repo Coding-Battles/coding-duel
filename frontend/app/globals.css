@@ -490,14 +490,15 @@ html {
   /* Matrix rain columns */
   .matrix-rain-container::before,
   .matrix-rain-container::after {
-    content: "01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\ 01?{}[]<>/\\";
+    content: "01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ{}[]()<>/\\;:'\".,?!@#$%^&*+-=_|~`abcdefghijklmnopqrstuvwxyz 01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ{}[]()<>/\\;:'\".,?!@#$%^&*+-=_|~`abcdefghijklmnopqrstuvwxyz 01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ{}[]()<>/\\;:'\".,?!@#$%^&*+-=_|~`abcdefghijklmnopqrstuvwxyz";
     position: absolute;
     top: -100%;
     left: 0;
     width: 100%;
     height: 200%;
     font-family: var(--font-mono);
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: bold;
     line-height: 1;
     color: var(--player2);
     opacity: 0.5;
@@ -511,12 +512,14 @@ html {
 
   .matrix-rain-container::before {
     animation: matrix-fall-1 8s linear infinite;
+    animation-delay: -1s;
     left: 0%;
     opacity: 0.4;
   }
 
   .matrix-rain-container::after {
     animation: matrix-fall-2 12s linear infinite;
+    animation-delay: -3s;
     left: 0%;
     opacity: 0.3;
   }
@@ -530,7 +533,8 @@ html {
     width: 100%;
     height: 200%;
     font-family: var(--font-mono);
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: bold;
     line-height: 1;
     color: var(--player2);
     white-space: pre-wrap;
@@ -545,102 +549,75 @@ html {
     left: 0%;
     opacity: 0.5;
     animation: matrix-fall-3 10s linear infinite;
+    animation-delay: -2s;
   }
 
   .matrix-column-2 {
     left: 0%;
     opacity: 0.3;
     animation: matrix-fall-4 14s linear infinite;
+    animation-delay: -5s;
   }
 
   .matrix-column-3 {
     left: 0%;
     opacity: 0.4;
     animation: matrix-fall-5 9s linear infinite;
+    animation-delay: -1.5s;
   }
 
   @keyframes matrix-fall-1 {
     0% {
       transform: translateY(-100%);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.4;
-    }
-    90% {
       opacity: 0.4;
     }
     100% {
       transform: translateY(100%);
-      opacity: 0;
+      opacity: 0.4;
     }
   }
 
   @keyframes matrix-fall-2 {
     0% {
       transform: translateY(-100%);
-      opacity: 0;
-    }
-    15% {
-      opacity: 0.3;
-    }
-    85% {
       opacity: 0.3;
     }
     100% {
       transform: translateY(100%);
-      opacity: 0;
+      opacity: 0.3;
     }
   }
 
   @keyframes matrix-fall-3 {
     0% {
       transform: translateY(-100%);
-      opacity: 0;
-    }
-    12% {
-      opacity: 0.5;
-    }
-    88% {
       opacity: 0.5;
     }
     100% {
       transform: translateY(100%);
-      opacity: 0;
+      opacity: 0.5;
     }
   }
 
   @keyframes matrix-fall-4 {
     0% {
       transform: translateY(-100%);
-      opacity: 0;
-    }
-    8% {
-      opacity: 0.3;
-    }
-    92% {
       opacity: 0.3;
     }
     100% {
       transform: translateY(100%);
-      opacity: 0;
+      opacity: 0.3;
     }
   }
 
   @keyframes matrix-fall-5 {
     0% {
       transform: translateY(-100%);
-      opacity: 0;
-    }
-    11% {
-      opacity: 0.4;
-    }
-    89% {
       opacity: 0.4;
     }
     100% {
       transform: translateY(100%);
-      opacity: 0;
+      opacity: 0.4;
     }
   }
 
