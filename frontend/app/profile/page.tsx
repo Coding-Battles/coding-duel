@@ -194,17 +194,15 @@ const LeetCodeProfile: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-background min-h-screen">
+    <div className="max-w-6xl min-h-screen p-6 mx-auto bg-background">
       <Link
-        href="/"
-        className="text-accent absolute top-2 left-2 w-8 h-8 hover:text-accent/70 transition-colors cursor-pointer"
+        href="/game-setup"
+        className="absolute w-8 h-8 transition-colors cursor-pointer text-accent top-2 left-2 hover:text-accent/70"
       >
         <ArrowLeftSquare className="w-full h-full" />
       </Link>
       {/* Header */}
-      <div className="bg-background rounded-lg shadow-md p-6 mb-6">
-        <ProfileBar />
-      </div>
+      <ProfileBar />
 
       <UserStatsAndHistory
         userStats={userStats}

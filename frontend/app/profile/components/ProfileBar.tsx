@@ -2,7 +2,7 @@
 import { UserStats } from '@/interfaces/UserStats';
 import { updateUserProfile, useSession, getAvatarUrl } from '@/lib/auth-client';
 import { Edit, Calendar, TrendingUp } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ImageUploader from '@/components/ImageUploader';
 
 interface CustomUser {
@@ -32,6 +32,7 @@ export const ProfileBar = () => {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState((session?.user as CustomUser)?.username || session?.user?.name || "");
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [nameKey, setNameKey] = useState(0);
 
   const handleUploadSuccess = (imageUrl: string) => {
     setUploadMessage('Upload successful!');
@@ -48,8 +49,13 @@ export const ProfileBar = () => {
     // Clear message after 5 seconds
     setTimeout(() => setUploadMessage(null), 5000);
   };
+
+  useEffect(() => {
+    // Reset name key to force re-render when name changes
+    setNameKey(prev => prev + 1);
+  }, [session?.user?.name]);
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center w-full py-4 pl-5 mb-10 space-x-4 border-2 rounded-lg border-border">
       
       <ImageUploader
         currentImageUrl={getAvatarUrl(session?.user as CustomUser)}
@@ -74,18 +80,20 @@ export const ProfileBar = () => {
                   })
                 }
               }}
-              className="text-2xl font-bold border-b border-foreground/30 outline-none bg-transparent text-foreground"
+              className="text-2xl font-bold bg-transparent border-b outline-none border-foreground/30 text-foreground"
               autoFocus
             />
           ) : (
             <>
               <h1
-                className="text-2xl font-bold text-foreground cursor-pointer"
+                key={nameKey}
+                className="text-2xl font-bold cursor-pointer text-foreground gaming-title text-gradient"
                 onClick={() => setEditingName(true)}
+                data-text={(session?.user as CustomUser)?.username || session?.user?.name || "Unknown User"}
               >
                 {(session?.user as CustomUser)?.username || session?.user?.name || "Unknown User"}
               </h1>
-              <Edit className="w-4 h-4 text-foreground/50 cursor-pointer" onClick={() => setEditingName(true)} />
+              <Edit className="w-4 h-4 cursor-pointer text-foreground/50" onClick={() => setEditingName(true)} />
             </>
           )}
         </div>
@@ -94,7 +102,7 @@ export const ProfileBar = () => {
             {uploadMessage}
           </p>
         )}
-        <div className="flex items-center space-x-4 mt-2 text-sm text-foreground/50">
+        <div className="flex items-center mt-2 space-x-4 text-sm text-foreground/50">
           <div className="flex items-center space-x-1">
             <Calendar className="w-4 h-4" />
             <span>Joined Jan 2023</span>

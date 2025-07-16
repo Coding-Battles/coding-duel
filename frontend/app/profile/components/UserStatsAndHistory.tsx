@@ -55,71 +55,71 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
   }
 
   return (
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
   {/* Stats Panel */}
-  <div className="lg:col-span-1">
-    <div className="bg-background rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-lg font-semibold text-foreground mb-4">Statistics</h2>
+  <div className="border-2 rounded-lg h-fit border-border lg:col-span-1">
+    <div className="p-6 mb-6 rounded-lg shadow-md bg-background">
+      <h2 className="mb-4 text-lg font-semibold text-foreground">Statistics</h2>
       
       {/* Total Solved */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-foreground/60">Total Battles</span>
-          <span className="font-bold text-2xl text-foreground">{totalBattles}</span>
+          <span className="text-2xl font-bold text-foreground">{totalBattles}</span>
         </div>
-        <div className="w-full bg-foreground/20 rounded-full h-2">
+        <div className="w-full h-2 rounded-full bg-foreground/20">
           <div 
-            className="bg-success h-2 rounded-full" 
+            className="h-2 transition-all duration-1000 ease-out rounded-full bg-success" 
             style={{ width: `${totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0}%` }}
           ></div>
         </div>
       </div>
 
       {/* Difficulty Breakdown */}
-      <div className="space-y-3 mb-6">
-        <div className="flex justify-between items-center">
-          <span className="text-success font-medium">Easy</span>
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-success">Easy</span>
           <span className="font-semibold">?</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-accent font-medium">Medium</span>
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-accent">Medium</span>
           <span className="font-semibold">?</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-error font-medium">Hard</span>
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-error">Hard</span>
           <span className="font-semibold">?</span>
         </div>
       </div>
 
       {/* Additional Stats */}
-      <div className="border-t pt-4 space-y-3">
-        <div className="flex justify-between items-center">
+      <div className="pt-4 space-y-3 border-t">
+        <div className="flex items-center justify-between">
           <span className="text-foreground/60">Win Rate</span>
           <span className="font-semibold text-success">{totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0}%</span>
         </div>
 
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <span className="text-foreground/60">Wins</span>
           <span className="font-semibold text-success">{totalWins}</span>
         </div>
       </div>
     </div>
   </div>
-  <div className="lg:col-span-2">
-    <div className="bg-background rounded-lg shadow-md p-6">
-      <h2 className="text-lg font-semibold text-foreground mb-4">Recent Submissions</h2>
+  <div className="p-6 pb-20 border-2 rounded-lg lg:col-span-2 border-border min-h-[880px] relative">
+    <div className="rounded-lg shadow-md bg-background">
+      <h2 className="mb-4 text-lg font-semibold text-foreground">Recent Submissions</h2>
       <div className="space-y-3">
         {userGameHistory.length > 0 && (
           <>
             {userGameHistory[selectedIndex].map((game, index) => (
-              <div key={game.game_id} className="border rounded-lg p-4 hover:bg-foreground/5 transition-colors h-auto">
+              <div key={game.game_id} className="h-auto p-4 transition-colors border rounded-lg hover:bg-foreground/5">
                 <div className='w-full absolute h-[70px] bg-transparent cursor-pointer' onClick={() => onClickExpand(index)} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {getStatusIcon(game.result)}
                     <div>
                       <h3 className="font-medium text-foreground">Game #{game.game_id}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
+                      <div className="flex items-center mt-1 space-x-2">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           game.result === 'won' ? 'text-success bg-success/10' :
                           game.result === 'lost' ? 'text-error bg-error/10' :
@@ -151,7 +151,7 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
       </div>
       </div>
 
-      <div className='flex justify-center gap-4 mt-4'>
+      <div className='absolute flex justify-center gap-4 mt-4 transform -translate-x-1/2 bottom-4 left-1/2'>
         {userGameHistory.map((_, index) => (
           <button
             key={index}
