@@ -170,12 +170,16 @@ export default function QueueLayout({
 
     socket.on("match_found", (data: MatchFoundData) => {
       console.log("Match found!", data);
+      
+      // Set opponent data immediately so users can see the opponent avatar
+      setOpponentDataPersistent({
+        name: (data as any).opponent_Name || data.opponentName,
+        image_url: (data as any).opponentImageURL || data.opponentImageURL || "",
+      });
+      setGameIdPersistent(data.game_id);
+      
+      // Keep original 5-second delay for synchronized navigation
       setTimeout(() => {
-        setOpponentDataPersistent({
-          name: data.opponentName,
-          image_url: data.opponentImageURL || "",
-        });
-        setGameIdPersistent(data.game_id);
         router.push("/game-setup/queue/" + data.question_name);
       }, 5000);
     });
