@@ -1,19 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/lib/auth-client";
+import { useSession, getAvatarUrl } from "@/lib/auth-client";
 import DifficultySelector from "@/components/DifficultySelector";
 import { useGameContext } from "./layout";
 import QueueWaitingRoom from "@/components/QueueWaitingRoom";
 
-
-
-type QueueStatus = 'idle' | 'searching' | 'found';
+type QueueStatus = "idle" | "searching" | "found";
 
 export default function GameSetupPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  const [queueStatus, setQueueStatus] = useState<QueueStatus>('idle');
+  const [queueStatus, setQueueStatus] = useState<QueueStatus>("idle");
 
   const context = useGameContext();
 
@@ -29,18 +27,16 @@ export default function GameSetupPage() {
     if (!context?.socket) return;
 
     const handleQueueLeft = (data: { status: string }) => {
-      console.log('Queue left:', data);
+      console.log("Queue left:", data);
       // Additional cleanup or user feedback could go here
     };
 
-    context.socket.on('queue_left', handleQueueLeft);
+    context.socket.on("queue_left", handleQueueLeft);
 
     return () => {
-      context.socket?.off('queue_left', handleQueueLeft);
+      context.socket?.off("queue_left", handleQueueLeft);
     };
   }, [context?.socket]);
-
-
 
   // Show loading state while session is being fetched
   if (isPending || !context) {
@@ -53,10 +49,18 @@ export default function GameSetupPage() {
       </div>
     );
   }
-  
-  const { selectedDifficulties, setSelectedDifficulties, handleFindGame: contextHandleFindGame } = context;
 
-  if (!setSelectedDifficulties || !selectedDifficulties || !contextHandleFindGame) {
+  const {
+    selectedDifficulties,
+    setSelectedDifficulties,
+    handleFindGame: contextHandleFindGame,
+  } = context;
+
+  if (
+    !setSelectedDifficulties ||
+    !selectedDifficulties ||
+    !contextHandleFindGame
+  ) {
     return (
       <div className="flex items-center justify-center min-h-screen text-white bg-gray-950">
         <div className="text-center">
@@ -66,7 +70,6 @@ export default function GameSetupPage() {
       </div>
     );
   }
-  
 
   // Don't render content if not authenticated (will redirect via useEffect)
   if (!session?.user) {
@@ -75,7 +78,7 @@ export default function GameSetupPage() {
 
   // Local handleFindGame that updates queue status instead of navigating
   const handleFindGame = () => {
-    setQueueStatus('searching');
+    setQueueStatus("searching");
     // Call the context handleFindGame but don't navigate
     if (contextHandleFindGame) {
       contextHandleFindGame();
@@ -86,25 +89,32 @@ export default function GameSetupPage() {
   const handleCancelQueue = () => {
     // Emit leave_queue to backend to properly remove user from queue
     if (context?.socket) {
-      context.socket.emit('leave_queue');
+      context.socket.emit("leave_queue");
     }
-    setQueueStatus('idle');
+    setQueueStatus("idle");
   };
-
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background text-foreground">
       <div className="container px-6 mx-auto">
         <div className="max-w-4xl mx-auto">
-          {queueStatus === 'idle' && (
+          {queueStatus === "idle" && (
             <DifficultySelector
               selectedDifficulties={selectedDifficulties}
               onDifficultyChange={setSelectedDifficulties}
               onEditProfile={() => router.push("/profile")}
               onFindGame={handleFindGame}
+              userAvatar={getAvatarUrl(context?.user || session?.user)}
+              userName={
+                (context?.user as any)?.username ||
+                context?.user?.name ||
+                (session?.user as any)?.username ||
+                session?.user?.name ||
+                "Guest"
+              }
             />
           )}
-          {queueStatus === 'searching' && (
+          {queueStatus === "searching" && (
             <QueueWaitingRoom onCancel={handleCancelQueue} />
           )}
         </div>

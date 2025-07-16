@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "./ui/button";
+import AvatarCard from "./AvatarCard";
 
 export interface DifficultyState {
   easy: boolean;
@@ -12,6 +13,8 @@ interface DifficultySelectorProps {
   onDifficultyChange: (difficulties: DifficultyState) => void;
   onEditProfile?: () => void;
   onFindGame?: () => void;
+  userAvatar?: string;
+  userName?: string;
   className?: string;
 }
 
@@ -20,6 +23,8 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   onDifficultyChange,
   onEditProfile,
   onFindGame,
+  userAvatar,
+  userName,
   className = "",
 }) => {
   const difficulties = [
@@ -56,13 +61,29 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
     <div className={`bg-card rounded-3xl p-8 shadow-2xl relative ${className}`}>
       {/* Step 3: Pick Your Poison */}
       <div className="mb-8">
-        <div className="text-center pb-18">
-          <h1
-            className="text-4xl sm:text-6xl lg:text-8xl uppercase text-gradient font-bold tracking-wide gaming-title"
-            data-text="Pick your poison"
-          >
-            Pick your poison
-          </h1>
+        {/* Header: Title + Avatar */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-12 gap-8">
+          {/* Title */}
+          <div className="text-center lg:text-left flex-1">
+            <h1
+              className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl uppercase text-gradient font-bold tracking-wide gaming-title"
+              data-text="Pick your poison"
+            >
+              Pick your poison
+            </h1>
+          </div>
+
+          {/* User Avatar */}
+          {userAvatar && userName && (
+            <div className="flex justify-center lg:justify-end">
+              <AvatarCard
+                src={userAvatar}
+                alt={`${userName} Avatar`}
+                name={userName}
+                size="md"
+              />
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-3 gap-4">
