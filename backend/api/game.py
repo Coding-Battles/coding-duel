@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 # These will be injected from main.py
 database = None
 sio = None
+game_service = None
+matchmaking_service = None
 
 @dataclass
 class EmojiRequest:
@@ -77,8 +79,40 @@ class GameState:
             return player_ids[0] if player_ids[1] == player_id else player_ids[1]
         return None
 
-# Global game states - will be managed from main.py
-game_states: Dict[str, GameState] = {}
+# Game states are now managed by the centralized game_service
+
+def get_player_socket_id(game_id: str, player_id: str) -> Optional[str]:
+    """Get player's socket ID from matchmaking service."""
+    game_info = matchmaking_service.get_game_info(game_id)
+    if not game_info:
+        return None
+    
+    for player in game_info["players"]:
+        if player["id"] == player_id:
+            return player["sid"]
+    return None
+
+def get_player_name(game_id: str, player_id: str) -> Optional[str]:
+    """Get player's name from matchmaking service."""
+    game_info = matchmaking_service.get_game_info(game_id)
+    if not game_info:
+        return None
+    
+    for player in game_info["players"]:
+        if player["id"] == player_id:
+            return player["name"]
+    return None
+
+def get_opponent_id(game_id: str, player_id: str) -> Optional[str]:
+    """Get opponent's ID from matchmaking service."""
+    game_info = matchmaking_service.get_game_info(game_id)
+    if not game_info:
+        return None
+    
+    for player in game_info["players"]:
+        if player["id"] != player_id:
+            return player["id"]
+    return None
 
 def get_score(timeComplexity: str, implementTime: int) -> int:
     """Convert time complexity string to a score."""
@@ -164,20 +198,20 @@ async def send_emoji(game_id: str, data: EmojiRequest):
     emoji = data.emoji
     """Endpoint to send emoji from player to opponent."""
     logger.info(f"🚀 [ENTRY DEBUG] /send-emoji called for game {game_id} by player {player1} with emoji {emoji}")
-    if game_id not in game_states:
+    game_state = game_service.get_game(game_id)
+    if not game_state:
         raise HTTPException(status_code=404, detail="Game not found")
     
-    game_state = game_states[game_id]
-    players = list(game_state.players.values())
-    
-    if len(players) != 2:
+    if len(game_state.players) != 2:
         raise HTTPException(status_code=400, detail="Emoji can only be sent in 2-player games")
     
-    opponent_id = game_state.get_opponent_id(player1)
-    if (opponent_id is None) or (opponent_id not in game_state.players):
+    opponent_id = get_opponent_id(game_id, player1)
+    if not opponent_id:
         raise HTTPException(status_code=404, detail="Opponent not found in game")
     
-    opponent_sid = game_state.players[opponent_id].sid
+    opponent_sid = get_player_socket_id(game_id, opponent_id)
+    if not opponent_sid:
+        raise HTTPException(status_code=404, detail="Opponent socket not found")
     
     # Emit emoji to opponent
     await sio.emit("emoji_received", {"emoji": emoji, "from": player1}, room=opponent_sid)
@@ -188,17 +222,16 @@ async def send_emoji(game_id: str, data: EmojiRequest):
 async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     print(f"🚀 [ENTRY DEBUG] /run-all-tests called for game {game_id}")
     print(f"🚀 [ENTRY DEBUG] Player ID: {request.player_id}")
-    print(f"🚀 [ENTRY DEBUG] Available games: {list(game_states.keys())}")
+    print(f"🚀 [ENTRY DEBUG] Available games: {list(game_service.active_games.keys())}")
     logger.info(f"🚀 [ENTRY DEBUG] /run-all-tests called for game {game_id}")
     logger.info(f"🚀 [ENTRY DEBUG] Player ID: {request.player_id}")
-    logger.info(f"🚀 [ENTRY DEBUG] Available games: {list(game_states.keys())}")
+    logger.info(f"🚀 [ENTRY DEBUG] Available games: {list(game_service.active_games.keys())}")
     
     # Check if game exists
-    if game_id not in game_states:
-        logger.error(f"🚀 [ENTRY DEBUG] Game {game_id} not found in game_states")
+    game_state = game_service.get_game(game_id)
+    if not game_state:
+        logger.error(f"🚀 [ENTRY DEBUG] Game {game_id} not found in game_service")
         raise HTTPException(status_code=404, detail="Game not found")
-    
-    game_state = game_states[game_id]
     player_id = request.player_id
 
     logger.info(f"🚀 [ENTRY DEBUG] Game found, players in game {game_id}: {game_state.players}")
@@ -213,7 +246,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
         test_results = TestExecutionService.execute_test_cases(request)
 
         # Get opponent info
-        opponent_id = game_state.get_opponent_id(player_id)
+        opponent_id = get_opponent_id(game_id, player_id)
         opponent_player_info = None
         opponent_sid = None
 
@@ -225,12 +258,19 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
         complexity = "N/A"
 
         if(test_results.success):
-            game_state.mark_player_finished(player_id)
+            # Submit solution to game service
+            submission_data = {
+                "success": True,
+                "code": request.code,
+                "timer": request.timer,
+                "test_results": test_results.test_results
+            }
+            game_service.submit_solution(game_id, player_id, submission_data)
             
             if opponent_id:
                 # Emit to opponent only (don't expose full test results)
-                player_name = game_state.get_player_name(player_id)
-                opponent_sid = game_state.players[opponent_id].sid
+                player_name = get_player_name(game_id, player_id)
+                opponent_sid = get_player_socket_id(game_id, opponent_id)
                 logger.info(f"🔍 [OPPONENT DEBUG] SUCCESS: Player {player_name} (ID: {player_id}) passed all tests")
                 logger.info(f"🔍 [OPPONENT DEBUG] SUCCESS: Opponent SID: {opponent_sid}")
                 
@@ -253,7 +293,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                         final_time= get_score(complexity, request.timer),
                     )
                 
-                game_state.players[player_id].game_stats = test_result
+                # Game stats are now handled by the game service
                 print(f"🔍 [OPPONENT DEBUG] SUCCESS: About to emit 'opponent_submitted' to room {opponent_sid}")
                 logger.info(f"🔍 [OPPONENT DEBUG] SUCCESS: About to emit 'opponent_submitted' to room {opponent_sid}")
                 await sio.emit(
@@ -269,8 +309,8 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             logger.warning(f"{test_results.total_passed} out of {test_results.total_passed + test_results.total_failed} test cases passed.")
             # Emit to opponent only (don't expose full test results)
             if opponent_id:
-                opponent_player_info = game_state.players[opponent_id]
-                opponent_sid = opponent_player_info.sid
+                opponent_player_name = get_player_name(game_id, opponent_id)
+                opponent_sid = get_player_socket_id(game_id, opponent_id)
                 logger.info(f"🔍 [OPPONENT DEBUG] PARTIAL: Player {player_id} passed {test_results.total_passed}/{test_results.total_passed + test_results.total_failed} tests")
                 logger.info(f"🔍 [OPPONENT DEBUG] PARTIAL: Opponent SID: {opponent_sid}")
             
@@ -282,7 +322,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                     code=request.code,
                     opponent_id=player_id,
                     success=test_results.success,
-                    player_name=opponent_player_info.name,
+                    player_name=opponent_player_name,
                     test_results=test_results.test_results,
                     error=None,
                     total_passed=test_results.total_passed,
@@ -298,10 +338,22 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             logger.info(f"⚠️ Notified opponent {opponent_id} that {player_id} finished with partial success")
 
         # If all players finished, emit game completion
-        if game_state.all_players_finished():
-            await save_game_to_history(
-                list(game_state.players.values())
-            )
+        updated_game_state = game_service.get_game(game_id)
+        if updated_game_state and updated_game_state.status.value == "finished":
+            # Create player info for save_game_to_history
+            player_infos = []
+            game_info = matchmaking_service.get_game_info(game_id)
+            if game_info:
+                for player_data in game_info["players"]:
+                    player_info = PlayerInfo(
+                        id=player_data["id"],
+                        sid=player_data["sid"],
+                        name=player_data["name"],
+                        anonymous=player_data.get("anonymous", True)
+                    )
+                    player_infos.append(player_info)
+            
+            await save_game_to_history(player_infos)
             await sio.emit(
                 "game_completed",
                 {"message": "All players have finished!"},
@@ -323,7 +375,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             message="Test execution completed",
             code=request.code,
             opponent_id=opponent_id,
-            player_name= game_state.get_player_name(player_id),
+            player_name= get_player_name(game_id, player_id),
             success=test_results.success,
             test_results=test_results.test_results,
             total_passed=test_results.total_passed,
@@ -344,9 +396,10 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
         logger.error(f"Unexpected error in /run-all-tests: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-def set_dependencies(db, socketio_instance, game_states_dict):
+def set_dependencies(db, socketio_instance, game_service_instance, matchmaking_service_instance):
     """Set dependencies from main.py"""
-    global database, sio, game_states
+    global database, sio, game_service, matchmaking_service
     database = db
     sio = socketio_instance
-    game_states = game_states_dict
+    game_service = game_service_instance
+    matchmaking_service = matchmaking_service_instance

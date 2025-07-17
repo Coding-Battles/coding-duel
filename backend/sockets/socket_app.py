@@ -5,7 +5,7 @@ import socketio
 from .events import connection, matchmaking, game
 
 
-def create_socket_app(database=None, game_states=None, player_to_game=None):
+def create_socket_app(database=None):
     """Create and configure the Socket.IO server."""
     sio = socketio.AsyncServer(
         cors_allowed_origins="*",
