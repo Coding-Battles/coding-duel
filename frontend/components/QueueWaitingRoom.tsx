@@ -168,7 +168,7 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
     );
   }
 
-  const { opponent } = context;
+  const { opponent, selectedDifficulties } = context;
 
   return (
     <div className="flex h-[100%] w-[100%] flex-col border border-border rounded-lg overflow-hidden">
@@ -181,13 +181,6 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
             <div className="w-3 h-3 rounded-full bg-success" />
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm">
-            <span className="text-foreground/60">
-              Time:{" "}
-              <span className="font-mono text-foreground">
-                {Math.floor(timer / 60)}:{timer % 60 < 10 && 0}
-                {timer % 60}
-              </span>
-            </span>
             {!playerFound ? (
               <div className="flex items-center">
                 <div className="bg-background border border-border border-b-0 rounded-t-md px-3 py-1.5 text-xs font-medium text-accent flex items-center gap-2 relative">
@@ -217,8 +210,38 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
       </div>
 
       {/* Status Display */}
-      <div className="flex justify-center p-4">
-        <div className="text-center font-mono text-sm bg-foreground/5 px-4 py-2 rounded-lg whitespace-nowrap min-w-[20rem]">
+      <div className="flex justify-start p-4">
+        <div className="text-left font-mono text-sm px-4 py-2 whitespace-nowrap min-w-[20rem]">
+          {/* Selected difficulties as code */}
+          <div className="mb-2">
+            <span className="text-foreground">difficulties</span>{" "}
+            <span className="text-foreground/60">=</span>{" "}
+            <span className="text-foreground/60">[</span>
+            {selectedDifficulties &&
+              Object.entries(selectedDifficulties)
+                .filter(([_, selected]) => selected)
+                .map(([difficulty, _], index, array) => (
+                  <span key={difficulty}>
+                    <span className="text-foreground">"{difficulty}"</span>
+                    {index < array.length - 1 && (
+                      <span className="text-foreground/60">, </span>
+                    )}
+                  </span>
+                ))}
+            <span className="text-foreground/60">]</span>
+          </div>
+
+          {/* Time counter as code */}
+          <div className="mb-2">
+            <span className="text-foreground">time</span>{" "}
+            <span className="text-foreground/60">=</span>{" "}
+            <span className="text-foreground">
+              {Math.floor(timer / 60)}:{timer % 60 < 10 ? "0" : ""}
+              {timer % 60}
+            </span>
+          </div>
+
+          {/* Status messages as code */}
           <div className="text-accent">
             {!playerFound ? (
               <TypeIt
@@ -231,12 +254,16 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
                   const message1 = getQueueMessage();
                   const message2 = getQueueMessage();
                   instance
-                    .type(`<span style="color: orange;">${message1}</span>`)
-                    .pause(400)
-                    .delete(message1.length)
-                    .type(`<span style="color: orange;">${message2}</span>`)
-                    .pause(600)
-                    .delete(message2.length)
+                    .type(
+                      `<span class="text-foreground">status</span> <span class="text-foreground/60">=</span> <span class="text-foreground">"${message1}"</span>`
+                    )
+                    .pause(2500)
+                    .delete(message1.length + 12) // account for the extra code syntax
+                    .type(
+                      `<span class="text-foreground">status</span> <span class="text-foreground/60">=</span> <span class="text-foreground">"${message2}"</span>`
+                    )
+                    .pause(2500)
+                    .delete(message2.length + 12)
                     .exec(() => {
                       setKey((prevKey) => prevKey + 1); // trigger re-render to reset TypeIt
                     });
@@ -252,8 +279,10 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
                 getBeforeInit={(instance) => {
                   const matchMessage = getMatchFoundMessage();
                   instance
-                    .type(`<span style="color: orange;">${matchMessage}</span>`)
-                    .pause(2000)
+                    .type(
+                      `<span class="text-foreground">status</span> <span class="text-foreground/60">=</span> <span class="text-foreground">"${matchMessage}"</span>`
+                    )
+                    .pause(4000)
                     .exec(() => {
                       // Navigate to game with question name from match_found event
                       // This will be handled by the layout's match_found listener
@@ -294,9 +323,12 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
 
           {/* VS Section */}
           <div className="flex flex-col items-center gap-4 flex-shrink-0">
-            <div className="text-2xl md:text-4xl font-bold text-foreground/60">
+            <h1
+              className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl uppercase text-gradient font-bold tracking-wide gaming-title"
+              data-text="VS"
+            >
               VS
-            </div>
+            </h1>
           </div>
 
           {/* Opponent Avatar */}
