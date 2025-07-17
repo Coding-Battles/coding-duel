@@ -6,6 +6,8 @@ from typing import Dict, Any, Optional, List
 from pydantic import BaseModel
 from enum import Enum
 
+from backend.sockets.events import game
+
 
 class GameStatus(str, Enum):
     ACTIVE = "active"
@@ -53,6 +55,11 @@ class GameService:
     def __init__(self):
         self.active_games: Dict[str, GameState] = {}
         self.game_updates: Dict[str, List[GameUpdate]] = {}
+        self.game_states: Dict[str, game.GameState] = {}
+
+    def set_dependencies(game_states_param=None):
+
+        game_states = game_states_param
     
     def create_game(self, game_id: str, question_name: str, players: List[Dict[str, Any]]) -> GameState:
         """Create a new game session."""

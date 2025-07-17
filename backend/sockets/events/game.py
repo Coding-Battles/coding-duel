@@ -4,9 +4,17 @@ Game event handlers for Socket.IO.
 import logging
 from ..services.game_service import game_service, PlayerStatus
 from ..services.matchmaking_service import matchmaking_service
+from typing import Dict
+from backend.api import game
 
 logger = logging.getLogger(__name__)
 
+game_states: Dict[str, game.GameState] = {}
+
+def set_dependencies(game_states_param=None):
+    global game_states
+    game_states = game_states_param
+    game_service.set_dependencies(game_states_param)
 
 def register_events(sio):
     """Register game events with the Socket.IO server."""

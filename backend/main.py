@@ -16,6 +16,8 @@ from typing import Dict
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Set
+from backend.sockets.events import matchmaking, connection
+from pathlib import Path
 
 
 # Load environment variables early
@@ -161,10 +163,13 @@ app.include_router(game.router, prefix="/api")
 
 
 # Create Socket.IO server with CORS and better connection settings
-sio = create_socket_app(database, game_states, player_to_game)
+sio = create_socket_app(database, game_states, app)
 
 # Now set the socket instance for game router
 game.set_dependencies(database, sio, game_states)
+#set dependencies for matchmaking and connection events
+matchmaking.set_dependencies(game_states)
+connection.set_dependencies(game_states)
 
 # Create combined ASGI app
 socket_app = socketio.ASGIApp(sio, app)

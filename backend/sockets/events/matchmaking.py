@@ -5,8 +5,17 @@ Matchmaking event handlers for Socket.IO.
 import logging
 from pydantic import ValidationError
 from ..services.matchmaking_service import matchmaking_service, MatchFoundResponse
+from typing import Dict
+from backend.api import game
 
 logger = logging.getLogger(__name__)
+
+game_states: Dict[str, game.GameState] = {}
+
+def set_dependencies(game_states_param=None):
+    global game_states
+    game_states = game_states_param
+    matchmaking_service.set_dependencies(game_states_param)
 
 
 def register_events(sio):
@@ -25,6 +34,8 @@ def register_events(sio):
 
             # Try to create a match
             match_result = matchmaking_service.try_create_match()
+
+            logger.info(f"game_states: {game_states}")
 
             if match_result:
                 player1, player2, game_id, difficulty, question_slug = match_result
@@ -53,6 +64,10 @@ def register_events(sio):
                 logger.info(
                     f"Match created: {player1.name} vs {player2.name} in {difficulty} difficulty with question {question_slug} (Game: {game_id})"
                 )
+
+                # After match is found
+                await sio.enter_room(player1.sid, game_id)
+                await sio.enter_room(player2.sid, game_id)
             else:
                 # Send queue status
                 queue_status = matchmaking_service.get_queue_status()

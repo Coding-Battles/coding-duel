@@ -38,6 +38,7 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
   const [opponentEmoji, setOpponentEmoji] = React.useState<string | null>(null);
   const [opponentKey, setOpponentKey] = useState(0);
   const [userKey, setUserKey] = useState(0);
+  const [showPicker, setShowPicker] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,7 +114,7 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
         </div>
       )}
       
-      {/* Avatar */}
+      {/* Opponent Avatar */}
       <div className="flex items-start justify-center gap-8 mb-4">
         <div className="flex flex-col gap-2">
           <div className="flex justify-center mb-3">
@@ -152,7 +153,8 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
             <p className="font-semibold text-foreground">{opponentData?.name}</p>
           </div>
         </div>
-
+        
+        {/*user avatar */}
         <div className="flex flex-col gap-2">
           <div className="flex justify-center mb-3">
             <div className="relative w-[120px] h-30">
@@ -160,8 +162,9 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
                 src={user?.image || "/images/default-avatar.png"}
                 alt={`${user?.name} avatar`}
                 fill
-                className="object-cover w-full border-2 border-gray-100 rounded-full"
-              />
+                className="object-cover w-full border-2 border-gray-100 rounded-full cursor-pointer"
+                onClick={() => setShowPicker(!showPicker)}
+              /> 
               {/* Status indicator dot
               <div
                 className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(
@@ -174,14 +177,33 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
               </div> */}
               {/* Speech bubble positioned absolutely */}
               <div className="absolute top-0 w-auto h-auto ml-3 left-full">
-                <div key={userKey} className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10 animate-bounce-scale">
+                <div 
+                  key={userKey} 
+                  className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10 animate-bounce-scale cursor-pointer"
+                  onClick={() => setShowPicker(!showPicker)}
+                >
                   {userEmoji}
                   {/* Speech bubble tail pointing left */}
-                  <div className="absolute transform -translate-y-1/2 right-full top-1/2">
-                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
-                  </div>
+                  {!showPicker ? (
+                    <div className="absolute transform -translate-y-1/2 right-full top-1/2">
+                      <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
+                    </div>
+                  ) : 
+                    <div className="absolute transform -translate-y-1/2 right-full top-1/2">
+                      <div className="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent border-r-gray-100"></div>
+                    </div>
+                  }
                 </div>
               </div>
+              {showPicker &&
+                <span className="absolute right-0 w-auto h-auto ml-3">
+                  <Picker 
+                    data={data} 
+                    onEmojiSelect={(emoji : any) => {onUserEmojiSelect(emoji.native)}} 
+                    theme={theme}
+                  />
+                </span>
+              }
             </div>
           </div>
 
@@ -240,8 +262,6 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
           <div className="ml-4 text-accent">pass</div>
         </div>
       </div>
-
-      <Picker data={data} onEmojiSelect={(emoji : any) => {onUserEmojiSelect(emoji.native)}} theme={theme}/>
 
     </div>
   );

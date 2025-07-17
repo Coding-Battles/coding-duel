@@ -3,8 +3,16 @@ Connection event handlers for Socket.IO.
 """
 import logging
 from ..services.matchmaking_service import matchmaking_service
+from typing import Dict
+from backend.api import game
 
 logger = logging.getLogger(__name__)
+
+game_states: Dict[str, game.GameState] = {}
+
+def set_dependencies(game_states_param=None):
+    global game_states
+    game_states = game_states_param
 
 
 def register_events(sio):
@@ -24,13 +32,13 @@ def register_events(sio):
         
         # TODO: Handle disconnection during active games
         # For now, we'll just log it
-        active_games = [
-            game_id for game_id, game_info in matchmaking_service.active_games.items()
-            if any(player["sid"] == sid for player in game_info["players"])
+        game_states = [
+            game_id for game_id, state in matchmaking_service.game_states.items()
+            if any(player.sid == sid for player in state.players)
         ]
         
-        if active_games:
-            logger.warning(f"Client {sid} disconnected during active game(s): {active_games}")
+        if game_states:
+            logger.warning(f"Client {sid} disconnected during active game(s): {game_states}")
             # TODO: Notify opponent and handle game state
         
         if removed_from_queue:

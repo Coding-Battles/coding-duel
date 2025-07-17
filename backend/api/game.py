@@ -186,6 +186,7 @@ async def send_emoji(game_id: str, data: EmojiRequest):
 
 @router.post("/{game_id}/run-all-tests", response_model=CodeTestResult)
 async def run_all_tests(game_id: str, request: RunTestCasesRequest):
+    print(f"gameStates: {game_states}")
     print(f"🚀 [ENTRY DEBUG] /run-all-tests called for game {game_id}")
     print(f"🚀 [ENTRY DEBUG] Player ID: {request.player_id}")
     print(f"🚀 [ENTRY DEBUG] Available games: {list(game_states.keys())}")
@@ -299,6 +300,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
 
         # If all players finished, emit game completion
         if game_state.all_players_finished():
+            print(f"🔍 [OPPONENT DEBUG] All players finished in game {game_id}, saving history")
             await save_game_to_history(
                 list(game_state.players.values())
             )

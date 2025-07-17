@@ -2,10 +2,10 @@
 Socket.IO application setup and configuration.
 """
 import socketio
-from .events import connection, matchmaking, game
+from .events import connection, matchmaking
 
 
-def create_socket_app(database=None, game_states=None, player_to_game=None):
+def create_socket_app(database=None, player_to_game=None, app=None):
     """Create and configure the Socket.IO server."""
     sio = socketio.AsyncServer(
         cors_allowed_origins="*",
@@ -19,8 +19,6 @@ def create_socket_app(database=None, game_states=None, player_to_game=None):
     # Register event handlers with dependencies
     connection.register_events(sio)
     matchmaking.register_events(sio)
-    game.register_events(sio)
-    
     return sio
 
 

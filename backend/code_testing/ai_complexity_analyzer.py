@@ -1,7 +1,23 @@
 import os
 from groq import Groq
+from dotenv import load_dotenv
+from pathlib import Path
 
-# Load API key from environment
+# Load environment variables early
+env_path = Path(".env")
+if not env_path.exists():
+    env_path = Path("../.env")
+    if not env_path.exists():
+        env_path = Path("backend/.env")
+
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+    print(f"Loaded .env from: {env_path.absolute()}")
+else:
+    print("WARNING: .env file not found! Attempting to load from system environment")
+    load_dotenv()
+
+from groq import Groq
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 

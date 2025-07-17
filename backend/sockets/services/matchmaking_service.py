@@ -4,6 +4,11 @@ Matchmaking service for handling player queues and match formation.
 import uuid
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
+from backend.api import game
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Player(BaseModel):
@@ -32,12 +37,16 @@ class QueueStatusResponse(BaseModel):
 
 class MatchmakingService:
     """Service for managing player queues and creating matches."""
+        
     
     def __init__(self):
         self.waiting_players_easy: List[Player] = []
         self.waiting_players_medium: List[Player] = []
         self.waiting_players_hard: List[Player] = []
-        self.active_games: Dict[str, Dict[str, Any]] = {}
+        self.game_states: Dict[str, game.GameState] = {}
+
+    def set_dependencies(self, game_states_param=None):
+        self.game_states = game_states_param
     
     def add_player_to_queue(self, player_data: Dict[str, Any], sid: str) -> Player:
         """Add a player to the matchmaking queue."""
@@ -115,16 +124,21 @@ class MatchmakingService:
             except Exception as e:
                 # Fallback to two-sum if file reading fails
                 question_slug = "two-sum"
+
+            game_state = game.GameState(
+                game_id=game_id,
+                players={
+                    player1.id: game.PlayerInfo(id=player1.id, name=player1.name, sid=player1.sid, anonymous=player1.anonymous),
+                    player2.id: game.PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid, anonymous=player2.anonymous)
+                },
+                question_name=question_slug,
+            )
             
             # Store active game
-            self.active_games[game_id] = {
-                "players": [player1.model_dump(), player2.model_dump()],
-                "question_name": question_slug,
-                "difficulty": difficulty_name,
-                "created_at": time.time(),
-                "status": "active"
-            }
-            
+            self.game_states[game_id] = game_state
+
+            logger.info(f"Match created: {player1.name} vs {player2.name} in game {game_id} with question {question_slug} game_states={self.game_states}")
+
             return player1, player2, game_id, difficulty_name, question_slug
         return None
     
@@ -138,12 +152,12 @@ class MatchmakingService:
     
     def get_game_info(self, game_id: str) -> Optional[Dict[str, Any]]:
         """Get information about an active game."""
-        return self.active_games.get(game_id)
+        return self.game_states.get(game_id)
     
     def end_game(self, game_id: str) -> bool:
         """End an active game."""
-        if game_id in self.active_games:
-            del self.active_games[game_id]
+        if game_id in self.game_states:
+            del self.game_states[game_id]
             return True
         return False
 
