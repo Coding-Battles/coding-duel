@@ -10,16 +10,8 @@ import { useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
-import GameTimer from "@/components/GameTimer";
+import { debounce } from "lodash";
 import FinishedPage from "@/components/FinishedPage";
-import {
-  dummyOpponent,
-  dummyOpponentStats,
-  dummyUser,
-  dummyUserStats,
-} from "@/components/dummyData/FinishedPageData";
-
-const TestFinishedPage = true;
 
 import DuelInfo from "@/components/DuelInfo";
 import {
@@ -68,6 +60,9 @@ export default function InGamePage() {
   const router = useRouter();
   const params = useParams();
   const { data: userSession } = useSession();
+
+  // Debounced function to emit code updates - we'll set this up later
+  const emitCodeUpdateRef = useRef<ReturnType<typeof debounce> | null>(null);
 
   // All useCallback hooks
   const handleLeftMouseDown = useCallback(
@@ -246,6 +241,36 @@ export default function InGamePage() {
     }
   }, [questionData, selectedLanguage]);
 
+  // Join game room and set up debounced code update function
+  useEffect(() => {
+    if (context?.socket && context.gameId && userSession?.user?.id) {
+      // Join the game room first
+      context.socket.emit("join_game", {
+        game_id: context.gameId,
+        player_id: userSession.user.id
+      });
+
+      // Set up debounced code update function
+      emitCodeUpdateRef.current = debounce((code: string) => {
+        // Only emit if we have all required data and the socket is connected
+        if (context.socket && context.socket.connected && context.gameId && userSession?.user?.id) {
+          context.socket.emit("code_update", {
+            game_id: context.gameId,
+            player_id: userSession.user.id,
+            code: code
+          });
+        }
+      }, 500);
+    }
+    
+    // Cleanup on unmount or dependencies change
+    return () => {
+      if (emitCodeUpdateRef.current) {
+        emitCodeUpdateRef.current.cancel();
+      }
+    };
+  }, [context?.socket, context?.gameId, userSession?.user?.id]);
+
   // NOW all conditional returns can happen AFTER all hooks are declared
   if (!context) {
     return <div>Loading game context...</div>;
@@ -272,7 +297,6 @@ export default function InGamePage() {
   }
 
   // Rest of your component logic...
-  const { socket } = context;
   const questionName = params?.questionName;
 
   const handleLanguageChange = (language: Language) => {
@@ -461,7 +485,11 @@ export default function InGamePage() {
             <EditorWithTerminal
               code={userCode}
               onCodeChange={(value) => {
-                setUserCode(value || "");
+                const newCode = value || "";
+                setUserCode(newCode);
+                if (emitCodeUpdateRef.current) {
+                  emitCodeUpdateRef.current(newCode);
+                }
               }}
               language={getLanguageConfig(selectedLanguage).monacoLanguage}
               theme={monacoTheme}
@@ -512,6 +540,8 @@ export default function InGamePage() {
                 user={context.user ?? undefined}
                 socket={context.socket ?? undefined}
                 gameId={context.gameId ?? undefined}
+                starterCode={questionData?.starter_code?.[selectedLanguage] || ""}
+                selectedLanguage={selectedLanguage}
               />
             </div>
           </div>

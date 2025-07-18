@@ -159,6 +159,12 @@ export default function QueueLayout({
       }
     });
 
+    socket.on("connection_displaced", (data) => {
+      console.log("Connection displaced:", data);
+      alert("Your connection has been replaced by a new tab/window. Please refresh this page to reconnect.");
+      setLoadingState(true);
+    });
+
     socket.on("connect_error", (error) => {
       console.error("Connection error:", error);
       setLoadingState(true);

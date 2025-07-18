@@ -38,6 +38,7 @@ class MatchmakingService:
         self.waiting_players_medium: List[Player] = []
         self.waiting_players_hard: List[Player] = []
         self.active_games: Dict[str, Dict[str, Any]] = {}
+        self.user_connections: Dict[str, str] = {}  # user_id -> current_sid mapping
     
     def add_player_to_queue(self, player_data: Dict[str, Any], sid: str) -> Player:
         """Add a player to the matchmaking queue."""
@@ -71,6 +72,46 @@ class MatchmakingService:
                 removed = True
                 
         return removed
+    
+    def remove_player_by_user_id(self, user_id: str) -> bool:
+        """Remove a player from all queues by user ID."""
+        removed = False
+        
+        # Remove from all difficulty queues
+        for queue_list in [self.waiting_players_easy, self.waiting_players_medium, self.waiting_players_hard]:
+            initial_count = len(queue_list)
+            queue_list[:] = [p for p in queue_list if p.id != user_id]
+            if len(queue_list) < initial_count:
+                removed = True
+                
+        return removed
+    
+    def get_previous_connection(self, user_id: str) -> Optional[str]:
+        """Get the previous connection SID for a user."""
+        return self.user_connections.get(user_id)
+    
+    def update_user_connection(self, user_id: str, new_sid: str) -> Optional[str]:
+        """Update user's connection mapping and return the previous SID if any."""
+        previous_sid = self.user_connections.get(user_id)
+        self.user_connections[user_id] = new_sid
+        return previous_sid
+    
+    def remove_user_connection(self, user_id: str) -> bool:
+        """Remove user from connection mapping."""
+        if user_id in self.user_connections:
+            del self.user_connections[user_id]
+            return True
+        return False
+    
+    def cleanup_user_connection(self, sid: str) -> Optional[str]:
+        """Clean up user connection mapping by SID and return the user_id if found."""
+        user_id = None
+        for uid, connection_sid in list(self.user_connections.items()):
+            if connection_sid == sid:
+                user_id = uid
+                del self.user_connections[uid]
+                break
+        return user_id
     
     def try_create_match(self) -> Optional[tuple[Player, Player, str, str, str]]:
         """Try to create a match if 2+ players are in queue."""

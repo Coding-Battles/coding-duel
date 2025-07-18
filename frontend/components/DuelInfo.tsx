@@ -6,8 +6,10 @@ import { UserStats } from "@/interfaces/UserStats";
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 import { useTheme } from "next-themes";
-import { set } from "better-auth";
 import { Socket } from "socket.io-client";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import vsDark from 'react-syntax-highlighter/dist/esm/styles/prism/vs-dark';
+import { Language } from '@/types/languages';
 
 
 interface DuelInfoProps {
@@ -16,9 +18,11 @@ interface DuelInfoProps {
   user? : CustomUser;
   socket?: Socket;
   gameId?: string;
+  starterCode?: string;
+  selectedLanguage?: Language;
 }
 
-const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps) => {
+const DuelInfo = ({ timeRef, opponentData, user, socket, gameId, starterCode, selectedLanguage = 'python' }: DuelInfoProps) => {
   // // Mock data - replace with real props/state
   // const opponentData = {
   //   username: "CodeNinja42",
@@ -34,10 +38,43 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
   console.log ("user " + user?.image)
   const { theme} = useTheme();
 
+  // Map our language types to Prism language names for syntax highlighting
+  const getPrismLanguage = (language: Language): string => {
+    switch (language) {
+      case 'python':
+        return 'python';
+      case 'java':
+        return 'java';
+      case 'cpp':
+        return 'cpp';
+      case 'javascript':
+        return 'javascript';
+      default:
+        return 'python';
+    }
+  };
+
+  // Use Monaco Editor vs-dark theme with class name overrides
+  const syntaxTheme = {
+    ...vsDark,
+    // Override class names to match Monaco (light gray, no decoration)
+    'class-name': {
+      color: '#d4d4d4',
+      textDecoration: 'none',
+    },
+    'entity': {
+      color: '#d4d4d4', 
+      textDecoration: 'none',
+    },
+  };
+
+
   const [userEmoji, setUserEmoji] = React.useState<string | null>(null);
   const [opponentEmoji, setOpponentEmoji] = React.useState<string | null>(null);
   const [opponentKey, setOpponentKey] = useState(0);
   const [userKey, setUserKey] = useState(0);
+  const [opponentCode, setOpponentCode] = React.useState<string | null>(null);
+  const [codeAvailable, setCodeAvailable] = React.useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -70,24 +107,51 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
   };
 
   useEffect(() => {
-    if(socket == null) return;
+    if(socket == null || !gameId || !user?.id) return;
 
     socket.on("emoji_received", async (data: {emoji: string }) => {
       console.log("Received emoji update:", data);
       setOpponentEmoji(data.emoji);
       setOpponentKey(prev => prev + 1); // Force re-render to trigger animation
     });
-    
-  }, [socket])
 
-  const onUserEmojiSelect = async (emoji: any) => {
+    socket.on("opponent_code", (data: { code: string | null; available: boolean }) => {
+      console.log("Received opponent code:", data);
+      setOpponentCode(data.code);
+      setCodeAvailable(data.available);
+    });
+
+    // Function to fetch opponent code
+    const fetchOpponentCode = () => {
+      if (socket && gameId && user?.id) {
+        socket.emit("get_opponent_code", {
+          game_id: gameId,
+          player_id: user.id
+        });
+      }
+    };
+
+    // Fetch opponent code immediately and then every 5 seconds
+    fetchOpponentCode();
+    const interval = setInterval(fetchOpponentCode, 5000);
+
+    // Cleanup
+    return () => {
+      socket.off("emoji_received");
+      socket.off("opponent_code");
+      clearInterval(interval);
+    };
+    
+  }, [socket, gameId, user?.id]);
+
+  const onUserEmojiSelect = async (emoji: {native: string}) => {
     console.log("Selected emoji:", emoji);
-    setUserEmoji(emoji);
+    setUserEmoji(emoji.native);
     setUserKey(prev => prev + 1); // Force re-render to trigger animation
 
     console.log("player1: " + user?.id)
 
-    const response = await fetch(
+    await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/${gameId}/send-emoji`,
     {
       method: "POST",
@@ -95,7 +159,7 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        emoji: emoji,
+        emoji: emoji.native,
         player1: user?.id
       }),
     })
@@ -229,19 +293,46 @@ const DuelInfo = ({ timeRef, opponentData, user, socket, gameId }: DuelInfoProps
       {/* Opponent Code Preview */}
       <div className="pt-4 mt-4 border-t">
         <h4 className="mb-2 text-sm font-semibold text-foreground/70">
-          Opponent&apos;s Code (30s delay)
+          Opponent&apos;s Code
         </h4>
-        <div className="p-3 overflow-y-auto font-mono text-xs rounded-md bg-foreground/5 text-success h-80">
-          <div className="text-foreground/50"># Python starter code</div>
-          <div className="text-accent">def</div>{" "}
-          <div className="inline text-accent">two_sum</div>
-          <div className="inline text-foreground">(nums, target):</div>
-          <div className="ml-4 text-foreground/50"># Your solution here</div>
-          <div className="ml-4 text-accent">pass</div>
+        <div className="overflow-y-auto rounded-md bg-foreground/5 h-80">
+          {codeAvailable && opponentCode ? (
+            <SyntaxHighlighter
+              language={getPrismLanguage(selectedLanguage)}
+              style={syntaxTheme}
+              className="!m-0 !bg-transparent"
+              customStyle={{
+                fontSize: '12px',
+                margin: 0,
+                padding: '12px',
+                background: 'transparent',
+              }}
+            >
+              {opponentCode}
+            </SyntaxHighlighter>
+          ) : (
+            <SyntaxHighlighter
+              language={getPrismLanguage(selectedLanguage)}
+              style={syntaxTheme}
+              className="!m-0 !bg-transparent"
+              customStyle={{
+                fontSize: '12px',
+                margin: 0,
+                padding: '12px',
+                background: 'transparent',
+                opacity: 0.7,
+              }}
+            >
+              {starterCode || "# No code available yet"}
+            </SyntaxHighlighter>
+          )}
+        </div>
+        <div className="mt-1 text-xs text-foreground/40">
+          * Code updates are delayed by 30 seconds
         </div>
       </div>
 
-      <Picker data={data} onEmojiSelect={(emoji : any) => {onUserEmojiSelect(emoji.native)}} theme={theme}/>
+      <Picker data={data} onEmojiSelect={(emoji : {native: string}) => {onUserEmojiSelect(emoji)}} theme={theme}/>
 
     </div>
   );
