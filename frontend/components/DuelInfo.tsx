@@ -81,6 +81,7 @@ const DuelInfo = ({
   const [userKey, setUserKey] = useState(0);
   const [opponentCode, setOpponentCode] = React.useState<string | null>(null);
   const [codeAvailable, setCodeAvailable] = React.useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
