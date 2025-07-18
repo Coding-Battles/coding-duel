@@ -5,27 +5,65 @@ Matchmaking event handlers for Socket.IO.
 import logging
 from pydantic import ValidationError
 from ..services.matchmaking_service import matchmaking_service, MatchFoundResponse
-from typing import Dict
+from typing import Any, Dict
 from backend.api import game
+from backend.sockets.events import game as game_events
 
 logger = logging.getLogger(__name__)
 
 game_states: Dict[str, game.GameState] = {}
+
+sio_instance = None
+
+
 
 def set_dependencies(game_states_param=None):
     global game_states
     game_states = game_states_param
     matchmaking_service.set_dependencies(game_states_param)
 
+async def remove_duplicate_player(self, player_data: Dict[str, Any], playerId: str):
+    """Remove a player from all queues if they are already in one and force disconnect them."""
+    logger.info(f"player_data: {player_data}")
+    logger.info(f"Removing duplicate player {player_data.get('name', 'unknown')} with id {playerId} from queues")
+    logger.info(f"current easy_list: {matchmaking_service.waiting_players_easy}")
+    # Find and collect SIDs of duplicate players before removing them
+    duplicate_sids = []
+    
+    for queue_list in [matchmaking_service.waiting_players_easy, matchmaking_service.waiting_players_medium, matchmaking_service.waiting_players_hard]:
+        # Find duplicate players and collect their SIDs
+        for p in queue_list:
+            if p.id == playerId:
+                duplicate_sids.append(p.sid)
+        
+        # Remove duplicates from queue
+        queue_list[:] = [p for p in queue_list if p.id != playerId]
+    
+    # If duplicates were found, emit force_disconnect to their SIDs
+    if duplicate_sids:
+        logger.info(f"Found duplicate player {player_data.get('name', 'unknown')} with id {playerId}. Disconnecting SIDs: {duplicate_sids}")
+
+        for sid in duplicate_sids:
+            logger.info(f"Emitting remove_duplicate to sid {sid}")
+            if sio_instance:
+                await sio_instance.emit("remove_duplicate", {"status": "removed"}, room=sid)
+            else:
+                logger.error("sio_instance not set, cannot emit remove_duplicate")
+
+    logger.info(f"new easy_list: {matchmaking_service.waiting_players_easy}")
+
 
 def register_events(sio):
     """Register matchmaking events with the Socket.IO server."""
+    global sio_instance
+    sio_instance = sio
 
     @sio.event
     async def join_queue(sid, data):
         """Handle player joining the matchmaking queue."""
         try:
             # Add player to queue
+            await remove_duplicate_player(matchmaking_service, data, data.get("id", "unknown"))
             player = matchmaking_service.add_player_to_queue(data, sid)
             total_players = len(matchmaking_service.waiting_players_easy) + len(matchmaking_service.waiting_players_medium) + len(matchmaking_service.waiting_players_hard)
             logger.info(

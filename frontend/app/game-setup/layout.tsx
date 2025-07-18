@@ -170,6 +170,13 @@ export default function QueueLayout({
       setLoadingState(true);
     });
 
+    socket.on("remove_duplicate", (data) => {
+      console.log("Duplicate player removed:", data);
+      alert("You have been removed from the queue due to a duplicate connection. Please refresh the page.");
+      clearGameData();
+      setLoadingState(true);
+    });
+
     socket.on("queue_status", (data) => {
       console.log("Queue status:", data);
     });

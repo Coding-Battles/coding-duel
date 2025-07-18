@@ -80,7 +80,7 @@ export default function EditorWithTerminal({
               onClick={onSubmit}
               size="sm"
               variant="default"
-              className="bg-success hover:bg-success/80 text-background border-0"
+              className="border-0 bg-success hover:bg-success/80 text-background"
               disabled={isRunning}
             >
               {isRunning ? (
@@ -95,7 +95,7 @@ export default function EditorWithTerminal({
       </div>
 
       {/* Editor and Test Results */}
-      <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex flex-col flex-1 h-full min-h-0">
         <div className={hasResults ? "flex-1 min-h-0" : "flex-1"}>
           <CodeEditor
             value={code}
@@ -107,7 +107,7 @@ export default function EditorWithTerminal({
           />
         </div>
         {hasResults && (
-          <div className="flex-shrink-0 border-t border-slate-600/30">
+          <div className="flex-shrink-0 border-t border-slate-600/30 max-h-[40%]">
             <TestResults
               testResults={testResults}
               isRunning={isRunning}

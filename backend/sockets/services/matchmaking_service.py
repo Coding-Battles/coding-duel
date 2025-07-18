@@ -47,7 +47,7 @@ class MatchmakingService:
 
     def set_dependencies(self, game_states_param=None):
         self.game_states = game_states_param
-    
+
     def add_player_to_queue(self, player_data: Dict[str, Any], sid: str) -> Player:
         """Add a player to the matchmaking queue."""
         import time

@@ -85,10 +85,10 @@ export default function TestResults({
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 overflow-y-scroll">
         {/* Error Message */}
         {error && (
-          <div className="text-error bg-error/10 p-3 rounded text-sm">
+          <div className="p-3 text-sm rounded text-error bg-error/10">
             {error}
           </div>
         )}
@@ -110,20 +110,20 @@ export default function TestResults({
                 {/* Test Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 text-sm">
-                    <span className="text-foreground font-medium">
+                    <span className="font-medium text-foreground">
                       Test {i + 1}
                     </span>
-                    <code className="text-foreground/60 font-mono text-xs">
+                    <code className="font-mono text-xs text-foreground/60">
                       {JSON.stringify(test.input)}
                     </code>
                     <span className="text-foreground/40">→</span>
-                    <code className="text-foreground font-mono text-xs">
+                    <code className="font-mono text-xs text-foreground">
                       {test.actual_output}
                     </code>
                     {!test.passed && (
                       <>
-                        <span className="text-foreground/40 text-xs">expected</span>
-                        <code className="text-foreground/60 font-mono text-xs">
+                        <span className="text-xs text-foreground/40">expected</span>
+                        <code className="font-mono text-xs text-foreground/60">
                           {Array.isArray(test.expected_output) 
                             ? JSON.stringify(test.expected_output[0] || test.expected_output)
                             : JSON.stringify(test.expected_output)

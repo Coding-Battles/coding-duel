@@ -6,7 +6,7 @@ import { Language, getLanguageConfig } from "@/types/languages";
 import { TestResultsData } from "@/components/TestResults";
 import { useParams, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useGameContext } from "../../layout";
+import { CustomUser, OpponentData, useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
@@ -20,6 +20,52 @@ import {
 } from "@/lib/leetcode-html-transformer";
 
 type AlertType = { id: string; message: string; variant?: string };
+
+// Dummy data - User wins scenario
+export const dummyUserWinsData = {
+  opponent: {
+    image_url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+    name: "Alex Thompson"
+  } as OpponentData,
+  
+  user: {
+    id: "user123",
+    name: "John Doe",
+    email: "john@example.com"
+  } as CustomUser,
+  
+  opponentStats: {
+    player_name: "Alex Thompson",
+    implement_time: 165, // Changed from "2:45" to a number (e.g., seconds)
+    complexity: "O(n²)",
+    final_time: 165.8,
+    success: true,
+    test_results: [],
+    total_passed: 0,
+    total_failed: 0,
+    error: "",
+    message: "",
+    code: "",
+    opponent_id: "opponent123"
+  } as TestResultsData,
+  
+  userStats: {
+    player_name: "John Doe",
+    implement_time: 132, // Changed from "2:12" (string) to 132 (number, e.g., seconds)
+    complexity: "O(n log n)",
+    final_time: 132.5,
+    success: true,
+    test_results: [],
+    total_passed: 0,
+    total_failed: 0,
+    error: "",
+    message: "",
+    code: "",
+    opponent_id: ""
+  } as TestResultsData
+};
+
+const debugFinishedPage = false; // Set to true to debug FinishedPage component
 
 export default function InGamePage() {
   // ALL HOOKS MUST BE DECLARED AT THE TOP - NO CONDITIONAL LOGIC BEFORE HOOKS
@@ -428,10 +474,10 @@ export default function InGamePage() {
 
   console.log("context: ", context);
   return (
-    <div ref={containerRef} className="flex w-screen h-screen">
+    <div ref={containerRef} className="flex items-center justify-center w-screen h-screen">
       <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
 
-      {!gameFinished ? (
+      {!debugFinishedPage && <>{!gameFinished ? (
         <div className="flex w-full h-full">
           {/* Left Column - Question */}
           <div
@@ -557,6 +603,17 @@ export default function InGamePage() {
           />
         )
       )}
+      </>
+    }
+
+    {debugFinishedPage && 
+      <FinishedPage
+        opponent={dummyUserWinsData.opponent}
+        user={dummyUserWinsData.user}
+        opponentStats={dummyUserWinsData.opponentStats}
+        userStats={dummyUserWinsData.userStats}
+      />
+    }
     </div>
   );
 }

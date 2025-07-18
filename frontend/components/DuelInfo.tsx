@@ -273,7 +273,7 @@ const DuelInfo = ({
                 </div>
               </div>
               {showPicker && (
-                <span className="absolute right-0 w-auto h-auto ml-3">
+                <span className="absolute right-0 z-50 w-auto h-auto ml-3">
                   <Picker
                     data={data}
                     onEmojiSelect={(emoji: any) => {
@@ -367,14 +367,6 @@ const DuelInfo = ({
           * Code updates are delayed by 30 seconds
         </div>
       </div>
-
-      <Picker
-        data={data}
-        onEmojiSelect={(emoji: { native: string }) => {
-          onUserEmojiSelect(emoji);
-        }}
-        theme={theme}
-      />
     </div>
   );
 };

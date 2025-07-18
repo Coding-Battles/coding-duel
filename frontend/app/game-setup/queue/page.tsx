@@ -96,10 +96,10 @@ export default function QueueLayout() {
                 key={key} // use key to reset TypeIt instance
                 getBeforeInit={(instance) => {
                   instance
-                    .type('<span style="color: orange;">loading...</span>')
+                    .type('<span style="color: orange;" className="text-orange">loading...</span>')
                     .pause(750)
                     .delete(10)
-                    .type('<span style="color: orange;">loading!</span>')
+                    .type('<span style="color: orange;" className="text-orange">loading!</span>')
                     .pause(1000)
                     .delete(8)
                     .exec(() => {
@@ -112,7 +112,7 @@ export default function QueueLayout() {
               <TypeIt
                 getBeforeInit={(instance) => {
                   instance
-                    .type('<span style="color: orange;">Player Found!</span>')
+                    .type('<span style="color: orange;" className="text-orange">Player Found!</span>')
                     .pause(2000)
                     .exec(() => {
                       router.push("/game-setup/queue/in-game");
