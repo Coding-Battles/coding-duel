@@ -46,6 +46,8 @@ from backend.sockets.socket_app import create_socket_app
 
 # Import services
 from backend.services.user_service import initialize_username_pool
+from backend.sockets.services.game_service import game_service
+from backend.sockets.services.matchmaking_service import matchmaking_service
 
 # Import models for socket functionality
 from backend.models.questions import CodeTestResult
@@ -74,9 +76,7 @@ executor = ThreadPoolExecutor(max_workers=5)
 DATABASE_URL = os.getenv("DATABASE_URL")
 database = databases.Database(DATABASE_URL)
 
-# Game state storage
-game_states: Dict[str, game.GameState] = {}
-player_to_game: Dict[str, str] = {}
+# Game state storage is now handled by socket services
 
 
 @asynccontextmanager
@@ -153,7 +153,9 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Set up database dependencies for routers
 questions_router.set_database(database)
-game.set_dependencies(database, None, game_states)  # sio will be set after creation
+game.set_dependencies(
+    database, None, game_service, matchmaking_service
+)  # sio will be set after creation
 
 # Include API routers
 app.include_router(users.router, prefix="/api")
@@ -167,7 +169,7 @@ sio = create_socket_app(database, game_states, app)
 
 # Now set the socket instance for game router
 game.set_dependencies(database, sio, game_states)
-#set dependencies for matchmaking and connection events
+# set dependencies for matchmaking and connection events
 matchmaking.set_dependencies(game_states)
 connection.set_dependencies(game_states)
 

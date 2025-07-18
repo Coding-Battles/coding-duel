@@ -10,11 +10,8 @@ import { useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
-import GameTimer from "@/components/GameTimer";
+import { debounce } from "lodash";
 import FinishedPage from "@/components/FinishedPage";
-import { dummyOpponent, dummyOpponentStats, dummyUser, dummyUserStats } from "@/components/dummyData/FinishedPageData";
-
-const TestFinishedPage = true;
 
 import DuelInfo from "@/components/DuelInfo";
 import {
@@ -28,21 +25,28 @@ export default function InGamePage() {
   // ALL HOOKS MUST BE DECLARED AT THE TOP - NO CONDITIONAL LOGIC BEFORE HOOKS
   const { resolvedTheme } = useTheme();
   const monacoTheme = resolvedTheme === "dark" ? "vs-dark" : "vs";
-  
+
   // All useState hooks
-  const [selectedLanguage, setSelectedLanguage] = React.useState<Language>("python");
+  const [selectedLanguage, setSelectedLanguage] =
+    React.useState<Language>("python");
   const [userCode, setUserCode] = React.useState<string>("");
-  const [questionData, setQuestionData] = React.useState<QuestionData | null>(null);
+  const [questionData, setQuestionData] = React.useState<QuestionData | null>(
+    null
+  );
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [testResults, setTestResults] = React.useState<TestResultsData | undefined>(undefined);
+  const [testResults, setTestResults] = React.useState<
+    TestResultsData | undefined
+  >(undefined);
   const [alerts, setAlerts] = React.useState<AlertType[]>([]);
   const [leftWidth, setLeftWidth] = useState(33.33);
   const [rightWidth, setRightWidth] = useState(25);
   const [gameFinished, setGameFinished] = React.useState(false);
   const [isRunning, setIsRunning] = React.useState(false);
   const [hasResults, setHasResults] = React.useState(false);
-  const [opponentStatus, setOpponentStatus] = React.useState<string | null>(null);
+  const [opponentStatus, setOpponentStatus] = React.useState<string | null>(
+    null
+  );
 
   // All useRef hooks
   const opponentTestStatsRef = useRef<TestResultsData | undefined>(undefined);
@@ -57,16 +61,25 @@ export default function InGamePage() {
   const params = useParams();
   const { data: userSession } = useSession();
 
-  // All useCallback hooks
-  const handleLeftMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    isDraggingLeft.current = true;
-    e.preventDefault();
-  }, []);
+  // Debounced function to emit code updates - we'll set this up later
+  const emitCodeUpdateRef = useRef<ReturnType<typeof debounce> | null>(null);
 
-  const handleRightMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    isDraggingRight.current = true;
-    e.preventDefault();
-  }, []);
+  // All useCallback hooks
+  const handleLeftMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      isDraggingLeft.current = true;
+      e.preventDefault();
+    },
+    []
+  );
+
+  const handleRightMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      isDraggingRight.current = true;
+      e.preventDefault();
+    },
+    []
+  );
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!containerRef.current) return;
@@ -80,7 +93,8 @@ export default function InGamePage() {
       const newLeftWidth = Math.min(Math.max(percentage, 20), 60);
       setLeftWidth(newLeftWidth);
     } else if (isDraggingRight.current) {
-      const rightPercentage = ((containerWidth - mouseX) / containerWidth) * 100;
+      const rightPercentage =
+        ((containerWidth - mouseX) / containerWidth) * 100;
       const newRightWidth = Math.min(Math.max(rightPercentage, 15), 40);
       setRightWidth(newRightWidth);
     }
@@ -93,12 +107,12 @@ export default function InGamePage() {
 
   // All useEffect hooks
   React.useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [handleMouseMove, handleMouseUp]);
 
@@ -114,15 +128,25 @@ export default function InGamePage() {
     }
 
     const handleOpponentSubmitted = (data: TestResultsData) => {
-      console.log("🔍 [OPPONENT DEBUG] Frontend received opponent_submitted event");
+      console.log(
+        "🔍 [OPPONENT DEBUG] Frontend received opponent_submitted event"
+      );
       console.log("🔍 [OPPONENT DEBUG] Data:", data);
-      
+
       if (data.success) {
-        setOpponentStatus(`🎉 Opponent finished! All ${data.total_passed} tests passed (${data.complexity || 'N/A'} complexity)`);
+        setOpponentStatus(
+          `🎉 Opponent finished! All ${data.total_passed} tests passed (${
+            data.complexity || "N/A"
+          } complexity)`
+        );
       } else {
-        setOpponentStatus(`⚠️ Opponent submitted: ${data.total_passed}/${data.total_passed + data.total_failed} tests passed`);
+        setOpponentStatus(
+          `⚠️ Opponent submitted: ${data.total_passed}/${
+            data.total_passed + data.total_failed
+          } tests passed`
+        );
       }
-      
+
       setAlerts((prev) => [
         ...prev,
         {
@@ -166,9 +190,11 @@ export default function InGamePage() {
       console.warn("Game context not ready yet, waiting...");
       return;
     }
-    
+
     if (context && !context.socket && !context.loading) {
-      console.log("Context is stable but socket is missing, redirecting to queue");
+      console.log(
+        "Context is stable but socket is missing, redirecting to queue"
+      );
       router.push("/queue");
     }
   }, [context, router]);
@@ -215,11 +241,41 @@ export default function InGamePage() {
     }
   }, [questionData, selectedLanguage]);
 
+  // Join game room and set up debounced code update function
+  useEffect(() => {
+    if (context?.socket && context.gameId && userSession?.user?.id) {
+      // Join the game room first
+      context.socket.emit("join_game", {
+        game_id: context.gameId,
+        player_id: userSession.user.id
+      });
+
+      // Set up debounced code update function
+      emitCodeUpdateRef.current = debounce((code: string) => {
+        // Only emit if we have all required data and the socket is connected
+        if (context.socket && context.socket.connected && context.gameId && userSession?.user?.id) {
+          context.socket.emit("code_update", {
+            game_id: context.gameId,
+            player_id: userSession.user.id,
+            code: code
+          });
+        }
+      }, 500);
+    }
+    
+    // Cleanup on unmount or dependencies change
+    return () => {
+      if (emitCodeUpdateRef.current) {
+        emitCodeUpdateRef.current.cancel();
+      }
+    };
+  }, [context?.socket, context?.gameId, userSession?.user?.id]);
+
   // NOW all conditional returns can happen AFTER all hooks are declared
   if (!context) {
     return <div>Loading game context...</div>;
   }
-  
+
   if (context.loading) {
     return <div>Connecting to game...</div>;
   }
@@ -241,7 +297,6 @@ export default function InGamePage() {
   }
 
   // Rest of your component logic...
-  const { socket } = context;
   const questionName = params?.questionName;
 
   const handleLanguageChange = (language: Language) => {
@@ -375,11 +430,11 @@ export default function InGamePage() {
   return (
     <div ref={containerRef} className="flex w-screen h-screen">
       <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
-      
+
       {!gameFinished ? (
         <div className="flex w-full h-full">
           {/* Left Column - Question */}
-          <div 
+          <div
             className="relative overflow-y-auto border-r"
             style={{ width: `${leftWidth}%` }}
           >
@@ -411,22 +466,30 @@ export default function InGamePage() {
 
           {/* Left Resizer */}
           <div
-            className="relative w-1 transition-colors duration-200 bg-gray-300 hover:bg-blue-500 cursor-col-resize group"
+            className="relative w-1 transition-colors duration-200 cursor-col-resize group"
+            style={{ backgroundColor: "var(--border)" }}
             onMouseDown={handleLeftMouseDown}
           >
             <div className="absolute inset-0 w-3 -ml-1" />
-            <div className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 bg-gray-400 rounded top-1/2 left-1/2 group-hover:bg-blue-600" />
+            <div
+              className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded top-1/2 left-1/2"
+              style={{
+                backgroundColor: "var(--border)",
+                opacity: "0.8",
+              }}
+            />
           </div>
 
           {/* Middle Column - Editor */}
-          <div 
-            className="h-full"
-            style={{ width: `${middleWidth}%` }}
-          >
+          <div className="h-full" style={{ width: `${middleWidth}%` }}>
             <EditorWithTerminal
               code={userCode}
               onCodeChange={(value) => {
-                setUserCode(value || "");
+                const newCode = value || "";
+                setUserCode(newCode);
+                if (emitCodeUpdateRef.current) {
+                  emitCodeUpdateRef.current(newCode);
+                }
               }}
               language={getLanguageConfig(selectedLanguage).monacoLanguage}
               theme={monacoTheme}
@@ -444,15 +507,22 @@ export default function InGamePage() {
 
           {/* Right Resizer */}
           <div
-            className="relative w-1 transition-colors duration-200 bg-gray-300 hover:bg-blue-500 cursor-col-resize group"
+            className="relative w-1 transition-colors duration-200 cursor-col-resize group"
+            style={{ backgroundColor: "var(--border)" }}
             onMouseDown={handleRightMouseDown}
           >
             <div className="absolute inset-0 w-3 -ml-1" />
-            <div className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 bg-gray-400 rounded top-1/2 left-1/2 group-hover:bg-blue-600" />
+            <div
+              className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded top-1/2 left-1/2"
+              style={{
+                backgroundColor: "var(--border)",
+                opacity: "0.8",
+              }}
+            />
           </div>
 
           {/* Right Column - DuelInfo */}
-          <div 
+          <div
             className="relative overflow-y-auto"
             style={{ width: `${rightWidth}%` }}
           >
@@ -464,7 +534,15 @@ export default function InGamePage() {
                   </p>
                 </div>
               )}
-              <DuelInfo timeRef={timeRef} opponentData={context.opponent} user={context.user ?? undefined} socket={context.socket ?? undefined} gameId={context.gameId ?? undefined} />
+              <DuelInfo
+                timeRef={timeRef}
+                opponentData={context.opponent}
+                user={context.user ?? undefined}
+                socket={context.socket ?? undefined}
+                gameId={context.gameId ?? undefined}
+                starterCode={questionData?.starter_code?.[selectedLanguage] || ""}
+                selectedLanguage={selectedLanguage}
+              />
             </div>
           </div>
         </div>

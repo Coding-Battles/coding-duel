@@ -30,6 +30,9 @@ def register_events(sio):
         # Remove player from queue if they disconnect
         removed_from_queue = matchmaking_service.remove_player_from_queue(sid)
         
+        # Clean up user connection mapping
+        user_id = matchmaking_service.cleanup_user_connection(sid)
+        
         # TODO: Handle disconnection during active games
         # For now, we'll just log it
         game_states = [
@@ -42,6 +45,7 @@ def register_events(sio):
             # TODO: Notify opponent and handle game state
         
         if removed_from_queue:
-            logger.info(f"Client {sid} disconnected and removed from queue. Queue size: {len(matchmaking_service.waiting_players)}")
+            total_remaining = len(matchmaking_service.waiting_players_easy) + len(matchmaking_service.waiting_players_medium) + len(matchmaking_service.waiting_players_hard)
+            logger.info(f"Client {sid} (user: {user_id}) disconnected and removed from queue. Total remaining: {total_remaining}")
         else:
-            logger.info(f"Client {sid} disconnected")
+            logger.info(f"Client {sid} (user: {user_id}) disconnected")
