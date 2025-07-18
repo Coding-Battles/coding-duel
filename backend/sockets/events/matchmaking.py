@@ -25,30 +25,6 @@ def register_events(sio):
     async def join_queue(sid, data):
         """Handle player joining the matchmaking queue."""
         try:
-            user_id = data.get('id')
-            if not user_id:
-                logger.error("No user ID provided in join_queue")
-                await sio.emit("error", {"message": "User ID is required"}, room=sid)
-                return
-            
-            # Check if user already has an active connection
-            previous_sid = matchmaking_service.get_previous_connection(user_id)
-            if previous_sid and previous_sid != sid:
-                logger.info(f"User {user_id} ({data.get('name', 'Unknown')}) connecting from new tab. Disconnecting previous connection {previous_sid}")
-                
-                # Remove previous connection from queues
-                matchmaking_service.remove_player_from_queue(previous_sid)
-                
-                # Disconnect the previous connection
-                await sio.emit("connection_displaced", {
-                    "message": "Your connection has been replaced by a new tab/window",
-                    "reason": "multiple_connections"
-                }, room=previous_sid)
-                await sio.disconnect(previous_sid)
-            
-            # Update user connection mapping
-            matchmaking_service.update_user_connection(user_id, sid)
-            
             # Add player to queue
             player = matchmaking_service.add_player_to_queue(data, sid)
             total_players = len(matchmaking_service.waiting_players_easy) + len(matchmaking_service.waiting_players_medium) + len(matchmaking_service.waiting_players_hard)
@@ -109,19 +85,18 @@ def register_events(sio):
         """Handle player leaving the matchmaking queue."""
         try:
             logger.info(f"[leave_queue] Called with sid: {sid}")
+            # Print all waiting players with their sids and names
             # Log current queue state
             logger.info(
                 f"[leave_queue] Current queue sizes - easy: {len(matchmaking_service.waiting_players_easy)}, medium: {len(matchmaking_service.waiting_players_medium)}, hard: {len(matchmaking_service.waiting_players_hard)}"
             )
             
-            # Remove player from queue and clean up user connection mapping
             removed = matchmaking_service.remove_player_from_queue(sid)
-            user_id = matchmaking_service.cleanup_user_connection(sid)
             
             logger.info(
                 f"[leave_queue] Queue sizes after removal - easy: {len(matchmaking_service.waiting_players_easy)}, medium: {len(matchmaking_service.waiting_players_medium)}, hard: {len(matchmaking_service.waiting_players_hard)}"
             )
-            logger.info(f"[leave_queue] Removed: {removed}, User ID: {user_id}")
+            logger.info(f"[leave_queue] Removed: {removed}")
             
             if removed:
                 total_remaining = len(matchmaking_service.waiting_players_easy) + len(matchmaking_service.waiting_players_medium) + len(matchmaking_service.waiting_players_hard)
