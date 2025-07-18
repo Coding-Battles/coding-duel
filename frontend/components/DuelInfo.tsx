@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import GameTimer from "./GameTimer";
 import { CustomUser, OpponentData } from "@/app/game-setup/layout";
 import { UserStats } from "@/interfaces/UserStats";
@@ -10,6 +9,8 @@ import { Socket } from "socket.io-client";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import vsDark from "react-syntax-highlighter/dist/esm/styles/prism/vs-dark";
 import { Language } from "@/types/languages";
+import AvatarCard from "./AvatarCard";
+import { getAvatarUrl } from "@/lib/auth-client";
 
 interface DuelInfoProps {
   timeRef?: React.RefObject<number>;
@@ -81,6 +82,7 @@ const DuelInfo = ({
   const [userKey, setUserKey] = useState(0);
   const [opponentCode, setOpponentCode] = React.useState<string | null>(null);
   const [codeAvailable, setCodeAvailable] = React.useState(false);
+  const [showPicker, setShowPicker] = React.useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -188,106 +190,73 @@ const DuelInfo = ({
       {/* Opponent Avatar */}
       <div className="flex items-start justify-center gap-8 mb-4">
         <div className="flex flex-col gap-2">
-          <div className="flex justify-center mb-3">
-            <div className="relative w-[120px] h-30">
-              <Image
-                src={opponentData?.image_url || "/images/default-avatar.png"}
-                alt={`${opponentData?.name} avatar`}
-                fill
-                className="object-cover w-full border-2 border-gray-100 rounded-full"
-              />
-              {/* Status indicator dot
+          <div className="flex justify-center mb-3 relative">
+            <AvatarCard
+              src={opponentData?.image_url || "/images/default-avatar.png"}
+              alt={`${opponentData?.name || "Opponent"} avatar`}
+              name={opponentData?.name || "Opponent"}
+              size="md"
+              player="player2"
+            />
+            {/* Speech bubble positioned absolutely */}
+            <div className="absolute top-0 w-auto h-auto ml-3 right-full">
               <div
-                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(
-                  opponentData.status
-                )}`}
+                key={opponentKey}
+                className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10  animate-bounce-scale"
               >
-                {opponentData.status === "typing" && (
-                  <div className="w-full h-full rounded-full animate-pulse bg-success"></div>
-                )}
-              </div> */}
-              {/* Speech bubble positioned absolutely */}
-              <div className="absolute top-0 w-auto h-auto ml-3 right-full">
-                <div
-                  key={opponentKey}
-                  className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10  animate-bounce-scale"
-                >
-                  {opponentEmoji}
-                  {/* Speech bubble tail pointing left */}
-                  <div className="absolute transform -translate-y-1/2 right-full top-1/2">
-                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
-                  </div>
+                {opponentEmoji}
+                {/* Speech bubble tail pointing left */}
+                <div className="absolute transform -translate-y-1/2 right-full top-1/2">
+                  <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Username */}
-          <div className="mb-4 text-center">
-            <p className="font-semibold text-foreground">
-              {opponentData?.name}
-            </p>
           </div>
         </div>
 
         {/*user avatar */}
         <div className="flex flex-col gap-2">
-          <div className="flex justify-center mb-3">
-            <div className="relative w-[120px] h-30">
-              <Image
-                src={user?.image || "/images/default-avatar.png"}
-                alt={`${user?.name} avatar`}
-                fill
-                className="object-cover w-full border-2 border-gray-100 rounded-full cursor-pointer"
-                onClick={() => setShowPicker(!showPicker)}
-              />
-              {/* Status indicator dot
+          <div className="flex justify-center mb-3 relative">
+            <AvatarCard
+              src={getAvatarUrl(user)}
+              alt={`${user?.name || "User"} avatar`}
+              name={user?.name || "User"}
+              size="md"
+              player="player1"
+              clickable={true}
+              onClick={() => setShowPicker(!showPicker)}
+            />
+            {/* Speech bubble positioned absolutely */}
+            <div className="absolute top-0 w-auto h-auto ml-3 left-full">
               <div
-                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(
-                  opponentData.status
-                )}`}
+                key={userKey}
+                className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10 animate-bounce-scale cursor-pointer"
+                onClick={() => setShowPicker(!showPicker)}
               >
-                {opponentData.status === "typing" && (
-                  <div className="w-full h-full rounded-full animate-pulse bg-success"></div>
+                {userEmoji}
+                {/* Speech bubble tail pointing left */}
+                {!showPicker ? (
+                  <div className="absolute transform -translate-y-1/2 right-full top-1/2">
+                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
+                  </div>
+                ) : (
+                  <div className="absolute transform -translate-y-1/2 right-full top-1/2">
+                    <div className="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent border-r-gray-100"></div>
+                  </div>
                 )}
-              </div> */}
-              {/* Speech bubble positioned absolutely */}
-              <div className="absolute top-0 w-auto h-auto ml-3 left-full">
-                <div
-                  key={userKey}
-                  className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10 animate-bounce-scale cursor-pointer"
-                  onClick={() => setShowPicker(!showPicker)}
-                >
-                  {userEmoji}
-                  {/* Speech bubble tail pointing left */}
-                  {!showPicker ? (
-                    <div className="absolute transform -translate-y-1/2 right-full top-1/2">
-                      <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
-                    </div>
-                  ) : (
-                    <div className="absolute transform -translate-y-1/2 right-full top-1/2">
-                      <div className="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent border-r-gray-100"></div>
-                    </div>
-                  )}
-                </div>
               </div>
-              {showPicker && (
-                <span className="absolute right-0 w-auto h-auto ml-3">
-                  <Picker
-                    data={data}
-                    onEmojiSelect={(emoji: any) => {
-                      onUserEmojiSelect(emoji.native);
-                    }}
-                    theme={theme}
-                  />
-                </span>
-              )}
             </div>
-          </div>
-
-          {/* Username */}
-          <div className="mb-4 text-center">
-            <p className="font-semibold text-foreground">{user?.name}</p>
+            {showPicker && (
+              <span className="absolute right-0 w-auto h-auto ml-3">
+                <Picker
+                  data={data}
+                  onEmojiSelect={(emoji: { native: string }) => {
+                    onUserEmojiSelect(emoji);
+                  }}
+                  theme={theme}
+                />
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -366,14 +335,6 @@ const DuelInfo = ({
           * Code updates are delayed by 30 seconds
         </div>
       </div>
-
-      <Picker
-        data={data}
-        onEmojiSelect={(emoji: { native: string }) => {
-          onUserEmojiSelect(emoji);
-        }}
-        theme={theme}
-      />
     </div>
   );
 };
