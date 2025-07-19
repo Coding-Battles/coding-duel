@@ -10,7 +10,6 @@ from backend.api import game
 logger = logging.getLogger(__name__)
 
 game_states: Dict[str, game.GameState] = {}
-sio_instance = None
 
 def set_dependencies(game_states_param=None):
     global game_states
@@ -20,9 +19,6 @@ def set_dependencies(game_states_param=None):
 def register_events(sio):
     """Register game events with the Socket.IO server."""
 
-    global sio_instance
-    sio_instance = sio
-    
     @sio.event
     async def join_game(sid, data):
         """Handle player joining a game."""

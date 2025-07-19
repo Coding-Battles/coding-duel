@@ -160,6 +160,7 @@ async def save_game_to_history(players: List[PlayerInfo]):
 
 @router.post("/{game_id}/send-emoji")
 async def send_emoji(game_id: str, data: EmojiRequest):
+    logger.info(f"🚀 [ENTRY DEBUG] /send-emoji called for game {game_id} by player {data.player1} with emoji {data.emoji}")
     player1 = data.player1 #id
     emoji = data.emoji
     """Endpoint to send emoji from player to opponent."""

@@ -13,9 +13,6 @@ logger = logging.getLogger(__name__)
 
 game_states: Dict[str, game.GameState] = {}
 
-sio_instance = None
-
-
 
 def set_dependencies(game_states_param=None):
     global game_states

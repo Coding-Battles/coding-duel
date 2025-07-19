@@ -162,7 +162,7 @@ const DuelInfo = ({
     console.log("player1: " + user?.id);
 
     await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/${gameId}/send-emoji`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${gameId}/send-emoji`,
       {
         method: "POST",
         headers: {
