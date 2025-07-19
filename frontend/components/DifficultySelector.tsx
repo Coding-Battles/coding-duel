@@ -60,7 +60,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
     Object.values(selectedDifficulties).some(Boolean);
 
   const handleProfileClick = () => {
-    router.push('/profile');
+    router.push("/profile");
   };
 
   return (
@@ -89,6 +89,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                 size="md"
                 onClick={handleProfileClick}
                 clickable={true}
+                player="player1"
               />
             </div>
           )}

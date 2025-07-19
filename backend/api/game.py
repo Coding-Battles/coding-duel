@@ -53,6 +53,14 @@ class GameState:
     finished_players: Set[str] = field(default_factory=set)
     created_at: datetime = field(default_factory=datetime.now)
     question_name: str = ""
+    
+    # Player code storage for opponent code feature
+    player1: str = ""
+    player2: str = ""
+    player1_code: str = ""
+    player2_code: str = ""
+    player1_code_timestamp: Optional[float] = None
+    player2_code_timestamp: Optional[float] = None
 
     def is_player_finished(self, player_id: str) -> bool:
         return player_id in self.finished_players
@@ -163,24 +171,35 @@ async def send_emoji(game_id: str, data: EmojiRequest):
     player1 = data.player1 #id
     emoji = data.emoji
     """Endpoint to send emoji from player to opponent."""
-    logger.info(f"🚀 [ENTRY DEBUG] /send-emoji called for game {game_id} by player {player1} with emoji {emoji}")
+    logger.info(f"🚀 [EMOJI DEBUG] /send-emoji called for game {game_id} by player {player1} with emoji {emoji}")
+    logger.info(f"🚀 [EMOJI DEBUG] Current game_states keys: {list(game_states.keys())}")
+    logger.info(f"🚀 [EMOJI DEBUG] Total games in game_states: {len(game_states)}")
+    
     if game_id not in game_states:
+        logger.error(f"🚀 [EMOJI DEBUG] Game {game_id} NOT FOUND in game_states!")
         raise HTTPException(status_code=404, detail="Game not found")
     
     game_state = game_states[game_id]
     players = list(game_state.players.values())
+    logger.info(f"🚀 [EMOJI DEBUG] Game found! Players in game: {[p.id for p in players]}")
     
     if len(players) != 2:
+        logger.error(f"🚀 [EMOJI DEBUG] Wrong number of players: {len(players)}")
         raise HTTPException(status_code=400, detail="Emoji can only be sent in 2-player games")
     
     opponent_id = game_state.get_opponent_id(player1)
+    logger.info(f"🚀 [EMOJI DEBUG] Opponent lookup: player1={player1}, opponent_id={opponent_id}")
+    
     if (opponent_id is None) or (opponent_id not in game_state.players):
+        logger.error(f"🚀 [EMOJI DEBUG] Opponent not found! opponent_id={opponent_id}, players={list(game_state.players.keys())}")
         raise HTTPException(status_code=404, detail="Opponent not found in game")
     
     opponent_sid = game_state.players[opponent_id].sid
+    logger.info(f"🚀 [EMOJI DEBUG] Emitting emoji to opponent_sid: {opponent_sid}")
     
     # Emit emoji to opponent
     await sio.emit("emoji_received", {"emoji": emoji, "from": player1}, room=opponent_sid)
+    logger.info(f"🚀 [EMOJI DEBUG] Emoji successfully emitted!")
     
     return {"message": "Emoji sent successfully"}
 

@@ -165,8 +165,15 @@ class GameService:
     
     def get_opponent_code(self, game_id: str, player_id: str, delay_seconds: int = 30) -> Optional[str]:
         """Get opponent's code with delay (for game mechanic)."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"🚀 [CODE DEBUG] Looking for game {game_id} in active_games")
+        logger.info(f"🚀 [CODE DEBUG] Active games: {list(self.active_games.keys())}")
+        
         game = self.active_games.get(game_id)
         if not game:
+            logger.error(f"🚀 [CODE DEBUG] Game {game_id} not found in active_games")
             return None
         
         # Find opponent

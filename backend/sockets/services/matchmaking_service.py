@@ -132,6 +132,12 @@ class MatchmakingService:
                     player2.id: game.PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid, anonymous=player2.anonymous)
                 },
                 question_name=question_slug,
+                player1=player1.id,
+                player2=player2.id,
+                player1_code="",
+                player2_code="",
+                player1_code_timestamp=None,
+                player2_code_timestamp=None
             )
             
             # Store active game

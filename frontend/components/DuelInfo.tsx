@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import GameTimer from "./GameTimer";
 import { CustomUser, OpponentData } from "@/app/game-setup/layout";
 import { UserStats } from "@/interfaces/UserStats";
-import Picker from "@emoji-mart/react";
-import data from "@emoji-mart/data";
-import { useTheme } from "next-themes";
+import CustomEmojiPicker from "./CustomEmojiPicker";
 import { Socket } from "socket.io-client";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import vsDark from "react-syntax-highlighter/dist/esm/styles/prism/vs-dark";
@@ -28,7 +26,6 @@ const DuelInfo = ({
   user,
   socket,
   gameId,
-  starterCode,
   selectedLanguage = "python",
 }: DuelInfoProps) => {
   // // Mock data - replace with real props/state
@@ -44,7 +41,6 @@ const DuelInfo = ({
 
   console.log("opponentData " + opponentData?.image_url);
   console.log("user " + user?.image);
-  const { theme } = useTheme();
 
   // Map our language types to Prism language names for syntax highlighting
   const getPrismLanguage = (language: Language): string => {
@@ -82,51 +78,37 @@ const DuelInfo = ({
   const [userKey, setUserKey] = useState(0);
   const [opponentCode, setOpponentCode] = React.useState<string | null>(null);
   const [codeAvailable, setCodeAvailable] = React.useState(false);
-  const [showPicker, setShowPicker] = React.useState(false);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "typing":
-        return "bg-success";
-      case "running":
-        return "bg-accent";
-      case "submitted":
-        return "bg-accent";
-      case "idle":
-        return "bg-foreground/40";
-      default:
-        return "bg-foreground/40";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "typing":
-        return "Typing...";
-      case "running":
-        return "Running code";
-      case "submitted":
-        return "Submitted!";
-      case "idle":
-        return "Thinking";
-      default:
-        return "Offline";
-    }
-  };
+  const [opponentEmojiQueue, setOpponentEmojiQueue] = React.useState<
+    Array<{ emoji: string; timestamp: number }>
+  >([]);
 
   useEffect(() => {
-    if (socket == null || !gameId || !user?.id) return;
+    if (socket == null || !gameId || !user?.id) {
+      console.log("🚀 [CODE DEBUG] Socket effect skipped - missing:", { socket: !!socket, gameId, userId: user?.id });
+      return;
+    }
+
+    console.log("🚀 [CODE DEBUG] Setting up socket listeners for gameId:", gameId);
 
     socket.on("emoji_received", async (data: { emoji: string }) => {
       console.log("Received emoji update:", data);
       setOpponentEmoji(data.emoji);
       setOpponentKey((prev) => prev + 1); // Force re-render to trigger animation
+
+      // Add to emoji queue
+      const newEmojiItem = { emoji: data.emoji, timestamp: Date.now() };
+      setOpponentEmojiQueue((prev) => [...prev, newEmojiItem].slice(-10)); // Keep last 10
+
+      // Auto-hide after 4 seconds
+      setTimeout(() => {
+        setOpponentEmoji(null);
+      }, 4000);
     });
 
     socket.on(
       "opponent_code",
       (data: { code: string | null; available: boolean }) => {
-        console.log("Received opponent code:", data);
+        console.log("🚀 [CODE DEBUG] Received opponent code event:", data);
         setOpponentCode(data.code);
         setCodeAvailable(data.available);
       }
@@ -135,19 +117,25 @@ const DuelInfo = ({
     // Function to fetch opponent code
     const fetchOpponentCode = () => {
       if (socket && gameId && user?.id) {
+        console.log("🚀 [CODE DEBUG] Emitting get_opponent_code:", { game_id: gameId, player_id: user.id });
         socket.emit("get_opponent_code", {
           game_id: gameId,
           player_id: user.id,
         });
+      } else {
+        console.log("🚀 [CODE DEBUG] Cannot fetch opponent code - missing:", { socket: !!socket, gameId, userId: user?.id });
       }
     };
 
     // Fetch opponent code immediately and then every 5 seconds
+    console.log("🚀 [CODE DEBUG] Starting opponent code fetching...");
     fetchOpponentCode();
     const interval = setInterval(fetchOpponentCode, 5000);
+    console.log("🚀 [CODE DEBUG] Set up 5-second interval for opponent code");
 
     // Cleanup
     return () => {
+      console.log("🚀 [CODE DEBUG] Cleaning up socket listeners and interval");
       socket.off("emoji_received");
       socket.off("opponent_code");
       clearInterval(interval);
@@ -155,15 +143,28 @@ const DuelInfo = ({
   }, [socket, gameId, user?.id]);
 
   const onUserEmojiSelect = async (emoji: { native: string }) => {
-    console.log("Selected emoji:", emoji);
+    console.log("🚀 [EMOJI DEBUG] Selected emoji:", emoji);
+    console.log("🚀 [EMOJI DEBUG] GameId:", gameId);
+    console.log("🚀 [EMOJI DEBUG] User ID:", user?.id);
+    console.log("🚀 [EMOJI DEBUG] Socket connected:", socket?.connected);
+
     setUserEmoji(emoji.native);
     setUserKey((prev) => prev + 1); // Force re-render to trigger animation
 
-    console.log("player1: " + user?.id);
+    // Auto-hide user emoji after 4 seconds
+    setTimeout(() => {
+      setUserEmoji(null);
+    }, 4000);
 
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/${gameId}/send-emoji`,
-      {
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${gameId}/send-emoji`;
+    console.log("🚀 [EMOJI DEBUG] API URL:", apiUrl);
+    console.log("🚀 [EMOJI DEBUG] Request body:", {
+      emoji: emoji.native,
+      player1: user?.id,
+    });
+
+    try {
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -172,23 +173,68 @@ const DuelInfo = ({
           emoji: emoji.native,
           player1: user?.id,
         }),
+      });
+
+      console.log("🚀 [EMOJI DEBUG] Response status:", response.status);
+
+      if (!response.ok) {
+        console.error(
+          "🚀 [EMOJI DEBUG] Failed to send emoji:",
+          response.status,
+          response.statusText
+        );
+        const errorText = await response.text();
+        console.error("🚀 [EMOJI DEBUG] Error details:", errorText);
+      } else {
+        console.log("🚀 [EMOJI DEBUG] Emoji sent successfully!");
+        const responseData = await response.json();
+        console.log("🚀 [EMOJI DEBUG] Response data:", responseData);
       }
-    );
-    // Optionally, you can also set opponent emoji here if needed
-    // setOpponentEmoji(emoji.native);
+    } catch (error) {
+      console.error("🚀 [EMOJI DEBUG] Network error:", error);
+    }
   };
 
   return (
-    <div className="w-full ">
+    <div className="w-full px-6 py-4">
       {/* Timer */}
       {timeRef && (
-        <div className="mb-4 text-center">
+        <div className="text-center py-4">
           <GameTimer timeRef={timeRef} />
         </div>
       )}
 
-      {/* Opponent Avatar */}
-      <div className="flex items-start justify-center gap-8 mb-4">
+      {/* Avatars: User left, Opponent right */}
+      <div className="flex items-start justify-center gap-16">
+        {/* User avatar (left) */}
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-center mb-3 relative">
+            <AvatarCard
+              src={getAvatarUrl(user)}
+              alt={`${user?.username || user?.name || "User"} avatar`}
+              name={user?.username || user?.name || "User"}
+              size="md"
+              player="player1"
+            />
+            {/* Floating emoji positioned absolutely */}
+            {userEmoji && (
+              <div className="absolute -top-4 -left-4 z-10">
+                <div
+                  key={userKey}
+                  className="text-5xl animate-in slide-in-from-left-2 fade-in duration-300"
+                  style={{
+                    animation:
+                      "slideInBounce 0.3s ease-out, fadeOut 0.5s ease-in 3.5s forwards",
+                  }}
+                >
+                  {userEmoji}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Opponent avatar (right) */}
         <div className="flex flex-col gap-2">
           <div className="flex justify-center mb-3 relative">
             <AvatarCard
@@ -198,68 +244,48 @@ const DuelInfo = ({
               size="md"
               player="player2"
             />
-            {/* Speech bubble positioned absolutely */}
-            <div className="absolute top-0 w-auto h-auto ml-3 right-full">
-              <div
-                key={opponentKey}
-                className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10  animate-bounce-scale"
-              >
-                {opponentEmoji}
-                {/* Speech bubble tail pointing left */}
-                <div className="absolute transform -translate-y-1/2 right-full top-1/2">
-                  <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
+            {/* Floating emoji positioned absolutely */}
+            {opponentEmoji && (
+              <div className="absolute -top-4 -right-4 z-10">
+                <div
+                  key={opponentKey}
+                  className="text-5xl animate-in slide-in-from-right-2 fade-in duration-300"
+                  style={{
+                    animation:
+                      "slideInBounce 0.3s ease-out, fadeOut 0.5s ease-in 3.5s forwards",
+                  }}
+                >
+                  {opponentEmoji}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/*user avatar */}
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-center mb-3 relative">
-            <AvatarCard
-              src={getAvatarUrl(user)}
-              alt={`${user?.name || "User"} avatar`}
-              name={user?.name || "User"}
-              size="md"
-              player="player1"
-              clickable={true}
-              onClick={() => setShowPicker(!showPicker)}
-            />
-            {/* Speech bubble positioned absolutely */}
-            <div className="absolute top-0 w-auto h-auto ml-3 left-full">
-              <div
-                key={userKey}
-                className="relative flex items-center justify-center w-[50px] h-[50px] text-3xl rounded-lg bg-foreground/10 animate-bounce-scale cursor-pointer"
-                onClick={() => setShowPicker(!showPicker)}
-              >
-                {userEmoji}
-                {/* Speech bubble tail pointing left */}
-                {!showPicker ? (
-                  <div className="absolute transform -translate-y-1/2 right-full top-1/2">
-                    <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-gray-100"></div>
-                  </div>
-                ) : (
-                  <div className="absolute transform -translate-y-1/2 right-full top-1/2">
-                    <div className="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent border-r-gray-100"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {showPicker && (
-              <span className="absolute right-0 w-auto h-auto ml-3">
-                <Picker
-                  data={data}
-                  onEmojiSelect={(emoji: { native: string }) => {
-                    onUserEmojiSelect(emoji);
-                  }}
-                  theme={theme}
-                />
-              </span>
             )}
           </div>
         </div>
       </div>
+
+      {/* Emoji Queue */}
+      {/* {opponentEmojiQueue.length > 0 && (
+        <div className="flex justify-start mb-4">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="text-xs text-foreground/60 flex-shrink-0">
+              Recent:
+            </span>
+            <div className="flex gap-1 overflow-hidden whitespace-nowrap">
+              {opponentEmojiQueue.map((item, index) => (
+                <div
+                  key={`${item.timestamp}-${index}`}
+                  className="flex-shrink-0 text-lg opacity-80"
+                  title={`Sent ${Math.round(
+                    (Date.now() - item.timestamp) / 1000
+                  )}s ago`}
+                >
+                  {item.emoji}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )} */}
 
       {/* Stats */}
       {/* <div className="space-y-3"> */}
@@ -294,13 +320,30 @@ const DuelInfo = ({
         </div>
       </div> */}
 
+      {/* Always Visible Emoji Picker */}
+      <div className="">
+        <h4 className="mb-2 text-sm font-semibold text-foreground/70">
+          Send Emoji
+        </h4>
+        <div className="flex justify-center mb-4">
+          <CustomEmojiPicker
+            onEmojiSelect={(emoji: { native: string }) => {
+              onUserEmojiSelect(emoji);
+            }}
+          />
+        </div>
+      </div>
+
       {/* Opponent Code Preview */}
-      <div className="pt-4 mt-4 border-t">
+      <div className="">
         <h4 className="mb-2 text-sm font-semibold text-foreground/70">
           Opponent&apos;s Code
+          <span className="text-xs text-foreground/40 ml-2">
+            🚀 [DEBUG] Available: {codeAvailable ? 'Yes' : 'No'} | Has Code: {opponentCode ? 'Yes' : 'No'}
+          </span>
         </h4>
         <div className="overflow-y-auto rounded-md bg-foreground/5 h-80">
-          {codeAvailable && opponentCode ? (
+          {opponentCode ? (
             <SyntaxHighlighter
               language={getPrismLanguage(selectedLanguage)}
               style={syntaxTheme}
@@ -315,20 +358,9 @@ const DuelInfo = ({
               {opponentCode}
             </SyntaxHighlighter>
           ) : (
-            <SyntaxHighlighter
-              language={getPrismLanguage(selectedLanguage)}
-              style={syntaxTheme}
-              className="!m-0 !bg-transparent"
-              customStyle={{
-                fontSize: "12px",
-                margin: 0,
-                padding: "12px",
-                background: "transparent",
-                opacity: 0.7,
-              }}
-            >
-              {starterCode || "# No code available yet"}
-            </SyntaxHighlighter>
+            <div className="flex items-center justify-center h-full text-foreground/60">
+              <p>Loading opponent code...</p>
+            </div>
           )}
         </div>
         <div className="mt-1 text-xs text-foreground/40">
