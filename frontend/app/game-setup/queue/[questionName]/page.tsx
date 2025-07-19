@@ -226,6 +226,7 @@ export default function InGamePage() {
     session.on("game_completed", handleGameCompleted);
 
     return () => {
+      console.log("Cleaning up socket listeners");
       session.off("opponent_submitted", handleOpponentSubmitted);
       session.off("game_completed", handleGameCompleted);
     };

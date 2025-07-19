@@ -15,6 +15,13 @@ interface CustomUser {
   selectedPfp?: number;
 }
 
+interface MatchFoundData {
+  game_id: string;
+  opponent_Name: string;
+  opponentImageURL: string;
+  question_name: string;
+}
+
 interface QueueWaitingRoomProps {
   onCancel?: () => void;
 }
@@ -22,7 +29,6 @@ interface QueueWaitingRoomProps {
 export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
   const context = useGameContext();
   const { data: session } = useSession();
-  const [key, setKey] = useState(0); // used to loop the type animation
   const [timer, setTimer] = useState(0);
   const [playerFound, setPlayerFound] = useState(false);
   const [recentMessages, setRecentMessages] = useState<string[]>([]);
@@ -160,6 +166,22 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
     }
   }, [context?.opponent?.image_url, context?.opponent?.name]);
 
+  // Listen for match_found event to immediately update playerFound state
+  useEffect(() => {
+    if (!context?.socket) return;
+
+    const handleMatchFound = (data: MatchFoundData) => {
+      console.log("Match found event received in QueueWaitingRoom:", data);
+      setPlayerFound(true);
+    };
+
+    context.socket.on("match_found", handleMatchFound);
+
+    return () => {
+      context.socket?.off("match_found", handleMatchFound);
+    };
+  }, [context?.socket]);
+
   if (!context) {
     return (
       <div className="flex h-[100%] w-[100%] items-center justify-center">
@@ -243,30 +265,34 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
 
           {/* Status messages as code */}
           <div className="text-accent">
+            <span className="text-foreground">status</span>{" "}
+            <span className="text-foreground/60">=</span>{" "}
             {!playerFound ? (
               <TypeIt
-                key={key} // use key to reset TypeIt instance
                 options={{
                   speed: 50,
                   deleteSpeed: 30,
                 }}
                 getBeforeInit={(instance) => {
-                  const message1 = getQueueMessage();
-                  const message2 = getQueueMessage();
+                  const addNextMessage = () => {
+                    const message = getQueueMessage();
+                    instance
+                      .type(`<span class="text-foreground">"${message}"</span>`)
+                      .pause(2500)
+                      .delete(message.length + 2)
+                      .exec(addNextMessage);
+                  };
+
+                  // First message
+                  const firstMessage = getQueueMessage();
                   instance
                     .type(
-                      `<span class="text-foreground">status</span> <span class="text-foreground/60">=</span> <span class="text-foreground">"${message1}"</span>`
+                      `<span class="text-foreground">"${firstMessage}"</span>`
                     )
                     .pause(2500)
-                    .delete(message1.length + 12) // account for the extra code syntax
-                    .type(
-                      `<span class="text-foreground">status</span> <span class="text-foreground/60">=</span> <span class="text-foreground">"${message2}"</span>`
-                    )
-                    .pause(2500)
-                    .delete(message2.length + 12)
-                    .exec(() => {
-                      setKey((prevKey) => prevKey + 1); // trigger re-render to reset TypeIt
-                    });
+                    .delete(firstMessage.length + 2)
+                    .exec(addNextMessage);
+
                   return instance;
                 }}
               />
@@ -280,7 +306,7 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
                   const matchMessage = getMatchFoundMessage();
                   instance
                     .type(
-                      `<span class="text-foreground">status</span> <span class="text-foreground/60">=</span> <span class="text-foreground">"${matchMessage}"</span>`
+                      `<span class="text-foreground">"${matchMessage}"</span>`
                     )
                     .pause(4000)
                     .exec(() => {
