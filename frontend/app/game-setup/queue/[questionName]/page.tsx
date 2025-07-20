@@ -93,6 +93,8 @@ export default function InGamePage() {
   const [opponentStatus, setOpponentStatus] = React.useState<string | null>(
     null
   );
+  const [gameStartTime, setGameStartTime] = React.useState<number | null>(null);
+  const [isGameStarted, setIsGameStarted] = React.useState(false);
 
   // All useRef hooks
   const opponentTestStatsRef = useRef<TestResultsData | undefined>(undefined);
@@ -291,6 +293,22 @@ export default function InGamePage() {
   // Join game room and set up debounced code update function
   useEffect(() => {
     if (context?.socket && context.gameId && userSession?.user?.id) {
+      // Set up socket event listeners for timer synchronization
+      context.socket.on("game_joined", (data: { game_id: string; start_time?: number | null }) => {
+        console.log("🚀 [TIMER DEBUG] Received game_joined event:", data);
+        if (data.start_time) {
+          console.log("🚀 [TIMER DEBUG] Game already started, setting start time:", data.start_time);
+          setGameStartTime(data.start_time);
+          setIsGameStarted(true);
+        }
+      });
+
+      context.socket.on("game_start", (data: { game_id: string; start_time: number }) => {
+        console.log("🚀 [TIMER DEBUG] Received game_start event:", data);
+        setGameStartTime(data.start_time);
+        setIsGameStarted(true);
+      });
+
       // Join the game room first
       context.socket.emit("join_game", {
         game_id: context.gameId,
@@ -304,7 +322,8 @@ export default function InGamePage() {
           context.socket.emit("code_update", {
             game_id: context.gameId,
             player_id: userSession.user.id,
-            code: code
+            code: code,
+            language: selectedLanguage
           });
         }
       }, 500);
@@ -314,6 +333,10 @@ export default function InGamePage() {
     return () => {
       if (emitCodeUpdateRef.current) {
         emitCodeUpdateRef.current.cancel();
+      }
+      if (context?.socket) {
+        context.socket.off("game_joined");
+        context.socket.off("game_start");
       }
     };
   }, [context?.socket, context?.gameId, userSession?.user?.id]);
@@ -589,6 +612,8 @@ export default function InGamePage() {
                 gameId={context.gameId ?? undefined}
                 starterCode={questionData?.starter_code?.[selectedLanguage] || ""}
                 selectedLanguage={selectedLanguage}
+                gameStartTime={gameStartTime}
+                isGameStarted={isGameStarted}
               />
             </div>
           </div>

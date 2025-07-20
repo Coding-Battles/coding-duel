@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Set
 from backend.sockets.events import matchmaking, connection
+from backend.sockets.events import game as socket_game_events
 from pathlib import Path
 
 
@@ -153,7 +154,13 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Set up database dependencies for routers
 questions_router.set_database(database)
-game.set_dependencies(database, None, game_states)  # sio will be set after creation
+
+# Set dependencies for socket events BEFORE creating socket app
+logger.info(f"🔧 [SYNC DEBUG] Setting dependencies with game_states id: {id(game_states)}")
+matchmaking.set_dependencies(game_states)
+connection.set_dependencies(game_states)
+socket_game_events.set_dependencies(game_states)
+# Note: game API module will be set after sio is created
 
 # Include API routers
 app.include_router(users.router, prefix="/api")
@@ -167,9 +174,6 @@ sio = create_socket_app(database, game_states, app)
 
 # Now set the socket instance for game router
 game.set_dependencies(database, sio, game_states)
-#set dependencies for matchmaking and connection events
-matchmaking.set_dependencies(game_states)
-connection.set_dependencies(game_states)
 
 # Create combined ASGI app
 socket_app = socketio.ASGIApp(sio, app)

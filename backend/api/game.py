@@ -61,6 +61,18 @@ class GameState:
     player2_code: str = ""
     player1_code_timestamp: Optional[float] = None
     player2_code_timestamp: Optional[float] = None
+    
+    # Language-aware code storage (per player per language)
+    player_codes: Dict[str, Dict[str, str]] = field(default_factory=dict)  # {player_id: {language: code}}
+    player_code_timestamps: Dict[str, Dict[str, float]] = field(default_factory=dict)  # {player_id: {language: timestamp}}
+    current_languages: Dict[str, str] = field(default_factory=dict)  # {player_id: current_language}
+    
+    # Game timing synchronization
+    game_start_time: Optional[float] = None
+    players_joined: Set[str] = field(default_factory=set)
+    
+    # Starter code for comparison (language -> code)
+    starter_codes: Dict[str, str] = field(default_factory=dict)
 
     def is_player_finished(self, player_id: str) -> bool:
         return player_id in self.finished_players

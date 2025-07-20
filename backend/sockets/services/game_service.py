@@ -57,9 +57,8 @@ class GameService:
         self.game_updates: Dict[str, List[GameUpdate]] = {}
         self.game_states: Dict[str, game.GameState] = {}
 
-    def set_dependencies(game_states_param=None):
-
-        game_states = game_states_param
+    def set_dependencies(self, game_states_param=None):
+        self.game_states = game_states_param
     
     def create_game(self, game_id: str, question_name: str, players: List[Dict[str, Any]]) -> GameState:
         """Create a new game session."""

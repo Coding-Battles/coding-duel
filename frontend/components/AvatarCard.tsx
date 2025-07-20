@@ -56,12 +56,13 @@ export default function AvatarCard({
   };
 
   return (
-    <div className={cn("flex flex-col items-center", className)}>
+    <div className={cn("flex flex-col items-center pb-4", className)}>
       <div
         className={cn(
-          "relative rounded-xl",
+          "relative rounded-xl transition-all duration-300 flex flex-col items-center",
           sizeClasses.container,
-          (clickable || onClick) && "cursor-pointer"
+          (clickable || onClick) &&
+            "cursor-pointer hover:transform hover:-translate-y-2 hover:scale-105"
         )}
         onClick={handleClick}
       >
@@ -74,18 +75,18 @@ export default function AvatarCard({
             className="w-full h-full rounded-lg object-cover bg-muted"
           />
         </div>
-      </div>
 
-      {showName && (
-        <h3
-          className={cn(
-            "mt-3 font-bold text-center text-foreground",
-            sizeClasses.text
-          )}
-        >
-          {name}
-        </h3>
-      )}
+        {showName && (
+          <h3
+            className={cn(
+              "mt-3 font-bold text-center text-foreground",
+              sizeClasses.text
+            )}
+          >
+            {name}
+          </h3>
+        )}
+      </div>
     </div>
   );
 }
