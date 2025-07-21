@@ -56,7 +56,7 @@ export default function AvatarCard({
   };
 
   return (
-    <div className={cn("flex flex-col items-center pb-4", className)}>
+    <div className={cn("flex flex-col items-center pb-8", className)}>
       <div
         className={cn(
           "relative rounded-xl transition-all duration-300 flex flex-col items-center",

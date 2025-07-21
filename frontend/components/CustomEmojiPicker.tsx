@@ -190,7 +190,7 @@ const CustomEmojiPicker: React.FC<CustomEmojiPickerProps> = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded backdrop-blur-md bg-gradient-to-br from-black/[0.02] to-black/[0.05] ${className}`}
+      className={`relative rounded backdrop-blur-md bg-gradient-to-br from-black/[0.02] to-black/[0.05] w-80 ${className}`}
     >
       <div className="px-4 py-2">
         <Carousel
@@ -218,11 +218,11 @@ const CustomEmojiPicker: React.FC<CustomEmojiPickerProps> = ({
               return (
                 <CarouselItem
                   key={`emoji-${item.emoji}`}
-                  className="pl-3 basis-1/4"
+                  className="pl-3 basis-auto"
                 >
                   <button
                     onClick={() => handleEmojiClick(item.emoji)}
-                    className="group relative flex items-center justify-center w-full h-20 text-4xl transition-all duration-300 rounded cursor-pointer bg-background/80 hover:scale-115 active:scale-95 active:translate-y-px font-[system-ui,'Apple_Color_Emoji','Segoe_UI_Emoji','Noto_Color_Emoji',sans-serif]"
+                    className="group relative flex items-center justify-center w-15 h-20 text-3xl transition-all duration-300 rounded cursor-pointer bg-background/80 hover:bg-background active:scale-95 active:translate-y-px font-[system-ui,'Apple_Color_Emoji','Segoe_UI_Emoji','Noto_Color_Emoji',sans-serif]"
                     title={item.name}
                     type="button"
                   >
@@ -232,8 +232,8 @@ const CustomEmojiPicker: React.FC<CustomEmojiPickerProps> = ({
               );
             })}
           </CarouselContent>
-          <CarouselPrevious className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
-          <CarouselNext className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80" />
+          <CarouselPrevious className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80 z-10 -left-3 !w-4 !h-6" />
+          <CarouselNext className="border-slate-500 hover:border-slate-400 text-slate-400 hover:text-slate-300 bg-background/80 z-10 -right-3 !w-4 !h-6" />
         </Carousel>
       </div>
 

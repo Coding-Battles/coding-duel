@@ -45,7 +45,7 @@ const DuelInfo = ({
 
   console.log("opponentData " + opponentData?.image_url);
   console.log("user " + user?.image);
-  
+
   // Debug gameId prop changes
   useEffect(() => {
     console.log("🚀 [GAME DEBUG] DuelInfo gameId prop changed:", gameId);
@@ -89,18 +89,27 @@ const DuelInfo = ({
   const [userKey, setUserKey] = useState(0);
   const [opponentCode, setOpponentCode] = React.useState<string | null>(null);
   const [codeAvailable, setCodeAvailable] = React.useState(false);
-  const [opponentLanguage, setOpponentLanguage] = React.useState<string | null>(null);
+  const [opponentLanguage, setOpponentLanguage] = React.useState<string | null>(
+    null
+  );
   const [opponentEmojiQueue, setOpponentEmojiQueue] = React.useState<
     Array<{ emoji: string; timestamp: number }>
   >([]);
 
   useEffect(() => {
     if (socket == null || !gameId || !user?.id) {
-      console.log("🚀 [CODE DEBUG] Socket effect skipped - missing:", { socket: !!socket, gameId, userId: user?.id });
+      console.log("🚀 [CODE DEBUG] Socket effect skipped - missing:", {
+        socket: !!socket,
+        gameId,
+        userId: user?.id,
+      });
       return;
     }
 
-    console.log("🚀 [CODE DEBUG] Setting up socket listeners for gameId:", gameId);
+    console.log(
+      "🚀 [CODE DEBUG] Setting up socket listeners for gameId:",
+      gameId
+    );
 
     socket.on("emoji_received", async (data: { emoji: string }) => {
       console.log("Received emoji update:", data);
@@ -118,23 +127,54 @@ const DuelInfo = ({
     });
 
     // Listen for push-based opponent code delivery (no more polling!)
-    socket.on("opponent_code_ready", (data: { code: string; from_player: string; language: string; timestamp: number }) => {
-      console.log("🚀 [PUSH DEBUG] Received opponent_code_ready event:", data);
-      console.log("🚀 [LANG DEBUG] Always displaying opponent code regardless of language");
-      setOpponentCode(data.code);
-      setCodeAvailable(true);
-      setOpponentLanguage(data.language);
-    });
+    socket.on(
+      "opponent_code_ready",
+      (data: {
+        code: string;
+        from_player: string;
+        language: string;
+        timestamp: number;
+        instant?: boolean;
+        reason?: string;
+      }) => {
+        console.log(
+          "🚀 [PUSH DEBUG] Received opponent_code_ready event:",
+          data
+        );
+        console.log(
+          "🚀 [INSTANT DEBUG] Is instant update:",
+          data.instant,
+          "Reason:",
+          data.reason
+        );
+        console.log(
+          "🚀 [LANG DEBUG] Always displaying opponent code regardless of language"
+        );
+        setOpponentCode(data.code);
+        setCodeAvailable(true);
+        setOpponentLanguage(data.language);
+      }
+    );
 
     // Listen for opponent language changes
-    socket.on("player_language_changed", (data: { player_id: string; language: string; immediate: boolean }) => {
-      console.log("🚀 [LANG DEBUG] Received player_language_changed event:", data);
-      if (data.player_id !== user?.id) { // This is opponent's language change
-        setOpponentLanguage(data.language);
-        // No longer clear code when languages differ - always show opponent code
-        console.log("🚀 [LANG DEBUG] Opponent changed language to:", data.language);
+    socket.on(
+      "player_language_changed",
+      (data: { player_id: string; language: string; immediate: boolean }) => {
+        console.log(
+          "🚀 [LANG DEBUG] Received player_language_changed event:",
+          data
+        );
+        if (data.player_id !== user?.id) {
+          // This is opponent's language change
+          setOpponentLanguage(data.language);
+          // No longer clear code when languages differ - always show opponent code
+          console.log(
+            "🚀 [LANG DEBUG] Opponent changed language to:",
+            data.language
+          );
+        }
       }
-    });
+    );
 
     // Cleanup
     return () => {
@@ -147,7 +187,9 @@ const DuelInfo = ({
 
   // No longer clear opponent code when user changes language - always show code
   useEffect(() => {
-    console.log("🚀 [LANG DEBUG] Language change detected - keeping opponent code visible");
+    console.log(
+      "🚀 [LANG DEBUG] Language change detected - keeping opponent code visible"
+    );
     // Keep opponent code visible regardless of language differences
   }, [selectedLanguage, opponentLanguage]);
 
@@ -163,13 +205,13 @@ const DuelInfo = ({
     // Check if gameId is valid before proceeding
     if (!gameId) {
       console.error("🚀 [EMOJI DEBUG] GameId is missing! Cannot send emoji.");
-      console.error("🚀 [EMOJI DEBUG] Current props:", { 
-        gameId, 
-        gameIdType: typeof gameId, 
-        user: user?.id, 
+      console.error("🚀 [EMOJI DEBUG] Current props:", {
+        gameId,
+        gameIdType: typeof gameId,
+        user: user?.id,
         socket: !!socket,
         opponentData: !!opponentData,
-        allProps: {gameId, user: user?.id, socket: !!socket}
+        allProps: { gameId, user: user?.id, socket: !!socket },
       });
       // Still show the visual feedback even if we can't send to server
       setUserEmoji(emoji.native);
@@ -232,8 +274,8 @@ const DuelInfo = ({
       {/* Timer */}
       {timeRef && (
         <div className="py-4 text-center">
-          <GameTimer 
-            timeRef={timeRef} 
+          <GameTimer
+            timeRef={timeRef}
             gameStartTime={gameStartTime}
             isGameStarted={isGameStarted}
           />
@@ -358,9 +400,6 @@ const DuelInfo = ({
 
       {/* Always Visible Emoji Picker */}
       <div className="">
-        <h4 className="mb-2 text-sm font-semibold text-foreground/70">
-          Send Emoji
-        </h4>
         <div className="flex justify-center mb-4">
           <CustomEmojiPicker
             onEmojiSelect={(emoji: { native: string }) => {
@@ -374,14 +413,13 @@ const DuelInfo = ({
       <div className="">
         <h4 className="mb-2 text-sm font-semibold text-foreground/70">
           Opponent&apos;s Code
-          <span className="ml-2 text-xs text-foreground/40">
-            {opponentLanguage ? `Language: ${opponentLanguage}` : 'Language: Unknown'}
-          </span>
         </h4>
         <div className="overflow-y-auto rounded-md bg-foreground/5 h-80">
           {opponentCode ? (
             <SyntaxHighlighter
-              language={getPrismLanguage((opponentLanguage as Language) || "python")}
+              language={getPrismLanguage(
+                (opponentLanguage as Language) || "python"
+              )}
               style={syntaxTheme}
               className="!m-0 !bg-transparent"
               customStyle={{
@@ -398,9 +436,6 @@ const DuelInfo = ({
               <p>Waiting for opponent code...</p>
             </div>
           )}
-        </div>
-        <div className="mt-1 text-xs text-foreground/40">
-          * Starter code: instant | Code changes: 30s delay | Language switches: instant (after 30s)
         </div>
       </div>
     </div>

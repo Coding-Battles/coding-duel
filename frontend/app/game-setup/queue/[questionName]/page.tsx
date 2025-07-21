@@ -10,7 +10,6 @@ import { CustomUser, OpponentData, useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
-import { debounce } from "lodash";
 import FinishedPage from "@/components/FinishedPage";
 
 import DuelInfo from "@/components/DuelInfo";
@@ -109,8 +108,13 @@ export default function InGamePage() {
   const params = useParams();
   const { data: userSession } = useSession();
 
-  // Debounced function to emit code updates - we'll set this up later
-  const emitCodeUpdateRef = useRef<ReturnType<typeof debounce> | null>(null);
+  // Function to emit code updates - we'll set this up later
+  const emitCodeUpdateRef = useRef<((code: string) => void) | null>(null);
+  // Function to emit instant code updates
+  const emitInstantCodeUpdateRef = useRef<((code: string, reason: string) => void) | null>(null);
+  // Refs to always have current values (avoid stale closures)
+  const questionDataRef = useRef<QuestionData | null>(null);
+  const userCodeRef = useRef<string>("");
 
   // All useCallback hooks
   const handleLeftMouseDown = useCallback(
@@ -252,6 +256,7 @@ export default function InGamePage() {
     const questionName = params?.questionName;
     const fetchQuestion = async () => {
       try {
+        console.log("🚀 [QUESTION DEBUG] Starting to fetch question:", questionName);
         setLoading(true);
         if (!questionName)
           throw new Error(
@@ -266,8 +271,11 @@ export default function InGamePage() {
         }
 
         const data = await response.json();
+        console.log("🚀 [QUESTION DEBUG] Question data loaded successfully:", !!data, "starter_code keys:", Object.keys(data?.starter_code || {}));
         setQuestionData(data);
+        questionDataRef.current = data;
       } catch (err) {
+        console.error("🚀 [QUESTION DEBUG] Failed to fetch question:", err);
         setError(
           err instanceof Error ? err.message : "Failed to load question"
         );
@@ -278,15 +286,27 @@ export default function InGamePage() {
 
     if (questionName) {
       fetchQuestion();
+    } else {
+      console.warn("🚀 [QUESTION DEBUG] No question name in params:", params);
     }
   }, [params?.questionName]);
 
   useEffect(() => {
+    console.log("🚀 [USERCODE DEBUG] useEffect triggered - questionData:", !!questionData, "selectedLanguage:", selectedLanguage);
     if (questionData && questionData.starter_code) {
       const starterCode = questionData.starter_code[selectedLanguage];
+      console.log("🚀 [USERCODE DEBUG] Found starter code for", selectedLanguage, ":", !!starterCode, "length:", starterCode?.length);
       if (starterCode) {
         setUserCode(starterCode);
+        userCodeRef.current = starterCode;
+        console.log("🚀 [USERCODE DEBUG] Set userCode to starter code");
       }
+    } else {
+      console.warn("🚀 [USERCODE DEBUG] Missing questionData or starter_code:", {
+        questionData: !!questionData,
+        starter_code: !!questionData?.starter_code,
+        selectedLanguage
+      });
     }
   }, [questionData, selectedLanguage]);
 
@@ -307,6 +327,29 @@ export default function InGamePage() {
         console.log("🚀 [TIMER DEBUG] Received game_start event:", data);
         setGameStartTime(data.start_time);
         setIsGameStarted(true);
+        
+        // Emit instant code update when timer starts
+        // Use refs to avoid stale closure issues
+        const attemptInstantUpdate = (attempt = 1, maxAttempts = 5) => {
+          // Access current values from refs (not closure variables)
+          const currentUserCode = userCodeRef.current;
+          const currentQuestionData = questionDataRef.current;
+          const codeToSend = currentUserCode || (currentQuestionData?.starter_code?.[selectedLanguage] || "");
+          
+          if (emitInstantCodeUpdateRef.current && codeToSend && currentQuestionData) {
+            console.log("🚀 [INSTANT DEBUG] Emitting instant code update on timer start (attempt", attempt, "), code length:", codeToSend.length);
+            console.log("🚀 [INSTANT DEBUG] Current userCode from ref:", currentUserCode?.substring(0, 50) + "...");
+            console.log("🚀 [INSTANT DEBUG] Selected language:", selectedLanguage);
+            emitInstantCodeUpdateRef.current(codeToSend, "timer_start");
+          } else if (attempt < maxAttempts) {
+            console.warn("🚀 [INSTANT DEBUG] Attempt", attempt, "failed - userCodeRef:", !!currentUserCode, "questionDataRef:", !!currentQuestionData, "emitRef:", !!emitInstantCodeUpdateRef.current, "- retrying in 500ms");
+            setTimeout(() => attemptInstantUpdate(attempt + 1, maxAttempts), 500);
+          } else {
+            console.error("🚀 [INSTANT DEBUG] Failed to send instant update after", maxAttempts, "attempts - userCodeRef:", !!currentUserCode, "questionDataRef:", !!currentQuestionData, "emitRef:", !!emitInstantCodeUpdateRef.current);
+          }
+        };
+        
+        setTimeout(() => attemptInstantUpdate(), 1000);
       });
 
       // Join the game room first
@@ -315,8 +358,8 @@ export default function InGamePage() {
         player_id: userSession.user.id
       });
 
-      // Set up debounced code update function
-      emitCodeUpdateRef.current = debounce((code: string) => {
+      // Set up simple code update function (no debouncing - backend handles timing)
+      emitCodeUpdateRef.current = (code: string) => {
         // Only emit if we have all required data and the socket is connected
         if (context.socket && context.socket.connected && context.gameId && userSession?.user?.id) {
           context.socket.emit("code_update", {
@@ -326,20 +369,31 @@ export default function InGamePage() {
             language: selectedLanguage
           });
         }
-      }, 500);
+      };
+
+      // Set up instant code update function (bypasses 30-second delay)
+      emitInstantCodeUpdateRef.current = (code: string, reason: string) => {
+        // Only emit if we have all required data and the socket is connected
+        if (context.socket && context.socket.connected && context.gameId && userSession?.user?.id) {
+          context.socket.emit("instant_code_update", {
+            game_id: context.gameId,
+            player_id: userSession.user.id,
+            code: code,
+            language: selectedLanguage,
+            reason: reason
+          });
+        }
+      };
     }
     
     // Cleanup on unmount or dependencies change
     return () => {
-      if (emitCodeUpdateRef.current) {
-        emitCodeUpdateRef.current.cancel();
-      }
       if (context?.socket) {
         context.socket.off("game_joined");
         context.socket.off("game_start");
       }
     };
-  }, [context?.socket, context?.gameId, userSession?.user?.id]);
+  }, [context?.socket, context?.gameId, userSession?.user?.id, selectedLanguage]);
 
   // NOW all conditional returns can happen AFTER all hooks are declared
   if (!context) {
@@ -375,6 +429,20 @@ export default function InGamePage() {
       const starterCode = questionData.starter_code[language];
       if (starterCode) {
         setUserCode(starterCode);
+        
+        // Update ref
+        userCodeRef.current = starterCode;
+        
+        // Check if we're in the first 30 seconds and emit instant update
+        if (gameStartTime && isGameStarted) {
+          const currentTime = Date.now();
+          const gameElapsedSeconds = (currentTime - gameStartTime * 1000) / 1000;
+          
+          if (gameElapsedSeconds < 30 && emitInstantCodeUpdateRef.current) {
+            console.log("🚀 [INSTANT DEBUG] Emitting instant code update on language switch in first 30s");
+            emitInstantCodeUpdateRef.current(starterCode, "language_switch_early");
+          }
+        }
       }
     }
   };
@@ -557,6 +625,7 @@ export default function InGamePage() {
               onCodeChange={(value) => {
                 const newCode = value || "";
                 setUserCode(newCode);
+                userCodeRef.current = newCode;
                 if (emitCodeUpdateRef.current) {
                   emitCodeUpdateRef.current(newCode);
                 }

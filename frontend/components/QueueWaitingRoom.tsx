@@ -322,8 +322,8 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
       </div>
 
       {/* Main Battle Area */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20 lg:gap-32 w-full max-w-6xl">
+      <div className="flex-1 flex items-center justify-center p-4 pb-10">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12 lg:gap-20 xl:gap-32 w-full max-w-6xl px-2">
           {/* User Avatar */}
           <div className="flex-shrink-0">
             <AvatarCard
