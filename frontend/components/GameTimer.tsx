@@ -2,30 +2,53 @@ import {useState } from "react";
 import React, { useEffect } from "react";
 
 export default function GameTimer({
-  timeRef
+  timeRef,
+  gameStartTime,
+  isGameStarted = false
 }: {
   timeRef: React.RefObject<number>;
+  gameStartTime?: number | null;
+  isGameStarted?: boolean;
 }) {
   const [time, setTime] = useState(0);
   const [milliseconds, setMilliseconds] = useState(0);
   
   useEffect(() => {
+    if (!isGameStarted || !gameStartTime) {
+      // Don't start timer until game has officially started
+      setTime(0);
+      setMilliseconds(0);
+      timeRef.current = 0;
+      return;
+    }
+
     const interval = setInterval(() => {
-      timeRef.current += 1; // Increment the timer by 1 second
-      setTime(timeRef.current); // Update the state to trigger a re-render
+      // Calculate time based on server start timestamp for synchronization
+      const now = Date.now() / 1000; // Convert to seconds
+      const elapsed = Math.floor(now - gameStartTime);
+      timeRef.current = elapsed;
+      setTime(elapsed);
     }, 1000);
 
-    return () => clearInterval(interval); // cleanup on unmount
-  }, []);
+    return () => clearInterval(interval);
+  }, [isGameStarted, gameStartTime, timeRef]);
 
   // Sub-second timer for smooth updates
   useEffect(() => {
+    if (!isGameStarted || !gameStartTime) {
+      setMilliseconds(0);
+      return;
+    }
+
     const msInterval = setInterval(() => {
-      setMilliseconds(prev => (prev + 1) % 10);
-    }, 100); // Update every 100ms (0.1 seconds)
+      const now = Date.now() / 1000;
+      const elapsed = now - gameStartTime;
+      const ms = Math.floor((elapsed % 1) * 10); // Get decimal part as 0-9
+      setMilliseconds(ms);
+    }, 100);
 
     return () => clearInterval(msInterval);
-  }, []);
+  }, [isGameStarted, gameStartTime]);
 
   const formatTime = (seconds: number, ms: number) => {
     const mins = Math.floor(seconds / 60);

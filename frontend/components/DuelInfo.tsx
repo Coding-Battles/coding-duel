@@ -18,6 +18,8 @@ interface DuelInfoProps {
   gameId?: string;
   starterCode?: string;
   selectedLanguage?: Language;
+  gameStartTime?: number | null;
+  isGameStarted?: boolean;
 }
 
 const DuelInfo = ({
@@ -27,6 +29,8 @@ const DuelInfo = ({
   socket,
   gameId,
   selectedLanguage = "python",
+  gameStartTime,
+  isGameStarted = false,
 }: DuelInfoProps) => {
   // // Mock data - replace with real props/state
   // const opponentData = {
@@ -41,6 +45,13 @@ const DuelInfo = ({
 
   console.log("opponentData " + opponentData?.image_url);
   console.log("user " + user?.image);
+
+  // Debug gameId prop changes
+  useEffect(() => {
+    console.log("🚀 [GAME DEBUG] DuelInfo gameId prop changed:", gameId);
+    console.log("🚀 [GAME DEBUG] gameId type:", typeof gameId);
+    console.log("🚀 [GAME DEBUG] gameId truthy:", !!gameId);
+  }, [gameId]);
 
   // Map our language types to Prism language names for syntax highlighting
   const getPrismLanguage = (language: Language): string => {
@@ -78,17 +89,27 @@ const DuelInfo = ({
   const [userKey, setUserKey] = useState(0);
   const [opponentCode, setOpponentCode] = React.useState<string | null>(null);
   const [codeAvailable, setCodeAvailable] = React.useState(false);
+  const [opponentLanguage, setOpponentLanguage] = React.useState<string | null>(
+    null
+  );
   const [opponentEmojiQueue, setOpponentEmojiQueue] = React.useState<
     Array<{ emoji: string; timestamp: number }>
   >([]);
 
   useEffect(() => {
     if (socket == null || !gameId || !user?.id) {
-      console.log("🚀 [CODE DEBUG] Socket effect skipped - missing:", { socket: !!socket, gameId, userId: user?.id });
+      console.log("🚀 [CODE DEBUG] Socket effect skipped - missing:", {
+        socket: !!socket,
+        gameId,
+        userId: user?.id,
+      });
       return;
     }
 
-    console.log("🚀 [CODE DEBUG] Setting up socket listeners for gameId:", gameId);
+    console.log(
+      "🚀 [CODE DEBUG] Setting up socket listeners for gameId:",
+      gameId
+    );
 
     socket.on("emoji_received", async (data: { emoji: string }) => {
       console.log("Received emoji update:", data);
@@ -105,48 +126,101 @@ const DuelInfo = ({
       }, 4000);
     });
 
+    // Listen for push-based opponent code delivery (no more polling!)
     socket.on(
-      "opponent_code",
-      (data: { code: string | null; available: boolean }) => {
-        console.log("🚀 [CODE DEBUG] Received opponent code event:", data);
+      "opponent_code_ready",
+      (data: {
+        code: string;
+        from_player: string;
+        language: string;
+        timestamp: number;
+        instant?: boolean;
+        reason?: string;
+      }) => {
+        console.log(
+          "🚀 [PUSH DEBUG] Received opponent_code_ready event:",
+          data
+        );
+        console.log(
+          "🚀 [INSTANT DEBUG] Is instant update:",
+          data.instant,
+          "Reason:",
+          data.reason
+        );
+        console.log(
+          "🚀 [LANG DEBUG] Always displaying opponent code regardless of language"
+        );
         setOpponentCode(data.code);
-        setCodeAvailable(data.available);
+        setCodeAvailable(true);
+        setOpponentLanguage(data.language);
       }
     );
 
-    // Function to fetch opponent code
-    const fetchOpponentCode = () => {
-      if (socket && gameId && user?.id) {
-        console.log("🚀 [CODE DEBUG] Emitting get_opponent_code:", { game_id: gameId, player_id: user.id });
-        socket.emit("get_opponent_code", {
-          game_id: gameId,
-          player_id: user.id,
-        });
-      } else {
-        console.log("🚀 [CODE DEBUG] Cannot fetch opponent code - missing:", { socket: !!socket, gameId, userId: user?.id });
+    // Listen for opponent language changes
+    socket.on(
+      "player_language_changed",
+      (data: { player_id: string; language: string; immediate: boolean }) => {
+        console.log(
+          "🚀 [LANG DEBUG] Received player_language_changed event:",
+          data
+        );
+        if (data.player_id !== user?.id) {
+          // This is opponent's language change
+          setOpponentLanguage(data.language);
+          // No longer clear code when languages differ - always show opponent code
+          console.log(
+            "🚀 [LANG DEBUG] Opponent changed language to:",
+            data.language
+          );
+        }
       }
-    };
-
-    // Fetch opponent code immediately and then every 5 seconds
-    console.log("🚀 [CODE DEBUG] Starting opponent code fetching...");
-    fetchOpponentCode();
-    const interval = setInterval(fetchOpponentCode, 5000);
-    console.log("🚀 [CODE DEBUG] Set up 5-second interval for opponent code");
+    );
 
     // Cleanup
     return () => {
-      console.log("🚀 [CODE DEBUG] Cleaning up socket listeners and interval");
+      console.log("🚀 [PUSH DEBUG] Cleaning up socket listeners");
       socket.off("emoji_received");
-      socket.off("opponent_code");
-      clearInterval(interval);
+      socket.off("opponent_code_ready");
+      socket.off("player_language_changed");
     };
   }, [socket, gameId, user?.id]);
+
+  // No longer clear opponent code when user changes language - always show code
+  useEffect(() => {
+    console.log(
+      "🚀 [LANG DEBUG] Language change detected - keeping opponent code visible"
+    );
+    // Keep opponent code visible regardless of language differences
+  }, [selectedLanguage, opponentLanguage]);
 
   const onUserEmojiSelect = async (emoji: { native: string }) => {
     console.log("🚀 [EMOJI DEBUG] Selected emoji:", emoji);
     console.log("🚀 [EMOJI DEBUG] GameId:", gameId);
+    console.log("🚀 [EMOJI DEBUG] GameId type:", typeof gameId);
+    console.log("🚀 [EMOJI DEBUG] GameId undefined?:", gameId === undefined);
+    console.log("🚀 [EMOJI DEBUG] GameId null?:", gameId === null);
     console.log("🚀 [EMOJI DEBUG] User ID:", user?.id);
     console.log("🚀 [EMOJI DEBUG] Socket connected:", socket?.connected);
+
+    // Check if gameId is valid before proceeding
+    if (!gameId) {
+      console.error("🚀 [EMOJI DEBUG] GameId is missing! Cannot send emoji.");
+      console.error("🚀 [EMOJI DEBUG] Current props:", {
+        gameId,
+        gameIdType: typeof gameId,
+        user: user?.id,
+        socket: !!socket,
+        opponentData: !!opponentData,
+        allProps: { gameId, user: user?.id, socket: !!socket },
+      });
+      // Still show the visual feedback even if we can't send to server
+      setUserEmoji(emoji.native);
+      setUserKey((prev) => prev + 1);
+      setTimeout(() => {
+        setUserEmoji(null);
+      }, 4000);
+      return;
+    }
 
     setUserEmoji(emoji.native);
     setUserKey((prev) => prev + 1); // Force re-render to trigger animation
@@ -200,7 +274,11 @@ const DuelInfo = ({
       {/* Timer */}
       {timeRef && (
         <div className="py-4 text-center">
-          <GameTimer timeRef={timeRef} />
+          <GameTimer
+            timeRef={timeRef}
+            gameStartTime={gameStartTime}
+            isGameStarted={isGameStarted}
+          />
         </div>
       )}
 
@@ -322,9 +400,6 @@ const DuelInfo = ({
 
       {/* Always Visible Emoji Picker */}
       <div className="">
-        <h4 className="mb-2 text-sm font-semibold text-foreground/70">
-          Send Emoji
-        </h4>
         <div className="flex justify-center mb-4">
           <CustomEmojiPicker
             onEmojiSelect={(emoji: { native: string }) => {
@@ -338,14 +413,13 @@ const DuelInfo = ({
       <div className="">
         <h4 className="mb-2 text-sm font-semibold text-foreground/70">
           Opponent&apos;s Code
-          <span className="ml-2 text-xs text-foreground/40">
-            🚀 [DEBUG] Available: {codeAvailable ? 'Yes' : 'No'} | Has Code: {opponentCode ? 'Yes' : 'No'}
-          </span>
         </h4>
         <div className="overflow-y-auto rounded-md bg-foreground/5 h-80">
           {opponentCode ? (
             <SyntaxHighlighter
-              language={getPrismLanguage(selectedLanguage)}
+              language={getPrismLanguage(
+                (opponentLanguage as Language) || "python"
+              )}
               style={syntaxTheme}
               className="!m-0 !bg-transparent"
               customStyle={{
@@ -359,12 +433,9 @@ const DuelInfo = ({
             </SyntaxHighlighter>
           ) : (
             <div className="flex items-center justify-center h-full text-foreground/60">
-              <p>Loading opponent code...</p>
+              <p>Waiting for opponent code...</p>
             </div>
           )}
-        </div>
-        <div className="mt-1 text-xs text-foreground/40">
-          * Code updates are delayed by 30 seconds
         </div>
       </div>
     </div>

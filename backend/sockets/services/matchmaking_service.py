@@ -47,6 +47,7 @@ class MatchmakingService:
 
     def set_dependencies(self, game_states_param=None):
         self.game_states = game_states_param
+        logger.info(f"🔧 [SYNC DEBUG] Matchmaking received game_states id: {id(game_states_param)}")
 
     def add_player_to_queue(self, player_data: Dict[str, Any], sid: str) -> Player:
         """Add a player to the matchmaking queue."""
@@ -136,6 +137,7 @@ class MatchmakingService:
             
             # Store active game
             self.game_states[game_id] = game_state
+            logger.info(f"🔧 [SYNC DEBUG] Stored game {game_id} in game_states id: {id(self.game_states)}")
 
             logger.info(f"Match created: {player1.name} vs {player2.name} in game {game_id} with question {question_slug} game_states={self.game_states}")
 
