@@ -45,30 +45,7 @@ html {
 
 :root {
   --radius: 0.65rem;
-  --background: oklch(0.89 0 0);
-  --foreground: oklch(0.22 0.03 210);
-  --accent: oklch(0.6 0.015 60);
-  --background: oklch(0.98 0 0);
-  --background2: oklch(0.95 0.00002 271.152);
-  --foreground: oklch(0.15 0 0);
-  --border: oklch(0.1 0.01262 333.851);
-  --accent: oklch(0.4 0.15 250);
-  --secondary: oklch(0.45 0.13 180);
-  --selected: oklch(0.85 0.18 210);
-  --success: oklch(0.5 0.15 140);
-  --error: oklch(0.55 0.2 20);
-  --player1: oklch(60.286% 0.17192 253.986);
-  --player2: oklch(60.983% 0.22289 26.972);
-}
-
-.dark {
-  --background: oklch(0.15 0.01 240);
-  --foreground: oklch(0.92 0.005 240);
-  --accent: oklch(0.82 0.04 240);
-  --secondary: oklch(0.7 0.03 240);
-  --friendly: oklch(0.45 0.2 260);
-  --opponent: oklch(0.5 0.25 25);
-  --selected: oklch(0.7 0.18 55);
+  /* Default to dark mode variables */
   --background: oklch(0.08 0 0);
   --background2: oklch(15.434% 0.00002 271.152);
   --foreground: oklch(0.95 0 0);
@@ -77,7 +54,21 @@ html {
   --secondary: oklch(0.55 0.13 180);
   --selected: oklch(0.3 0.18 210);
   --success: oklch(0.6 0.15 140);
-  --error: oklch(0.55 0.22 10);
+  --error: oklch(0.65 0.2 20);
+  --player1: oklch(52.044% 0.16553 255.237);
+  --player2: oklch(55.451% 0.2213 28.616);
+}
+
+.dark {
+  /* Same as :root - ensure consistency */
+  --background: oklch(0.08 0 0);
+  --background2: oklch(15.434% 0.00002 271.152);
+  --foreground: oklch(0.95 0 0);
+  --border: oklch(54.517% 0.00006 271.152);
+  --accent: oklch(0.95 0 0);
+  --secondary: oklch(0.55 0.13 180);
+  --selected: oklch(0.3 0.18 210);
+  --success: oklch(0.6 0.15 140);
   --error: oklch(0.65 0.2 20);
   --player1: oklch(52.044% 0.16553 255.237);
   --player2: oklch(55.451% 0.2213 28.616);

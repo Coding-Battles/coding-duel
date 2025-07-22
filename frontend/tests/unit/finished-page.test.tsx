@@ -3,12 +3,13 @@ import { render, screen } from '../utils/test-utils';
 import FinishedPage from '@/components/FinishedPage';
 import type { OpponentData, CustomUser } from '@/shared/types';
 
-// Mock next-themes
+// Mock next-themes - always dark mode
 vi.mock('next-themes', () => ({
   useTheme: () => ({
     theme: 'dark',
     setTheme: vi.fn(),
-    resolvedTheme: 'dark'
+    resolvedTheme: 'dark',
+    forcedTheme: 'dark'
   })
 }));
 

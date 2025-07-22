@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NightModeButton } from "@/components/NightModeButton";
 import { ThemeProvider } from "next-themes";
 
 const inter = Inter({
@@ -31,11 +30,11 @@ export default function RootLayout({
       >
         <ThemeProvider 
           attribute="class" 
-          defaultTheme="system" 
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
-          <NightModeButton />
           {children}
         </ThemeProvider>
       </body>

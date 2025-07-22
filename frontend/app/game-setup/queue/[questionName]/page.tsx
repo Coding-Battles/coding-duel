@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
-import { useTheme } from "next-themes";
+// Removed useTheme import - now using dark mode only
 import FinishedPage from "@/components/FinishedPage";
 
 import DuelInfo from "@/components/DuelInfo";
@@ -67,8 +67,8 @@ const debugFinishedPage = false; // Set to true to debug FinishedPage component
 
 export default function InGamePage() {
   // ALL HOOKS MUST BE DECLARED AT THE TOP - NO CONDITIONAL LOGIC BEFORE HOOKS
-  const { resolvedTheme } = useTheme();
-  const monacoTheme = resolvedTheme === "dark" ? "vs-dark" : "vs";
+  // Always use dark theme for Monaco editor
+  const monacoTheme = "vs-dark";
 
   // All useState hooks
   const [selectedLanguage, setSelectedLanguage] =

@@ -30,7 +30,7 @@ export default function EditorWithTerminal({
   code = "# Start typing...",
   onCodeChange,
   language = "python",
-  theme = "vs",
+  theme = "vs-dark",
   className = "",
   onRunCode,
   selectedLanguage = "python",

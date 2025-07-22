@@ -21,7 +21,8 @@ vi.mock('next-themes', () => ({
   useTheme: vi.fn(() => ({
     theme: 'dark',
     setTheme: vi.fn(),
-    resolvedTheme: 'dark'
+    resolvedTheme: 'dark',
+    forcedTheme: 'dark'
   }))
 }));
 
