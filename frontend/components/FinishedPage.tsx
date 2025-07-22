@@ -10,27 +10,40 @@ import { Trophy, Clock, Zap, Target, Home, ArrowRight } from "lucide-react";
 interface FinishedPageProps {
   opponent: OpponentData,
   user: CustomUser | null,
-  opponentStats: TestResultsData,
-  userStats: TestResultsData;
+  gameEndData: any, // Complete game end info from backend
+  userStats?: TestResultsData, // May be undefined if user didn't complete
+  opponentStats?: TestResultsData; // May be undefined if opponent didn't complete
 }
 
-const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageProps) => {
+const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats} : FinishedPageProps) => {
   const [mounted, setMounted] = useState(false);
-  const userWon = userStats.final_time && opponentStats.final_time ? 
-    userStats.final_time < opponentStats.final_time : true;
-  
-  const winnerStats = userWon ? userStats : opponentStats;
-  const loserStats = userWon ? opponentStats : userStats;
-  const winnerImage = userWon ? getAvatarUrl(user) : opponent.image_url;
-  const loserImage = userWon ? opponent.image_url : getAvatarUrl(user);
   const router = useRouter();
+  
+  // Determine winner based on gameEndData (first to solve wins)
+  const userWon = gameEndData?.winner_id === user?.id;
+  
+  // Create winner and loser data from available information
+  const winnerData = {
+    id: gameEndData?.winner_id,
+    name: gameEndData?.winner_name || (userWon ? user?.name : opponent?.name),
+    image: userWon ? getAvatarUrl(user) : opponent.image_url,
+    stats: userWon ? userStats : (gameEndData?.winner_stats || opponentStats)
+  };
+  
+  const loserData = {
+    id: gameEndData?.loser_id,
+    name: gameEndData?.loser_name || (userWon ? opponent?.name : user?.name),
+    image: userWon ? opponent.image_url : getAvatarUrl(user),
+    stats: userWon ? opponentStats : userStats
+  };
 
   useEffect(() => {
     setMounted(true);
-    console.log("User won:", userWon);
-    console.log("Winner Stats:", winnerStats);
-    console.log("Loser Stats:", loserStats);
-  }, [userWon, winnerStats, loserStats])
+    console.log("🏆 [FINISHED PAGE] User won:", userWon);
+    console.log("🏆 [FINISHED PAGE] Game end data:", gameEndData);
+    console.log("🏆 [FINISHED PAGE] Winner data:", winnerData);
+    console.log("🏆 [FINISHED PAGE] Loser data:", loserData);
+  }, [userWon, gameEndData, winnerData, loserData])
   
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen p-8 overflow-hidden ">
@@ -67,7 +80,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative">
                   <img
-                    src={winnerImage}
+                    src={winnerData.image}
                     alt="Winner"
                     className="w-20 h-20 border-4 rounded-full shadow-lg border-success"
                   />
@@ -77,7 +90,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-success">Winner</h2>
-                  <p className="font-semibold text-foreground/80">{winnerStats.player_name}</p>
+                  <p className="font-semibold text-foreground/80">{winnerData.name}</p>
                 </div>
               </div>
               
@@ -87,7 +100,9 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
                     <Clock className="w-4 h-4 text-success" />
                     <span className="text-sm font-medium">Implementation</span>
                   </div>
-                  <span className="font-bold text-success">{winnerStats.implement_time}</span>
+                  <span className="font-bold text-success">
+                    {winnerData.stats?.implement_time || "N/A"}
+                  </span>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
@@ -95,7 +110,9 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
                     <Zap className="w-4 h-4 text-success" />
                     <span className="text-sm font-medium">Complexity</span>
                   </div>
-                  <span className="font-bold text-success">{winnerStats.complexity}</span>
+                  <span className="font-bold text-success">
+                    {winnerData.stats?.complexity || "N/A"}
+                  </span>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
@@ -103,7 +120,9 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
                     <Target className="w-4 h-4 text-success" />
                     <span className="text-sm font-medium">Total Score</span>
                   </div>
-                  <span className="font-bold text-success">{winnerStats.final_time}</span>
+                  <span className="font-bold text-success">
+                    {winnerData.stats?.final_time || "N/A"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -116,7 +135,7 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative">
                   <img
-                    src={loserImage}
+                    src={loserData.image}
                     alt="Runner-up"
                     className="w-20 h-20 border-4 rounded-full shadow-lg border-error"
                   />
@@ -126,34 +145,45 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-error">Loser</h2>
-                  <p className="font-semibold text-foreground/80">{loserStats.player_name}</p>
+                  <p className="font-semibold text-foreground/80">{loserData.name}</p>
+                  {!loserData.stats && (
+                    <p className="text-xs text-foreground/50">Didn't complete</p>
+                  )}
                 </div>
               </div>
               
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-error" />
-                    <span className="text-sm font-medium">Implementation</span>
+                {loserData.stats ? (
+                  <>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-error" />
+                        <span className="text-sm font-medium">Implementation</span>
+                      </div>
+                      <span className="font-bold text-error">{loserData.stats.implement_time}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-error" />
+                        <span className="text-sm font-medium">Complexity</span>
+                      </div>
+                      <span className="font-bold text-error">{loserData.stats.complexity}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-error" />
+                        <span className="text-sm font-medium">Total Score</span>
+                      </div>
+                      <span className="font-bold text-error">{loserData.stats.final_time}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-4 text-center rounded-lg bg-background/30">
+                    <p className="text-sm text-foreground/60">Player didn't complete the challenge</p>
                   </div>
-                  <span className="font-bold text-error">{loserStats.implement_time}</span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-error" />
-                    <span className="text-sm font-medium">Complexity</span>
-                  </div>
-                  <span className="font-bold text-error">{loserStats.complexity}</span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-error" />
-                    <span className="text-sm font-medium">Total Score</span>
-                  </div>
-                  <span className="font-bold text-error">{loserStats.final_time}</span>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -169,23 +199,27 @@ const FinishedPage = ({opponent, user, opponentStats, userStats} : FinishedPageP
           
           <div className="grid gap-6 md:grid-cols-3">
             <div className="p-4 text-center border bg-accent/5 rounded-xl border-accent/20">
-              <Clock className="w-8 h-8 mx-auto mb-2 text-accent" />
-              <p className="mb-1 text-sm text-foreground/70">Time Difference</p>
-              <p className="text-2xl font-bold text-accent">
-                {Math.abs((winnerStats.final_time || 0) - (loserStats.final_time || 0)).toFixed(1)}s
+              <Trophy className="w-8 h-8 mx-auto mb-2 text-accent" />
+              <p className="mb-1 text-sm text-foreground/70">Game Result</p>
+              <p className="text-lg font-bold text-accent">
+                {gameEndData?.game_end_reason === "first_win" ? "First to Solve" : "Game Complete"}
               </p>
             </div>
             
             <div className="p-4 text-center border bg-primary/5 rounded-xl border-primary/20">
               <Zap className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <p className="mb-1 text-sm text-foreground/70">Best Complexity</p>
-              <p className="text-2xl font-bold text-primary">{winnerStats.complexity}</p>
+              <p className="mb-1 text-sm text-foreground/70">Winner's Complexity</p>
+              <p className="text-2xl font-bold text-primary">
+                {winnerData.stats?.complexity || "N/A"}
+              </p>
             </div>
             
             <div className="p-4 text-center border bg-success/5 rounded-xl border-success/20">
               <Target className="w-8 h-8 mx-auto mb-2 text-success" />
               <p className="mb-1 text-sm text-foreground/70">Winner's Time</p>
-              <p className="text-2xl font-bold text-success">{winnerStats.final_time}s</p>
+              <p className="text-2xl font-bold text-success">
+                {winnerData.stats?.final_time ? `${winnerData.stats.final_time}s` : "N/A"}
+              </p>
             </div>
           </div>
         </div>

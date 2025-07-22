@@ -195,7 +195,12 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
         complexity = "N/A"
 
         if test_results.success:
-            game_state.mark_player_finished(player_id)
+            # FIRST PLAYER TO SOLVE WINS IMMEDIATELY
+            if not game_state.is_game_ended():
+                logger.info(f"🏆 [WINNER DEBUG] Player {player_id} is FIRST TO SOLVE - setting as winner!")
+                game_state.set_winner(player_id, "first_win")
+            else:
+                logger.info(f"⏰ [LATE DEBUG] Player {player_id} solved but game already ended - winner was {game_state.winner_id}")
 
             if opponent_id:
                 # Emit to opponent only (don't expose full test results)
@@ -301,18 +306,36 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                 f"⚠️ Notified opponent {opponent_id} that {player_id} finished with partial success"
             )
 
-        # If all players finished, emit game completion
-        if game_state.all_players_finished():
-            print(
-                f"🔍 [OPPONENT DEBUG] All players finished in game {game_id}, saving history"
-            )
+        # If game has ended (first player won), emit game completion immediately
+        if game_state.is_game_ended():
+            winner_name = game_state.get_player_name(game_state.winner_id)
+            loser_id = game_state.get_loser_id()
+            loser_name = game_state.get_player_name(loser_id) if loser_id else "Unknown"
+            
+            print(f"🏆 [GAME END DEBUG] Game {game_id} ended - Winner: {winner_name} ({game_state.winner_id})")
+            
             await save_game_to_history(list(game_state.players.values()))
-            await sio.emit(
-                "game_completed",
-                {"message": "All players have finished!"},
-                room=game_id,
-            )
-            logger.info(f"Game {game_id} completed - all players finished")
+            
+            # Send comprehensive game end event with winner info
+            game_end_data = {
+                "message": f"{winner_name} won the game!",
+                "winner_id": game_state.winner_id,
+                "winner_name": winner_name,
+                "loser_id": loser_id,
+                "loser_name": loser_name,
+                "game_end_reason": game_state.game_end_reason,
+                "game_end_time": game_state.game_end_time,
+                "winner_stats": {
+                    "player_name": winner_name,
+                    "implement_time": request.timer,
+                    "complexity": complexity,
+                    "final_time": get_score(complexity, request.timer),
+                    "success": True
+                }
+            }
+            
+            await sio.emit("game_completed", game_end_data, room=game_id)
+            logger.info(f"🏆 Game {game_id} completed - {winner_name} won!")
 
         if test_results.success:
             logger.info(

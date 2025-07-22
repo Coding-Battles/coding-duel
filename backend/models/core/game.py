@@ -55,6 +55,11 @@ class GameState(BaseModel):
     game_start_time: Optional[float] = None
     players_joined: Set[str] = Field(default_factory=set)
     
+    # Winner tracking for "first to solve wins" game mode
+    winner_id: Optional[str] = None
+    game_end_time: Optional[float] = None
+    game_end_reason: str = ""  # "first_win", "timeout", "disconnection", etc.
+    
     # Starter code for comparison
     starter_codes: Dict[str, str] = Field(default_factory=dict)  # {language: code}
 
@@ -94,6 +99,25 @@ class GameState(BaseModel):
         if len(player_ids) == 2 and player_id in player_ids:
             return player_ids[0] if player_ids[1] == player_id else player_ids[1]
         
+        return None
+
+    def set_winner(self, winner_id: str, reason: str = "first_win"):
+        """Set the winner and end the game immediately."""
+        import time
+        self.winner_id = winner_id
+        self.game_end_time = time.time()
+        self.game_end_reason = reason
+        # Mark winner as finished
+        self.mark_player_finished(winner_id)
+
+    def is_game_ended(self) -> bool:
+        """Check if the game has ended."""
+        return self.winner_id is not None
+
+    def get_loser_id(self) -> Optional[str]:
+        """Get the loser's ID (opponent of winner)."""
+        if self.winner_id:
+            return self.get_opponent_id(self.winner_id)
         return None
 
 

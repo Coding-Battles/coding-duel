@@ -93,6 +93,7 @@ export default function InGamePage() {
   );
   const [gameStartTime, setGameStartTime] = React.useState<number | null>(null);
   const [isGameStarted, setIsGameStarted] = React.useState(false);
+  const [gameEndData, setGameEndData] = React.useState<any>(null); // Store complete game end info
 
   // All useRef hooks
   const opponentTestStatsRef = useRef<TestResultsData | undefined>(undefined);
@@ -210,21 +211,23 @@ export default function InGamePage() {
       opponentTestStatsRef.current = data;
     };
 
-    const handleGameCompleted = (data: { message: string }) => {
-      console.log("Game completed data:", data);
+    const handleGameCompleted = (data: any) => {
+      console.log("🏆 [GAME END DEBUG] Game completed data:", data);
+
+      // Store complete game end data for FinishedPage
+      setGameEndData(data);
 
       setAlerts((prev) => [
         ...prev,
         {
           id: `game-completed-${Date.now()}-${Math.random()}`,
-          message: `Game completed: ${data.message}`,
-          variant: "destructive",
+          message: data.message || "Game completed!",
+          variant: data.winner_id === userSession?.user?.id ? "default" : "destructive",
         },
       ]);
 
-      setTimeout(() => {
-        setGameFinished(true);
-      }, 5000);
+      // Show finished page immediately (no 5 second delay)
+      setGameFinished(true);
     };
 
     session.on("opponent_submitted", handleOpponentSubmitted);
@@ -694,13 +697,13 @@ export default function InGamePage() {
           </div>
         </div>
       ) : (
-        opponentTestStatsRef.current &&
-        testResults && (
+        gameEndData && (
           <FinishedPage
             opponent={context.opponent}
             user={context.user}
-            opponentStats={opponentTestStatsRef.current}
+            gameEndData={gameEndData}
             userStats={testResults}
+            opponentStats={opponentTestStatsRef.current}
           />
         )
       )}
