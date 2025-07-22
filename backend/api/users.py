@@ -31,11 +31,17 @@ async def get_available_username(request: UsernameRequest):
 @router.post("/users/generate-username")
 async def generate_username(request: GenerateUsernameRequest = GenerateUsernameRequest()):
     """Generate creative usernames using AI."""
-    if request.count == 1:
-        # Use instant pool for single username requests
-        instant_username = await get_instant_username()
-        return {"usernames": [instant_username], "count": 1}
-    else:
-        # Use regular generation for multiple usernames
-        ai_usernames = await generate_ai_username(request.count)
-        return {"usernames": ai_usernames, "count": len(ai_usernames)}
+    try:
+        if request.count == 1:
+            # Use instant pool for single username requests
+            instant_username = await get_instant_username()
+            return {"usernames": [instant_username], "count": 1}
+        else:
+            # Use regular generation for multiple usernames
+            ai_usernames = await generate_ai_username(request.count)
+            if not ai_usernames:
+                raise Exception("No usernames generated")
+            return {"usernames": ai_usernames, "count": len(ai_usernames)}
+    except Exception as e:
+        # Return error response instead of fallback
+        return {"error": f"Username generation failed: {str(e)}", "usernames": [], "count": 0}

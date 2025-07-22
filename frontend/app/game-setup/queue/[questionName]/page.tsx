@@ -217,12 +217,15 @@ export default function InGamePage() {
       // Store complete game end data for FinishedPage
       setGameEndData(data);
 
+      // Get unified player ID for winner comparison
+      const playerId = context?.isAnonymous ? context.anonymousId : userSession?.user?.id;
+
       setAlerts((prev) => [
         ...prev,
         {
           id: `game-completed-${Date.now()}-${Math.random()}`,
           message: data.message || "Game completed!",
-          variant: data.winner_id === userSession?.user?.id ? "default" : "destructive",
+          variant: data.winner_id === playerId ? "default" : "destructive",
         },
       ]);
 
@@ -314,7 +317,10 @@ export default function InGamePage() {
 
   // Join game room and set up debounced code update function
   useEffect(() => {
-    if (context?.socket && context.gameId && userSession?.user?.id) {
+    // Get player ID - either from authenticated user or anonymous user
+    const playerId = context?.isAnonymous ? context.anonymousId : userSession?.user?.id;
+    
+    if (context?.socket && context.gameId && playerId) {
       // Set up socket event listeners for timer synchronization
       context.socket.on("game_joined", (data: { game_id: string; start_time?: number | null }) => {
         console.log("🚀 [TIMER DEBUG] Received game_joined event:", data);
@@ -358,20 +364,20 @@ export default function InGamePage() {
       // Join the game room first
       console.log("🚀 [JOIN DEBUG] Emitting join_game event with:", {
         game_id: context.gameId,
-        player_id: userSession.user.id
+        player_id: playerId
       });
       context.socket.emit("join_game", {
         game_id: context.gameId,
-        player_id: userSession.user.id
+        player_id: playerId
       });
 
       // Set up simple code update function (no debouncing - backend handles timing)
       emitCodeUpdateRef.current = (code: string) => {
         // Only emit if we have all required data and the socket is connected
-        if (context.socket && context.socket.connected && context.gameId && userSession?.user?.id) {
+        if (context.socket && context.socket.connected && context.gameId && playerId) {
           context.socket.emit("code_update", {
             game_id: context.gameId,
-            player_id: userSession.user.id,
+            player_id: playerId,
             code: code,
             language: selectedLanguage
           });
@@ -381,10 +387,10 @@ export default function InGamePage() {
       // Set up instant code update function (bypasses 30-second delay)
       emitInstantCodeUpdateRef.current = (code: string, reason: string) => {
         // Only emit if we have all required data and the socket is connected
-        if (context.socket && context.socket.connected && context.gameId && userSession?.user?.id) {
+        if (context.socket && context.socket.connected && context.gameId && playerId) {
           context.socket.emit("instant_code_update", {
             game_id: context.gameId,
-            player_id: userSession.user.id,
+            player_id: playerId,
             code: code,
             language: selectedLanguage,
             reason: reason
@@ -400,7 +406,7 @@ export default function InGamePage() {
         context.socket.off("game_start");
       }
     };
-  }, [context?.socket, context?.gameId, userSession?.user?.id, selectedLanguage]);
+  }, [context?.socket, context?.gameId, context?.isAnonymous, context?.anonymousId, userSession?.user?.id, selectedLanguage]);
 
   // NOW all conditional returns can happen AFTER all hooks are declared
   if (!context) {

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { updateUserProfile } from "@/lib/auth-client";
 import ProfileCreator from "@/components/ProfileCreator";
@@ -8,20 +8,24 @@ import ProfileCreator from "@/components/ProfileCreator";
 export default function ProfileSetupPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isGuestMode = searchParams.get('guest') === 'true';
+  
   const [username, setUsername] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
   const [customAvatar, setCustomAvatar] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Handle authentication redirect in useEffect to avoid render-time navigation
+  // Skip this check for guest mode
   useEffect(() => {
-    if (!isPending && !session?.user) {
+    if (!isGuestMode && !isPending && !session?.user) {
       router.push("/");
     }
-  }, [session, isPending, router]);
+  }, [session, isPending, router, isGuestMode]);
 
-  // Show loading state while session is being fetched
-  if (isPending) {
+  // Show loading state while session is being fetched (skip for guest mode)
+  if (!isGuestMode && isPending) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
@@ -33,22 +37,35 @@ export default function ProfileSetupPage() {
   }
 
   // Don't render content if not authenticated (will redirect via useEffect)
-  if (!session?.user) {
+  // Skip this check for guest mode
+  if (!isGuestMode && !session?.user) {
     return null;
   }
 
   const handleComplete = async () => {
-    if (!username.trim() || (selectedAvatar === null && !customAvatar)) return;
+    if (!username.trim() || selectedAvatar === null) return;
 
     setIsSaving(true);
     try {
-      // Save profile data
-      await updateUserProfile({
-        username: username.trim(),
-        selectedPfp: selectedAvatar ?? undefined,
-      });
-
-      console.log("Profile saved successfully");
+      if (isGuestMode) {
+        // Guest mode: Create temporary session data in localStorage
+        const guestData = {
+          username: username.trim(),
+          selectedAvatar,
+          isGuest: true,
+          guestId: `guest-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        };
+        
+        localStorage.setItem('guestProfile', JSON.stringify(guestData));
+        console.log("Guest profile created:", guestData);
+      } else {
+        // Authenticated mode: Save to database
+        await updateUserProfile({
+          username: username.trim(),
+          selectedPfp: selectedAvatar ?? undefined,
+        });
+        console.log("Profile saved successfully");
+      }
 
       // Navigate to game setup
       router.push("/game-setup");
@@ -72,6 +89,7 @@ export default function ProfileSetupPage() {
           onCustomAvatarChange={setCustomAvatar}
           userId={session?.user?.id}
           onComplete={isSaving ? undefined : handleComplete}
+          isGuestMode={isGuestMode}
         />
 
         {isSaving && (

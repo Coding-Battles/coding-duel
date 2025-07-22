@@ -119,25 +119,17 @@ async def generate_ai_username(count: int = 1) -> List[str]:
                 if clean_username:
                     generated_usernames.append(clean_username)
 
-        # Ensure we have the requested number of usernames
-        if len(generated_usernames) < count:
-            # Fill remaining with fallback pattern
-            for i in range(len(generated_usernames), count):
-                generated_usernames.append(f"CodeWarrior{i+1}")
+        # Return only the AI-generated usernames (no fallback)
+        if generated_usernames:
+            available_usernames = await batch_get_available_usernames(generated_usernames)
+            return available_usernames
+        else:
+            return []
 
-        # Get available versions of each username using batch operations
-        trimmed_usernames = generated_usernames[:count]  # Only take the requested count
-        available_usernames = await batch_get_available_usernames(trimmed_usernames)
-
-        return available_usernames
-
-    except Exception:
-        # Fallback to simple defaults if API fails
-        fallback_base_usernames = [f"CodeWarrior{i+1}" for i in range(count)]
-        fallback_usernames = await batch_get_available_usernames(
-            fallback_base_usernames
-        )
-        return fallback_usernames
+    except Exception as e:
+        # Log the error but don't use fallback
+        print(f"AI username generation failed: {e}")
+        return []
 
 
 async def batch_check_usernames_availability(usernames: List[str]) -> dict[str, bool]:
@@ -265,7 +257,9 @@ async def get_instant_username() -> str:
         if not username_pool:
             print("Username pool empty, generating on demand...")
             usernames = await generate_ai_username(1)
-            return usernames[0] if usernames else "CodeWarrior1"
+            if not usernames:
+                raise Exception("AI username generation failed and no fallback available")
+            return usernames[0]
 
         # Get username from pool
         username = username_pool.pop(0)

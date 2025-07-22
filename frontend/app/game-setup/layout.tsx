@@ -194,11 +194,18 @@ export default function QueueLayout({
       return;
     }
 
-    // Check if user is authenticated
-    if (!session?.user) {
-      console.error("User not authenticated");
-      // TODO: Redirect to login or show auth error
+    // Check if user is authenticated OR is anonymous with guest profile
+    const guestProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('guestProfile') || 'null') : null;
+    
+    if (!session?.user && !isAnonymous) {
+      console.error("User not authenticated and not in anonymous mode");
       router.push("/");
+      return;
+    }
+
+    if (isAnonymous && !guestProfile) {
+      console.error("Anonymous user but no guest profile found");
+      router.push("/guestlogin");
       return;
     }
 
@@ -211,18 +218,32 @@ export default function QueueLayout({
     }
 
     console.log("Finding game with difficulties:", selectedDifficulties);
+    console.log("Anonymous mode:", isAnonymous, "Guest profile:", guestProfile);
 
     try {
-      // Emit join_queue event with user data
-      socketRef.current.emit("join_queue", {
-        id: session.user.id,
-        name: (session.user as CustomUser)?.username || session.user.name,
-        easy: selectedDifficulties.easy,
-        medium: selectedDifficulties.medium,
-        hard: selectedDifficulties.hard,
-        imageURL: getAvatarUrl(session.user as CustomUser),
-        anonymous: false,
-      });
+      if (isAnonymous && guestProfile) {
+        // Anonymous user - emit with guest data
+        socketRef.current.emit("join_queue", {
+          id: anonymousId,
+          name: guestProfile.username,
+          easy: selectedDifficulties.easy,
+          medium: selectedDifficulties.medium,
+          hard: selectedDifficulties.hard,
+          imageURL: `/avatars/${guestProfile.selectedAvatar}.png`,
+          anonymous: true,
+        });
+      } else if (session?.user) {
+        // Authenticated user - emit with session data
+        socketRef.current.emit("join_queue", {
+          id: session.user.id,
+          name: (session.user as CustomUser)?.username || session.user.name,
+          easy: selectedDifficulties.easy,
+          medium: selectedDifficulties.medium,
+          hard: selectedDifficulties.hard,
+          imageURL: getAvatarUrl(session.user as CustomUser),
+          anonymous: false,
+        });
+      }
 
       // Only navigate to queue page if we're not already on the main game-setup page
       if (pathname !== "/game-setup") {
@@ -234,11 +255,33 @@ export default function QueueLayout({
     }
   };
 
+  // Get guest user data for context
+  const getContextUser = () => {
+    if (session?.user) {
+      return session.user as CustomUser;
+    }
+    
+    if (isAnonymous && typeof window !== 'undefined') {
+      const guestProfile = JSON.parse(localStorage.getItem('guestProfile') || 'null');
+      if (guestProfile) {
+        return {
+          id: anonymousId,
+          name: guestProfile.username,
+          username: guestProfile.username,
+          email: null,
+          image: `/avatars/${guestProfile.selectedAvatar}.png`,
+        } as CustomUser;
+      }
+    }
+    
+    return null;
+  };
+
   return (
     <GameContext.Provider
       value={{
         socket: socketRef.current,
-        user: session?.user as CustomUser || null,
+        user: getContextUser(),
         loading: loadingState,
         opponent: opponentData,
         gameId: gameId,

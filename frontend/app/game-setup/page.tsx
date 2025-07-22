@@ -16,11 +16,12 @@ export default function GameSetupPage() {
   const context = useGameContext();
 
   // Handle authentication redirect in useEffect to avoid render-time navigation
+  // Allow anonymous users with guest profiles
   useEffect(() => {
-    if (!isPending && !session?.user) {
+    if (!isPending && !session?.user && !context?.isAnonymous) {
       router.push("/");
     }
-  }, [session, isPending, router]);
+  }, [session, isPending, router, context?.isAnonymous]);
 
   // Listen for queue_left confirmation from backend
   useEffect(() => {
@@ -72,7 +73,8 @@ export default function GameSetupPage() {
   }
 
   // Don't render content if not authenticated (will redirect via useEffect)
-  if (!session?.user) {
+  // Allow anonymous users with guest profiles
+  if (!session?.user && !context?.isAnonymous) {
     return null;
   }
 
@@ -110,15 +112,21 @@ export default function GameSetupPage() {
             <DifficultySelector
               selectedDifficulties={selectedDifficulties}
               onDifficultyChange={setSelectedDifficulties}
-              onEditProfile={() => router.push("/profile")}
+              onEditProfile={
+                context?.isAnonymous 
+                  ? () => router.push("/profile-setup?guest=true")
+                  : () => router.push("/profile")
+              }
               onFindGame={handleFindGame}
-              userAvatar={getAvatarUrl(context?.user || session?.user)}
+              userAvatar={
+                context?.isAnonymous
+                  ? context?.user?.image || "/default-avatar.png"
+                  : getAvatarUrl(session?.user)
+              }
               userName={
-                (context?.user as any)?.username ||
-                context?.user?.name ||
-                (session?.user as any)?.username ||
-                session?.user?.name ||
-                "Guest"
+                context?.isAnonymous
+                  ? context?.user?.username || context?.user?.name || "Guest"
+                  : (session?.user as any)?.username || session?.user?.name || "Guest"
               }
             />
           )}
