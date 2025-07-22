@@ -86,6 +86,8 @@ class OpponentData(BaseModel):
 
 class GameParticipant(BaseModel):
     id: Optional[int] = None
+    question_name: str
+    difficulty: str
     game_id: int
     player_name: str
     player_code: str

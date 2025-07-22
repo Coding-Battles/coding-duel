@@ -53,6 +53,8 @@ async def get_user_game_history(user_id: str):
     try:
         query = """
             SELECT g.id AS game_id,
+                    g.question_name as question_name,
+                     g.difficulty, as difficulty,
                     gp.user_id,
                    g.created_at,
                    gp.player_name,
@@ -72,6 +74,8 @@ async def get_user_game_history(user_id: str):
         
         if not results:
             return {"message": "No game history found for this user."}
+        
+
 
         return [dict(result) for result in results]
     except Exception as e:

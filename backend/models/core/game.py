@@ -35,6 +35,7 @@ class GameState(BaseModel):
     finished_players: Set[str] = Field(default_factory=set)
     created_at: datetime = Field(default_factory=datetime.now)
     question_name: str = ""
+    difficulty: str="easy"
     
     # Player assignments
     player1: str = ""

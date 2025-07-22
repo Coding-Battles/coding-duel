@@ -48,12 +48,19 @@ def get_score(timeComplexity: str, implementTime: int) -> int:
     return implementTime - timeReduction
 
 
-async def save_game_to_history(players: List[PlayerInfo]):
+async def save_game_to_history(players: List[PlayerInfo], difficulty: str, question_name: str = "Unknown"):
     """Save game history to the database."""
     try:
-        logger.info(f"Saving game history with {len(players)} players")
+        logger.info(f"Saving game history with {len(players)} players and difficulty {difficulty}")
 
-        game_query = "INSERT INTO games DEFAULT VALUES RETURNING id"
+        game_query = """INSERT INTO games (question_name, difficulty)
+            VALUES (:question_name, :difficulty)
+            RETURNING id;
+            """
+        values = {
+            "question_name": question_name if players else "Unknown",
+            "difficulty": difficulty
+        }
         result = await database.fetch_one(query=game_query)
 
         db_game_id = None
@@ -88,7 +95,7 @@ async def save_game_to_history(players: List[PlayerInfo]):
                     "implement_time": player_stats.implement_time,
                     "time_complexity": player_stats.complexity,
                     "final_time": player_stats.final_time,
-                    "user_id": player.id,
+                    "user_id": player.id
                 }
                 await database.execute(query=participant_query, values=values)
             if not player.anonymous:
@@ -311,10 +318,12 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             winner_name = game_state.get_player_name(game_state.winner_id)
             loser_id = game_state.get_loser_id()
             loser_name = game_state.get_player_name(loser_id) if loser_id else "Unknown"
+            difficulty = game_state.difficulty if hasattr(game_state, 'difficulty') else "Unknown"
+            question_name = game_state.question_name if hasattr(game_state, 'question_name') else "Unknown"
             
             print(f"🏆 [GAME END DEBUG] Game {game_id} ended - Winner: {winner_name} ({game_state.winner_id})")
             
-            await save_game_to_history(list(game_state.players.values()))
+            await save_game_to_history(list(game_state.players.values()), difficulty, question_name)
             
             # Send comprehensive game end event with winner info
             game_end_data = {
