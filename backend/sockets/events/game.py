@@ -3,16 +3,18 @@ Game event handlers for Socket.IO.
 """
 
 import logging
-from ..services.game_service import game_service, PlayerStatus
+import time
+from ..services.game_service import game_service
 from ..services.matchmaking_service import matchmaking_service
 from typing import Dict
-from backend.api import game
+from backend.models.core import GameState, PlayerStatus
 
 logger = logging.getLogger(__name__)
 
-game_states: Dict[str, game.GameState] = {}
+game_states: Dict[str, GameState] = {}
 # Timer management for delayed opponent code emission
 code_timers: Dict[str, Dict[str, any]] = {}  # game_id -> {player_id -> timer_handle}
+code_timer_start_times: Dict[str, Dict[str, float]] = {}  # game_id -> {player_id -> start_time}
 
 
 def set_dependencies(game_states_param=None):
@@ -27,25 +29,50 @@ def set_dependencies(game_states_param=None):
 async def schedule_delayed_code_emission(
     sio, game_id: str, player_id: str, code: str, language: str
 ):
-    """Schedule delayed emission of player code to opponent after 30 seconds."""
+    """Schedule delayed emission of player code to opponent with smart debouncing."""
     import asyncio
 
     # Initialize game timers if not exists
     if game_id not in code_timers:
         code_timers[game_id] = {}
+    if game_id not in code_timer_start_times:
+        code_timer_start_times[game_id] = {}
 
-    # Cancel existing timer for this player
+    current_time = time.time()
+    
+    # Smart timer cancellation logic
+    should_cancel_existing = False
     if player_id in code_timers[game_id]:
+        existing_start_time = code_timer_start_times[game_id].get(player_id, 0)
+        time_since_start = current_time - existing_start_time
+        
+        # Only cancel if timer has been running for less than 3 seconds
+        # Or if it's been running for more than 45 seconds (fallback protection)
+        if time_since_start < 3.0:
+            should_cancel_existing = True
+            logger.info(
+                f"🚀 [CODE DEBUG] Cancelling recent timer for player {player_id} (running for {time_since_start:.1f}s)"
+            )
+        elif time_since_start > 45.0:
+            should_cancel_existing = True
+            logger.info(
+                f"🚀 [CODE DEBUG] Cancelling stale timer for player {player_id} (running for {time_since_start:.1f}s)"
+            )
+        else:
+            logger.info(
+                f"🚀 [CODE DEBUG] Keeping existing timer for player {player_id} (running for {time_since_start:.1f}s)"
+            )
+            return  # Let the existing timer complete
+
+    if should_cancel_existing:
         try:
             code_timers[game_id][player_id].cancel()
-            logger.info(
-                f"🚀 [CODE DEBUG] Cancelled existing timer for player {player_id}"
-            )
         except:
             pass
 
     async def emit_delayed_code():
         """Emit code to opponent after delay."""
+        start_time = code_timer_start_times[game_id][player_id]
         try:
             await asyncio.sleep(30)  # 30-second delay
 
@@ -58,16 +85,11 @@ async def schedule_delayed_code_emission(
 
             game_state = game_states[game_id]
 
-            # Determine opponent
-            opponent_id = None
-            if player_id == game_state.player1:
-                opponent_id = game_state.player2
-            elif player_id == game_state.player2:
-                opponent_id = game_state.player1
-
+            # Use the centralized opponent lookup method
+            opponent_id = game_state.get_opponent_id(player_id)
             if not opponent_id or opponent_id not in game_state.players:
                 logger.warning(
-                    f"🚀 [CODE DEBUG] Opponent not found for player {player_id}"
+                    f"🚀 [CODE DEBUG] Opponent not found for player {player_id}. opponent_id: {opponent_id}"
                 )
                 return
 
@@ -75,7 +97,7 @@ async def schedule_delayed_code_emission(
             opponent_sid = game_state.players[opponent_id].sid
 
             logger.info(
-                f"🚀 [CODE DEBUG] Emitting delayed code from {player_id} to opponent {opponent_id} (sid: {opponent_sid})"
+                f"🚀 [CODE DEBUG] Successfully emitting delayed code from {player_id} to opponent {opponent_id} (sid: {opponent_sid}) after {time.time() - start_time:.1f}s"
             )
 
             # Emit code to opponent
@@ -86,29 +108,36 @@ async def schedule_delayed_code_emission(
                     "from_player": player_id,
                     "language": language,
                     "timestamp": time.time(),
+                    "delay_duration": time.time() - start_time,
                 },
                 room=opponent_sid,
             )
 
             logger.info(
-                f"🚀 [CODE DEBUG] Successfully emitted delayed code to opponent"
+                f"🚀 [CODE DEBUG] ✅ Code emission completed successfully for player {player_id}"
             )
 
         except asyncio.CancelledError:
-            logger.info(f"🚀 [CODE DEBUG] Timer cancelled for player {player_id}")
+            elapsed = time.time() - start_time
+            logger.info(f"🚀 [CODE DEBUG] ❌ Timer cancelled for player {player_id} after {elapsed:.1f}s")
+            raise
         except Exception as e:
-            logger.error(f"🚀 [CODE DEBUG] Error emitting delayed code: {e}")
+            elapsed = time.time() - start_time
+            logger.error(f"🚀 [CODE DEBUG] ❌ Error emitting delayed code for player {player_id} after {elapsed:.1f}s: {e}")
         finally:
-            # Clean up timer reference
+            # Clean up timer references
             if game_id in code_timers and player_id in code_timers[game_id]:
                 del code_timers[game_id][player_id]
+            if game_id in code_timer_start_times and player_id in code_timer_start_times[game_id]:
+                del code_timer_start_times[game_id][player_id]
 
-    # Create and store new timer
+    # Store start time and create new timer
+    code_timer_start_times[game_id][player_id] = current_time
     timer = asyncio.create_task(emit_delayed_code())
     code_timers[game_id][player_id] = timer
 
     logger.info(
-        f"🚀 [CODE DEBUG] Scheduled delayed code emission for player {player_id} in 30 seconds"
+        f"🚀 [CODE DEBUG] Scheduled delayed code emission for player {player_id} in 30 seconds (debounced)"
     )
 
 
@@ -215,11 +244,25 @@ def register_events(sio):
 
             # Send game state to player
             logger.info(f"🚀 [JOIN DEBUG] Sending game_joined event...")
+            
+            # Convert game state to dict with proper JSON serialization for all non-JSON types
+            game_state_dict = None
+            if game_state:
+                game_state_dict = game_state.model_dump()
+                # Convert Set fields to lists for JSON serialization
+                if 'finished_players' in game_state_dict:
+                    game_state_dict['finished_players'] = list(game_state_dict['finished_players'])
+                if 'players_joined' in game_state_dict:
+                    game_state_dict['players_joined'] = list(game_state_dict['players_joined'])
+                # Convert datetime fields to ISO format strings for JSON serialization
+                if 'created_at' in game_state_dict and game_state_dict['created_at']:
+                    game_state_dict['created_at'] = game_state_dict['created_at'].isoformat()
+            
             await sio.emit(
                 "game_joined",
                 {
                     "game_id": game_id,
-                    "game_state": game_state.model_dump() if game_state else None,
+                    "game_state": game_state_dict,
                     "start_time": (
                         game_states[game_id].game_start_time
                         if game_id in game_states
@@ -234,7 +277,10 @@ def register_events(sio):
             )
 
         except Exception as e:
-            logger.error(f"Error in join_game: {e}")
+            import traceback
+            logger.error(f"❌ [JOIN DEBUG] Error in join_game: {e}")
+            logger.error(f"❌ [JOIN DEBUG] Traceback: {traceback.format_exc()}")
+            logger.error(f"❌ [JOIN DEBUG] Game ID: {data.get('game_id')}, Player ID: {data.get('player_id')}")
             await sio.emit("error", {"message": "Failed to join game"}, room=sid)
 
     @sio.event

@@ -6,57 +6,9 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { User } from "better-auth";
 import { DifficultyState } from "@/components/DifficultySelector";
-
-interface CustomUser {
-  username?: string;
-  name?: string;
-  image?: string;
-  id?: string;
-  selectedPfp?: number;
-}
-
-// Types for socket events (following existing patterns)
-interface MatchFoundResponse {
-  game_id: string;
-  opponent_Name: string;
-  opponentImageURL?: string;
-  question_name: string;
-}
-
-interface QueueStatusResponse {
-  status: string;
-  queue_size: number;
-}
+import { CustomUser, OpponentData, GameContextType, MatchFoundResponse, QueueStatusResponse } from "@/shared/types";
 
 const GameContext = createContext<GameContextType | null>(null);
-
-type OpponentData = {
-  image_url: string;
-  name: string;
-};
-
-type GameContextType = {
-  socket: Socket | null;
-  loading: boolean;
-  opponent: OpponentData;
-  user: CustomUser | null;
-  gameId: string;
-  isAnonymous?: boolean;
-  anonymousId?: string;
-  selectedDifficulties?: DifficultyState;
-  setSelectedDifficulties?: React.Dispatch<React.SetStateAction<DifficultyState>>;
-  handleFindGame?: () => void;
-  clearGameData?: () => void;
-
-};
-
-type MatchFoundData = {
-  //data returned from backend
-  game_id: string;
-  opponentName: string;
-  opponentImageURL: string | null;
-  question_name: string;
-};
 
 export default function QueueLayout({
   children,
@@ -309,4 +261,3 @@ export function useGameContext() {
   return useContext(GameContext);
 }
 
-export type { OpponentData, CustomUser };

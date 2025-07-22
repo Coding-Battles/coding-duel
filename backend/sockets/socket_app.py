@@ -2,7 +2,7 @@
 Socket.IO application setup and configuration.
 """
 import socketio
-from .events import connection, matchmaking
+from .events import connection, matchmaking, game
 
 
 def create_socket_app(database=None, player_to_game=None, app=None):
@@ -19,6 +19,7 @@ def create_socket_app(database=None, player_to_game=None, app=None):
     # Register event handlers with dependencies
     connection.register_events(sio)
     matchmaking.register_events(sio)
+    game.register_events(sio)
     return sio
 
 

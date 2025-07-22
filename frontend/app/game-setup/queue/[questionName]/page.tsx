@@ -1,12 +1,11 @@
 // This file was moved from in-game/page.tsx to [questionName]/page.tsx for dynamic routing.
 "use client";
-import { QuestionData } from "@/types/question";
+import { QuestionData, TestResultsData, CustomUser, OpponentData, ProgrammingLanguage } from "@/shared/types";
 import EditorWithTerminal from "@/components/EditorWithTerminal";
 import { Language, getLanguageConfig } from "@/types/languages";
-import { TestResultsData } from "@/components/TestResults";
 import { useParams, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { CustomUser, OpponentData, useGameContext } from "../../layout";
+import { useGameContext } from "../../layout";
 import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
 import { useTheme } from "next-themes";
@@ -325,6 +324,7 @@ export default function InGamePage() {
 
       context.socket.on("game_start", (data: { game_id: string; start_time: number }) => {
         console.log("🚀 [TIMER DEBUG] Received game_start event:", data);
+        console.log("🚀 [TIMER DEBUG] Setting gameStartTime to:", data.start_time, "and isGameStarted to: true");
         setGameStartTime(data.start_time);
         setIsGameStarted(true);
         
@@ -353,6 +353,10 @@ export default function InGamePage() {
       });
 
       // Join the game room first
+      console.log("🚀 [JOIN DEBUG] Emitting join_game event with:", {
+        game_id: context.gameId,
+        player_id: userSession.user.id
+      });
       context.socket.emit("join_game", {
         game_id: context.gameId,
         player_id: userSession.user.id
@@ -673,6 +677,8 @@ export default function InGamePage() {
                   </p>
                 </div>
               )}
+              {/* Add timer state logging */}
+              {console.log("🚀 [TIMER DEBUG] Passing to DuelInfo - gameStartTime:", gameStartTime, "isGameStarted:", isGameStarted)}
               <DuelInfo
                 timeRef={timeRef}
                 opponentData={context.opponent}

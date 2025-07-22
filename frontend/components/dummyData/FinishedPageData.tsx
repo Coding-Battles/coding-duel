@@ -1,4 +1,5 @@
 // Dummy variables for FinishedPage component testing
+import { TestCase, TestResultsData } from "@/shared/types";
 
 // Dummy UserData
 const dummyUser = {
@@ -17,31 +18,6 @@ const dummyUser = {
     // Add any other UserData properties you need
   };
   
-  // Updated TestCase interface
-  interface TestCase {
-    input: Record<string, any>;
-    expected_output: string;
-    actual_output: string;
-    passed: boolean;
-    error?: string;
-    execution_time: number;
-  }
-  
-  // Updated TestResultsData interface
-  interface TestResultsData {
-    message: string;
-    code: string;
-    opponent_id: string;
-    player_name: string;
-    success: boolean;
-    test_results: TestCase[];
-    total_passed: number;
-    total_failed: number;
-    error?: string;
-    complexity?: string;
-    implement_time?: number;
-    final_time?: number;
-  }
   
   // Dummy test cases with Record<string, any> input
   const dummyTestCases: TestCase[] = [

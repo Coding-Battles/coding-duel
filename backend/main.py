@@ -41,6 +41,7 @@ from backend.api import users
 from backend.api import questions_router
 from backend.api import code
 from backend.api import game
+from backend.models.core import GameState
 
 # Import socket functionality
 from backend.sockets.socket_app import create_socket_app
@@ -76,7 +77,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 database = databases.Database(DATABASE_URL)
 
 # Game state storage
-game_states: Dict[str, game.GameState] = {}
+game_states: Dict[str, GameState] = {}
 player_to_game: Dict[str, str] = {}
 
 

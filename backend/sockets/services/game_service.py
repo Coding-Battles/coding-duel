@@ -3,50 +3,15 @@ Game service for managing active game sessions and real-time events.
 """
 import time
 from typing import Dict, Any, Optional, List
-from pydantic import BaseModel
-from enum import Enum
+from datetime import datetime
 
-from backend.sockets.events import game
-
-
-class GameStatus(str, Enum):
-    ACTIVE = "active"
-    FINISHED = "finished"
-    ABANDONED = "abandoned"
-
-
-class PlayerStatus(str, Enum):
-    TYPING = "typing"
-    RUNNING = "running"
-    SUBMITTED = "submitted"
-    IDLE = "idle"
-
-
-class GameUpdate(BaseModel):
-    game_id: str
-    player_id: str
-    event_type: str
-    data: Dict[str, Any]
-    timestamp: float
-
-
-class PlayerGameState(BaseModel):
-    player_id: str
-    code: str
-    status: PlayerStatus
-    last_run_count: int
-    submission_time: Optional[float] = None
-
-
-class GameState(BaseModel):
-    game_id: str
-    question_name: str
-    players: Dict[str, PlayerGameState]
-    status: GameStatus
-    created_at: float
-    started_at: Optional[float] = None
-    finished_at: Optional[float] = None
-    winner: Optional[str] = None
+from backend.models.core import (
+    GameState, 
+    PlayerInfo, 
+    PlayerStatus,
+    GameStatus,
+    GameUpdate
+)
 
 
 class GameService:
@@ -55,29 +20,36 @@ class GameService:
     def __init__(self):
         self.active_games: Dict[str, GameState] = {}
         self.game_updates: Dict[str, List[GameUpdate]] = {}
-        self.game_states: Dict[str, game.GameState] = {}
+        self.game_states: Dict[str, GameState] = {}
 
     def set_dependencies(self, game_states_param=None):
         self.game_states = game_states_param
     
     def create_game(self, game_id: str, question_name: str, players: List[Dict[str, Any]]) -> GameState:
-        """Create a new game session."""
-        player_states = {}
-        for player in players:
-            player_states[player["id"]] = PlayerGameState(
-                player_id=player["id"],
-                code="",
-                status=PlayerStatus.IDLE,
-                last_run_count=0
-            )
+        """Create a new game session using centralized GameState model."""
+        # Create PlayerInfo objects for the centralized GameState
+        player_info_dict = {}
+        player_ids = []
         
+        for player in players:
+            player_info = PlayerInfo(
+                id=player["id"],
+                name=player["name"],
+                anonymous=player.get("anonymous", False),
+                sid=player.get("sid", "")
+            )
+            player_info_dict[player["id"]] = player_info
+            player_ids.append(player["id"])
+        
+        # Create the centralized GameState
         game_state = GameState(
             game_id=game_id,
             question_name=question_name,
-            players=player_states,
-            status=GameStatus.ACTIVE,
-            created_at=time.time(),
-            started_at=time.time()
+            players=player_info_dict,
+            created_at=datetime.now(),
+            # Set player1 and player2 for backward compatibility
+            player1=player_ids[0] if len(player_ids) > 0 else "",
+            player2=player_ids[1] if len(player_ids) > 1 else "",
         )
         
         self.active_games[game_id] = game_state
@@ -95,8 +67,9 @@ class GameService:
         if not game or player_id not in game.players:
             return False
         
-        game.players[player_id].code = code
-        game.players[player_id].status = PlayerStatus.TYPING
+        # The centralized GameState handles code differently - using player_codes dict
+        # For now, just mark the player as active
+        # Code is handled by the socket events directly
         
         # Add update event
         self._add_game_update(game_id, player_id, "code_update", {"code": code})
@@ -109,16 +82,12 @@ class GameService:
         if not game or player_id not in game.players:
             return False
         
-        game.players[player_id].status = status
-        
-        if status == PlayerStatus.RUNNING:
-            game.players[player_id].last_run_count += 1
-        elif status == PlayerStatus.SUBMITTED:
-            game.players[player_id].submission_time = time.time()
+        # The centralized GameState doesn't have a direct status field on PlayerInfo
+        # Status updates are handled through the socket events
         
         # Add update event
         self._add_game_update(game_id, player_id, "status_update", {
-            "status": status,
+            "status": status.value if hasattr(status, 'value') else str(status),
             "data": data or {}
         })
         
@@ -130,14 +99,8 @@ class GameService:
         if not game or player_id not in game.players:
             return False
         
-        game.players[player_id].status = PlayerStatus.SUBMITTED
-        game.players[player_id].submission_time = time.time()
-        
-        # Check if this is the first successful submission
-        if not game.winner and submission_data.get("success", False):
-            game.winner = player_id
-            game.status = GameStatus.FINISHED
-            game.finished_at = time.time()
+        # Mark player as finished in the centralized GameState
+        game.mark_player_finished(player_id)
         
         # Add submission event
         self._add_game_update(game_id, player_id, "solution_submitted", submission_data)
@@ -150,12 +113,8 @@ class GameService:
         if not game:
             return False
         
-        if reason == "abandoned":
-            game.status = GameStatus.ABANDONED
-        else:
-            game.status = GameStatus.FINISHED
-        
-        game.finished_at = time.time()
+        # The centralized GameState doesn't have status/finished_at fields
+        # Game ending is handled through the socket events
         
         # Add game end event
         self._add_game_update(game_id, "system", "game_ended", {"reason": reason})
@@ -168,13 +127,8 @@ class GameService:
         if not game:
             return None
         
-        # Find opponent
-        opponent_id = None
-        for pid in game.players.keys():
-            if pid != player_id:
-                opponent_id = pid
-                break
-        
+        # Use the centralized GameState's get_opponent_id method
+        opponent_id = game.get_opponent_id(player_id)
         if not opponent_id:
             return None
         
@@ -188,7 +142,18 @@ class GameService:
         if opponent_updates:
             latest_update = max(opponent_updates, key=lambda x: x.timestamp)
             if current_time - latest_update.timestamp >= delay_seconds:
-                return game.players[opponent_id].code
+                # Get code from the centralized GameState's player_codes structure
+                if opponent_id in game.player_codes:
+                    # Return the most recent code (any language)
+                    opponent_codes = game.player_codes[opponent_id]
+                    if opponent_codes:
+                        # Get the current language or any available code
+                        current_lang = game.current_languages.get(opponent_id)
+                        if current_lang and current_lang in opponent_codes:
+                            return opponent_codes[current_lang]
+                        else:
+                            # Return any available code
+                            return next(iter(opponent_codes.values()))
         
         return None
     
@@ -206,7 +171,7 @@ class GameService:
             player_id=player_id,
             event_type=event_type,
             data=data,
-            timestamp=time.time()
+            timestamp=datetime.now()
         )
         
         if game_id not in self.game_updates:

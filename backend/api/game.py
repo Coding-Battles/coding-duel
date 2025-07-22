@@ -1,14 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Set, Optional
 import asyncio
-from backend.models.questions import RunTestCasesRequest, CodeTestResult
+from backend.models.core import (
+    RunTestCasesRequest, 
+    CodeTestResult,
+    TimeComplexity,
+    PlayerInfo,
+    GameState,
+    EmojiRequest
+)
 from backend.services.test_execution_service import TestExecutionService
 from backend.code_testing.ai_complexity_analyzer import analyze_time_complexity_ai
-from backend.models.questions import TimeComplexity
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -18,94 +21,8 @@ database = None
 sio = None
 
 
-@dataclass
-class EmojiRequest:
-    emoji: str
-    player1: str
-
-
-@dataclass
-class PlayerInfo:
-    id: str
-    sid: str
-    name: str
-    anonymous: bool = True
-    game_stats: Optional[CodeTestResult] = field(
-        default_factory=lambda: CodeTestResult(
-            message="",
-            code="",
-            player_name="",
-            opponent_id="",
-            success=False,
-            test_results=[],
-            total_passed=0,
-            total_failed=0,
-            error="",
-            complexity="",
-            implement_time=0,
-            final_time=20000,
-        )
-    )
-
-
-@dataclass
-class GameState:
-    game_id: str
-    players: Dict[str, PlayerInfo] = field(
-        default_factory=dict
-    )  # player_id -> PlayerInfo
-    finished_players: Set[str] = field(default_factory=set)
-    created_at: datetime = field(default_factory=datetime.now)
-    question_name: str = ""
-
-    # Player code storage for opponent code feature
-    player1: str = ""
-    player2: str = ""
-    player1_code: str = ""
-    player2_code: str = ""
-    player1_code_timestamp: Optional[float] = None
-    player2_code_timestamp: Optional[float] = None
-
-    # Language-aware code storage (per player per language)
-    player_codes: Dict[str, Dict[str, str]] = field(
-        default_factory=dict
-    )  # {player_id: {language: code}}
-    player_code_timestamps: Dict[str, Dict[str, float]] = field(
-        default_factory=dict
-    )  # {player_id: {language: timestamp}}
-    current_languages: Dict[str, str] = field(
-        default_factory=dict
-    )  # {player_id: current_language}
-
-    # Game timing synchronization
-    game_start_time: Optional[float] = None
-    players_joined: Set[str] = field(default_factory=set)
-
-    # Starter code for comparison (language -> code)
-    starter_codes: Dict[str, str] = field(default_factory=dict)
-
-    def is_player_finished(self, player_id: str) -> bool:
-        return player_id in self.finished_players
-
-    def mark_player_finished(self, player_id: str):
-        self.finished_players.add(player_id)
-
-    def get_unfinished_players(self) -> Set[str]:
-        return set(self.players.keys()) - self.finished_players
-
-    def all_players_finished(self) -> bool:
-        return len(self.finished_players) == len(self.players)
-
-    def get_player_name(self, player_id: str) -> Optional[str]:
-        if player_id in self.players:
-            return self.players[player_id].name
-        return None
-
-    def get_opponent_id(self, player_id: str) -> Optional[str]:
-        player_ids = list(self.players.keys())
-        if len(player_ids) == 2 and player_id in player_ids:
-            return player_ids[0] if player_ids[1] == player_id else player_ids[1]
-        return None
+# Note: GameState now comes from centralized models
+# We can extend it with additional methods if needed
 
 
 # Global game states - will be managed from main.py

@@ -13,39 +13,13 @@ import {
   ArrowLeftSquare,
 } from "lucide-react";
 import { ProfileBar } from "./components/ProfileBar";
-import { UserStats } from "@/interfaces/UserStats";
+import { UserStats, GameParticipant, GameHistoryItem, Problem, validateGameHistoryResponse, validateUserStats } from "@/shared/schemas";
 import Link from "next/link";
 
 import { useSession } from "@/lib/auth-client";
 import { UserStatsAndHistory } from "./components/UserStatsAndHistory";
 
-type GameParticipant = {
-  game_id: number;
-  player_name: string;
-  player_code: string;
-  implement_time: string;
-  time_complexity: string;
-  final_time: string;
-  user_id: string;
-};
 
-type GameHistoryItem = {
-  game_id: number;
-  participants: GameParticipant[];
-  user_won: boolean;
-  result: "won" | "lost" | "tie";
-  user_time: number;
-  opponent_best_time: number;
-};
-
-interface Problem {
-  id: number;
-  title: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  status: "Solved" | "Attempted" | "Not Attempted";
-  category: string;
-  submittedAt?: string;
-}
 
 const LeetCodeProfile: React.FC = () => {
   const userStats: UserStats = {
@@ -74,15 +48,22 @@ const LeetCodeProfile: React.FC = () => {
     )
       .then((response) => response.json())
       .then((data) => {
-        console.log("User Game History:", data);
-        setLoad(true);
-        var battles = 0;
-        var wins = 0;
+        console.log("User Game History (raw):", data);
+        
+        // Validate the API response with Zod (provides runtime type safety)
+        try {
+          const validatedResponse = validateGameHistoryResponse(data);
+          console.log("User Game History (validated):", validatedResponse);
+          
+          setLoad(true);
+          var battles = 0;
+          var wins = 0;
 
-        // Check if data exists and is a non-empty array
-        const groupedHistory = (data && Array.isArray(data) && data.length > 0)
-          ? data.reduce(
-              (acc: Record<number, GameParticipant[]>, curr: GameParticipant) => {
+          // Use validated data
+          const gameData = validatedResponse.games;
+          const groupedHistory = (gameData && Array.isArray(gameData) && gameData.length > 0)
+            ? gameData.reduce(
+                (acc: Record<number, GameParticipant[]>, curr: GameParticipant) => {
                 const { game_id } = curr;
                 if (!acc[game_id]) {
                   battles++;
@@ -145,6 +126,15 @@ const LeetCodeProfile: React.FC = () => {
       setUserGameHistory(compressedList);
       setTotalBattles(battles);
       setTotalWins(wins);
+      
+        } catch (validationError) {
+          console.error("Game history validation failed:", validationError);
+          // Fallback to empty data on validation error
+          setUserGameHistory([]);
+          setTotalBattles(0);
+          setTotalWins(0);
+          setLoad(true);
+        }
     })
     .catch(error => {
       console.error("Error fetching game history:", error);
@@ -214,6 +204,5 @@ const LeetCodeProfile: React.FC = () => {
   );
 };
 
-export type {Problem, GameHistoryItem}
 
 export default LeetCodeProfile;
