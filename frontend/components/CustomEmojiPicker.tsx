@@ -77,14 +77,17 @@ const CustomEmojiPicker: React.FC<CustomEmojiPickerProps> = ({
     }
   }, []);
 
-  // Save recent emojis to localStorage
+  // Save recent emojis to localStorage asynchronously to prevent blocking
   const saveRecentEmojis = useCallback((emojis: RecentEmoji[]) => {
-    try {
-      localStorage.setItem(RECENT_EMOJIS_KEY, JSON.stringify(emojis));
-    } catch (error) {
-      console.warn("Failed to save recent emojis to localStorage:", error);
-    }
-  }, []);
+    // Use setTimeout to defer localStorage write and prevent blocking
+    setTimeout(() => {
+      try {
+        localStorage.setItem(RECENT_EMOJIS_KEY, JSON.stringify(emojis));
+      } catch (error) {
+        console.warn("⚠️ [EMOJI PICKER] Failed to save recent emojis:", error);
+      }
+    }, 0);
+  }, [RECENT_EMOJIS_KEY]);
 
   // Update recent emojis when an emoji is selected (save for next game)
   const updateRecentEmojis = useCallback(
@@ -142,13 +145,21 @@ const CustomEmojiPicker: React.FC<CustomEmojiPickerProps> = ({
 
   const handleEmojiClick = useCallback(
     (emoji: string) => {
-      console.log("🚀 [PICKER DEBUG] Emoji clicked in picker:", emoji);
-      console.log(
-        "🚀 [PICKER DEBUG] onEmojiSelect function exists:",
-        !!onEmojiSelect
-      );
-      updateRecentEmojis(emoji);
-      onEmojiSelect({ native: emoji });
+      console.log("✅ [EMOJI PICKER] Emoji clicked:", emoji);
+      
+      try {
+        // Update recent emojis (non-blocking)
+        updateRecentEmojis(emoji);
+        
+        // Call parent handler
+        if (onEmojiSelect) {
+          onEmojiSelect({ native: emoji });
+        } else {
+          console.warn("⚠️ [EMOJI PICKER] No onEmojiSelect handler provided");
+        }
+      } catch (error) {
+        console.error("❌ [EMOJI PICKER] Error handling emoji click:", error);
+      }
     },
     [updateRecentEmojis, onEmojiSelect]
   );

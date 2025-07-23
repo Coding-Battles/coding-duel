@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import GameTimer from "./GameTimer";
 import { CustomUser, OpponentData } from "@/app/game-setup/layout";
 import { UserStats } from "@/interfaces/UserStats";
@@ -83,10 +83,23 @@ const DuelInfo = ({
     },
   };
 
+  // Emoji state management
   const [userEmoji, setUserEmoji] = React.useState<string | null>(null);
   const [opponentEmoji, setOpponentEmoji] = React.useState<string | null>(null);
   const [opponentKey, setOpponentKey] = useState(0);
   const [userKey, setUserKey] = useState(0);
+  
+  // Animation state tracking
+  const [userAnimationState, setUserAnimationState] = useState<'idle' | 'animating' | 'fading'>('idle');
+  const [opponentAnimationState, setOpponentAnimationState] = useState<'idle' | 'animating' | 'fading'>('idle');
+  
+  // Timeout refs for cleanup
+  const userEmojiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const opponentEmojiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userFadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const opponentFadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastEmojiSentRef = useRef<number>(0);
+  
   const [opponentCode, setOpponentCode] = React.useState<string | null>(null);
   const [codeAvailable, setCodeAvailable] = React.useState(false);
   const [opponentLanguage, setOpponentLanguage] = React.useState<string | null>(
@@ -95,6 +108,11 @@ const DuelInfo = ({
   const [opponentEmojiQueue, setOpponentEmojiQueue] = React.useState<
     Array<{ emoji: string; timestamp: number }>
   >([]);
+  
+  // Emoji timing constants (simplified for consistency)
+  const EMOJI_COOLDOWN_MS = 500; // Minimum time between emoji sends
+  const EMOJI_DISPLAY_DURATION_MS = 4000; // Total display time (always 4 seconds)
+  const EMOJI_FADE_START_MS = 3500; // When fade animation begins (0.5s before removal)
 
   useEffect(() => {
     if (socket == null || !gameId || !user?.id) {
@@ -112,18 +130,47 @@ const DuelInfo = ({
     );
 
     socket.on("emoji_received", async (data: { emoji: string }) => {
-      console.log("Received emoji update:", data);
-      setOpponentEmoji(data.emoji);
-      setOpponentKey((prev) => prev + 1); // Force re-render to trigger animation
+      console.log("✅ [EMOJI] Received emoji:", data.emoji);
+      
+      try {
+        // Clear ALL existing timeouts to prevent timing conflicts
+        if (opponentEmojiTimeoutRef.current) {
+          clearTimeout(opponentEmojiTimeoutRef.current);
+          opponentEmojiTimeoutRef.current = null;
+        }
+        if (opponentFadeTimeoutRef.current) {
+          clearTimeout(opponentFadeTimeoutRef.current);
+          opponentFadeTimeoutRef.current = null;
+        }
+        
+        // Set new emoji and animation state
+        setOpponentEmoji(data.emoji);
+        setOpponentKey((prev) => prev + 1);
+        setOpponentAnimationState('animating');
 
-      // Add to emoji queue
-      const newEmojiItem = { emoji: data.emoji, timestamp: Date.now() };
-      setOpponentEmojiQueue((prev) => [...prev, newEmojiItem].slice(-10)); // Keep last 10
+        // Add to emoji queue
+        const newEmojiItem = { emoji: data.emoji, timestamp: Date.now() };
+        setOpponentEmojiQueue((prev) => [...prev, newEmojiItem].slice(-10));
 
-      // Auto-hide after 4 seconds
-      setTimeout(() => {
-        setOpponentEmoji(null);
-      }, 4000);
+        // Set fade-out phase at consistent timing
+        opponentFadeTimeoutRef.current = setTimeout(() => {
+          setOpponentAnimationState('fading');
+        }, EMOJI_FADE_START_MS);
+
+        // Auto-hide after full duration
+        opponentEmojiTimeoutRef.current = setTimeout(() => {
+          setOpponentEmoji(null);
+          setOpponentAnimationState('idle');
+          opponentEmojiTimeoutRef.current = null;
+          opponentFadeTimeoutRef.current = null;
+        }, EMOJI_DISPLAY_DURATION_MS);
+        
+      } catch (error) {
+        console.error('❌ [EMOJI] Error handling received emoji:', error);
+        // Fallback: still show emoji briefly even if animation fails
+        setOpponentEmoji(data.emoji);
+        setOpponentKey((prev) => prev + 1);
+      }
     });
 
     // Listen for push-based opponent code delivery (no more polling!)
@@ -182,6 +229,24 @@ const DuelInfo = ({
       socket.off("emoji_received");
       socket.off("opponent_code_ready");
       socket.off("player_language_changed");
+      
+      // Clear ALL emoji timeouts to prevent memory leaks
+      if (userEmojiTimeoutRef.current) {
+        clearTimeout(userEmojiTimeoutRef.current);
+        userEmojiTimeoutRef.current = null;
+      }
+      if (opponentEmojiTimeoutRef.current) {
+        clearTimeout(opponentEmojiTimeoutRef.current);
+        opponentEmojiTimeoutRef.current = null;
+      }
+      if (userFadeTimeoutRef.current) {
+        clearTimeout(userFadeTimeoutRef.current);
+        userFadeTimeoutRef.current = null;
+      }
+      if (opponentFadeTimeoutRef.current) {
+        clearTimeout(opponentFadeTimeoutRef.current);
+        opponentFadeTimeoutRef.current = null;
+      }
     };
   }, [socket, gameId, user?.id]);
 
@@ -193,51 +258,64 @@ const DuelInfo = ({
     // Keep opponent code visible regardless of language differences
   }, [selectedLanguage, opponentLanguage]);
 
-  const onUserEmojiSelect = async (emoji: { native: string }) => {
-    console.log("🚀 [EMOJI DEBUG] Selected emoji:", emoji);
-    console.log("🚀 [EMOJI DEBUG] GameId:", gameId);
-    console.log("🚀 [EMOJI DEBUG] GameId type:", typeof gameId);
-    console.log("🚀 [EMOJI DEBUG] GameId undefined?:", gameId === undefined);
-    console.log("🚀 [EMOJI DEBUG] GameId null?:", gameId === null);
-    console.log("🚀 [EMOJI DEBUG] User ID:", user?.id);
-    console.log("🚀 [EMOJI DEBUG] Socket connected:", socket?.connected);
-
-    // Check if gameId is valid before proceeding
-    if (!gameId) {
-      console.error("🚀 [EMOJI DEBUG] GameId is missing! Cannot send emoji.");
-      console.error("🚀 [EMOJI DEBUG] Current props:", {
-        gameId,
-        gameIdType: typeof gameId,
-        user: user?.id,
-        socket: !!socket,
-        opponentData: !!opponentData,
-        allProps: { gameId, user: user?.id, socket: !!socket },
-      });
-      // Still show the visual feedback even if we can't send to server
-      setUserEmoji(emoji.native);
-      setUserKey((prev) => prev + 1);
-      setTimeout(() => {
-        setUserEmoji(null);
-      }, 4000);
+  // Enhanced emoji sending with debouncing and proper state management
+  const onUserEmojiSelect = useCallback(async (emoji: { native: string }) => {
+    const now = Date.now();
+    
+    // Debouncing: prevent rapid emoji sending
+    if (now - lastEmojiSentRef.current < EMOJI_COOLDOWN_MS) {
+      console.log('⏳ [EMOJI] Emoji send blocked by cooldown');
       return;
     }
-
-    setUserEmoji(emoji.native);
-    setUserKey((prev) => prev + 1); // Force re-render to trigger animation
-
-    // Auto-hide user emoji after 4 seconds
-    setTimeout(() => {
-      setUserEmoji(null);
-    }, 4000);
-
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${gameId}/send-emoji`;
-    console.log("🚀 [EMOJI DEBUG] API URL:", apiUrl);
-    console.log("🚀 [EMOJI DEBUG] Request body:", {
-      emoji: emoji.native,
-      player1: user?.id,
-    });
-
+    
+    console.log("✅ [EMOJI] Selected emoji:", emoji.native);
+    
     try {
+      // Clear ALL existing user emoji timeouts to prevent timing conflicts
+      if (userEmojiTimeoutRef.current) {
+        clearTimeout(userEmojiTimeoutRef.current);
+        userEmojiTimeoutRef.current = null;
+      }
+      if (userFadeTimeoutRef.current) {
+        clearTimeout(userFadeTimeoutRef.current);
+        userFadeTimeoutRef.current = null;
+      }
+
+      // Update last sent time
+      lastEmojiSentRef.current = now;
+      
+      // Set emoji and animation state immediately for visual feedback
+      setUserEmoji(emoji.native);
+      setUserKey((prev) => prev + 1);
+      setUserAnimationState('animating');
+
+      // Set fade-out phase at consistent timing
+      userFadeTimeoutRef.current = setTimeout(() => {
+        setUserAnimationState('fading');
+      }, EMOJI_FADE_START_MS);
+
+      // Auto-hide after full duration
+      userEmojiTimeoutRef.current = setTimeout(() => {
+        setUserEmoji(null);
+        setUserAnimationState('idle');
+        userEmojiTimeoutRef.current = null;
+        userFadeTimeoutRef.current = null;
+      }, EMOJI_DISPLAY_DURATION_MS);
+
+      // Validate game state before network call
+      if (!gameId) {
+        console.warn('⚠️ [EMOJI] GameId missing - showing visual feedback only');
+        return;
+      }
+
+      if (!user?.id) {
+        console.warn('⚠️ [EMOJI] User ID missing - showing visual feedback only');
+        return;
+      }
+
+      // Make network call
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${gameId}/send-emoji`;
+      
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -245,29 +323,26 @@ const DuelInfo = ({
         },
         body: JSON.stringify({
           emoji: emoji.native,
-          player1: user?.id,
+          player1: user.id,
         }),
       });
 
-      console.log("🚀 [EMOJI DEBUG] Response status:", response.status);
-
       if (!response.ok) {
-        console.error(
-          "🚀 [EMOJI DEBUG] Failed to send emoji:",
-          response.status,
-          response.statusText
-        );
         const errorText = await response.text();
-        console.error("🚀 [EMOJI DEBUG] Error details:", errorText);
-      } else {
-        console.log("🚀 [EMOJI DEBUG] Emoji sent successfully!");
-        const responseData = await response.json();
-        console.log("🚀 [EMOJI DEBUG] Response data:", responseData);
+        console.error('❌ [EMOJI] API Error:', response.status, errorText);
+        
+        // Don't hide the emoji on network failure - user should still see their action
+        return;
       }
+
+      const responseData = await response.json();
+      console.log('✅ [EMOJI] Sent successfully:', responseData);
+      
     } catch (error) {
-      console.error("🚀 [EMOJI DEBUG] Network error:", error);
+      console.error('❌ [EMOJI] Network error:', error);
+      // Keep emoji visible even on network failure
     }
-  };
+  }, [gameId, user?.id]);
 
   return (
     <div className="w-full px-6 py-4">
@@ -299,10 +374,11 @@ const DuelInfo = ({
               <div className="absolute z-10 -top-4 -left-4">
                 <div
                   key={userKey}
-                  className="text-5xl duration-300 animate-in slide-in-from-left-2 fade-in"
+                  className="text-5xl select-none"
                   style={{
-                    animation:
-                      "slideInBounce 0.3s ease-out, fadeOut 0.5s ease-in 3.5s forwards",
+                    animation: userAnimationState === 'fading' 
+                      ? "fadeOut 0.5s ease-in forwards" 
+                      : "slideInBounce 0.3s ease-out",
                   }}
                 >
                   {userEmoji}
@@ -327,10 +403,11 @@ const DuelInfo = ({
               <div className="absolute z-10 -top-4 -right-4">
                 <div
                   key={opponentKey}
-                  className="text-5xl duration-300 animate-in slide-in-from-right-2 fade-in"
+                  className="text-5xl select-none"
                   style={{
-                    animation:
-                      "slideInBounce 0.3s ease-out, fadeOut 0.5s ease-in 3.5s forwards",
+                    animation: opponentAnimationState === 'fading' 
+                      ? "fadeOut 0.5s ease-in forwards" 
+                      : "slideInBounce 0.3s ease-out",
                   }}
                 >
                   {opponentEmoji}
