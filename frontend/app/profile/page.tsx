@@ -77,10 +77,12 @@ const LeetCodeProfile: React.FC = () => {
             )
           : {} as Record<number, GameParticipant[]>;
 
+          console.log("Grouped Game History:", groupedHistory);
+
           // Convert grouped history to proper format
           const processedHistory: GameHistoryItem[] = [];
 
-          Object.entries(groupedHistory).forEach(([gameId, participants]) => {
+          Object.entries(groupedHistory).forEach(([gameId, participants], index) => {
             var userTime = 40000;
             var lowestTimeFromOther = 30000;
             var result: "won" | "lost" | "tie" = "lost";
@@ -88,10 +90,10 @@ const LeetCodeProfile: React.FC = () => {
             const gameParticipants = participants as GameParticipant[];
             gameParticipants.forEach((participant) => {
               if (participant.user_id == session?.user.id) {
-                userTime = parseInt(participant.final_time);
+                userTime = participant.final_time;
               } else {
-                if (parseInt(participant.final_time) < lowestTimeFromOther) {
-                  lowestTimeFromOther = parseInt(participant.final_time);
+                if (participant.final_time < lowestTimeFromOther) {
+                  lowestTimeFromOther = participant.final_time;
                 }
               }
             });
@@ -106,6 +108,8 @@ const LeetCodeProfile: React.FC = () => {
             }
 
           processedHistory.push({
+            difficulty: gameParticipants[0].difficulty,
+            question_name: gameParticipants[0].question_name,
             game_id: parseInt(gameId),
             participants: gameParticipants,
             user_won: result === "won",
@@ -132,7 +136,7 @@ const LeetCodeProfile: React.FC = () => {
         console.error("Game history validation failed:", error);
 
         if (error instanceof ZodError) {
-          console.error("🔍 Zod Errors:", error.errors);
+          console.error("🔍 Zod Errors:", error.cause);
           console.log("Formatted Zod Output:", error.format());
         } else {
           console.error("❌ Unknown validation error:", error);
@@ -203,12 +207,13 @@ const LeetCodeProfile: React.FC = () => {
       {/* Header */}
       <ProfileBar />
 
-      <UserStatsAndHistory
+      { userGameHistory &&
+        <UserStatsAndHistory
         userStats={userStats}
         userGameHistory={userGameHistory}
         totalBattles={totalBattles}
         totalWins={totalWins}
-      />
+      />}
     </div>
   );
 };

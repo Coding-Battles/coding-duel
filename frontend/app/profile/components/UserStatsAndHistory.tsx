@@ -44,8 +44,13 @@ const WinRatePercentage = (solved: number, total: number = 1000): number => {
 
 export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} : UserStatsAndHistoryProps) => {
 
-  const [expandedGames, setExpandedGame] = useState<boolean[]>(Array(userGameHistory.length).fill(false));
-  const [selectedIndex, setSelectedIndex] = useState<number>(1);
+  console.log("User Game History:", userGameHistory);
+
+  const [expandedGames, setExpandedGame] = useState<boolean[]>(
+    Array((userGameHistory ?? []).length).fill(false)
+  );
+
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const onClickExpand = (index: number) => {
     setExpandedGame((prev) => {
       const newState = [...prev]; // Create a copy of the previous state
@@ -130,6 +135,9 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
                         <span className="text-xs text-foreground/50">{game.participants.length} players</span>
                       </div>
                       <div className="mt-2 text-sm text-foreground/60">
+                        <p className={`font-medium ${getDifficultyColor(game.difficulty)}`}>
+                          {game.difficulty} - {game.question_name}
+                        </p>
                         <p>Your time: {game.user_time}ms</p>
                         <p>Best opponent: {game.opponent_best_time}ms</p>
                       </div>

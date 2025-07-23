@@ -105,6 +105,8 @@ export type GameHistoryItem = z.infer<typeof GameHistoryItemSchema>;
 
 // Game Context Type Schema (for React context)
 export const GameContextTypeSchema = z.object({
+  difficulty: DifficultyLevelSchema,
+  question_name: z.string(),
   socket: z.any(), // Socket.IO socket - hard to type precisely
   user: CustomUserSchema.nullable(),
   loading: z.boolean(),
