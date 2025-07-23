@@ -4,7 +4,7 @@ import { Session } from 'better-auth';
 import { CheckCircle, Circle, Clock, Loader, XCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import ExpandedGameResults from './ExpandedGameResults';
-import { GameHistoryItem } from '../page';
+import { GameHistoryItem } from '@/shared/schemas';
 
 interface UserStatsAndHistoryProps {
   userStats: {
@@ -22,12 +22,22 @@ interface UserStatsAndHistoryProps {
 
 const getDifficultyColor = (difficulty: string): string => {
   switch (difficulty) {
-    case 'Easy': return 'text-success bg-success/10';
-    case 'Medium': return 'text-accent bg-accent/10';
-    case 'Hard': return 'text-error bg-error/10';
+    case 'easy': return 'text-success bg-success/10';
+    case 'medium': return 'text-medium bg-medium/10';
+    case 'hard': return 'text-error bg-error/10';
     default: return 'text-foreground/60 bg-foreground/10';
   }
 };
+
+const getSubmissionOutlineColor = (difficulty: string): string => { 
+  console.log("Difficulty:", difficulty);
+  switch (difficulty) {
+    case 'easy': return 'border-success border-2 border-solid ';
+    case 'medium': return 'border-medium border-2 border-solid ';
+    case 'hard': return 'border-error border-2 border-solid ';
+    default: return 'border-foreground/20 border-2 border-solid ';
+  }
+}
 
 const getStatusIcon = (result: string) => {
   switch (result) {
@@ -43,6 +53,9 @@ const WinRatePercentage = (solved: number, total: number = 1000): number => {
 };
 
 export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} : UserStatsAndHistoryProps) => {
+  const [easyGames, setEasyGames] = useState(0);
+  const [mediumGames, setMediumGames] = useState(0);
+  const [hardGames, setHardGames] = useState(0);
 
   console.log("User Game History:", userGameHistory);
 
@@ -58,6 +71,30 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
       return newState; // Return the updated state
     });
   }
+
+  const getDifficultyGames = () => {
+    userGameHistory.forEach((list) => {
+      list.forEach((game) => {
+        switch (game.difficulty) {
+          case 'easy':
+            setEasyGames((prev) => prev + 1);
+            break;
+          case 'medium':
+            setMediumGames((prev) => prev + 1);
+            break;
+          case 'hard':
+            setHardGames((prev) => prev + 1);
+            break;
+          default:
+            break;
+        }
+      });
+    });
+  } 
+
+  useEffect(() => {
+    if(userGameHistory.length > 0) getDifficultyGames()
+  }, [userGameHistory])
 
   return (
 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -84,15 +121,15 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
       <div className="mb-6 space-y-3">
         <div className="flex items-center justify-between">
           <span className="font-medium text-success">Easy</span>
-          <span className="font-semibold">?</span>
+          <span className="font-semibold">{easyGames}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="font-medium text-accent">Medium</span>
-          <span className="font-semibold">?</span>
+          <span className="font-medium text-medium">Medium</span>
+          <span className="font-semibold">{mediumGames}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="font-medium text-error">Hard</span>
-          <span className="font-semibold">?</span>
+          <span className="font-semibold">{hardGames}</span>
         </div>
       </div>
 
@@ -117,7 +154,7 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
         {userGameHistory.length > 0 && (
           <>
             {userGameHistory[selectedIndex].map((game, index) => (
-              <div key={game.game_id} className="h-auto p-4 transition-colors border rounded-lg hover:bg-foreground/5">
+              <div key={game.game_id} className={`h-auto p-4 transition-colors rounded-lg hover:bg-foreground/5 ${getSubmissionOutlineColor(game.difficulty)}`}>
                 <div className='w-full absolute h-[70px] bg-transparent cursor-pointer' onClick={() => onClickExpand(index)} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -136,7 +173,7 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
                       </div>
                       <div className="mt-2 text-sm text-foreground/60">
                         <p className={`font-medium ${getDifficultyColor(game.difficulty)}`}>
-                          {game.difficulty} - {game.question_name}
+                          {game.difficulty} : {game.question_name}
                         </p>
                         <p>Your time: {game.user_time}ms</p>
                         <p>Best opponent: {game.opponent_best_time}ms</p>

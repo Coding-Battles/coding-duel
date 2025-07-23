@@ -24,6 +24,7 @@
   --color-destructive-foreground: var(--background);
   --color-input: var(--background);
   --color-ring: var(--accent);
+  --color-medium: var(--medium);
   --color-border: var(--secondary);
   --font-sans: var(--font-inter);
   --color-border: var(--border);
@@ -55,6 +56,7 @@ html {
   --selected: oklch(0.3 0.18 210);
   --success: oklch(0.6 0.15 140);
   --error: oklch(0.55 0.22 10);
+  --medium: oklch(65.185% 0.13514 77.239);
 }
 
 .wavyDiv {
