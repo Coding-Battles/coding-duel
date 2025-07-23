@@ -70,10 +70,12 @@ async def get_user_game_history(user_id: str):
         values = {"user_id": user_id}
         results = await database.fetch_all(query=query, values=values)
         
-        if not results:
-            return {"message": "No game history found for this user."}
-
-        return [dict(result) for result in results]
+        results_list = [dict(result) for result in results]
+        
+        return {
+            "games": results_list,
+            "total_count": len(results_list)
+        }
     except Exception as e:
         logger.error(f"Error fetching game history for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")

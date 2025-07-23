@@ -137,18 +137,21 @@ export const apiHandlers = [
   http.get('http://localhost:8000/api/user/:userId/game-history', ({ params }) => {
     const { userId } = params;
     
-    return HttpResponse.json([
-      {
-        game_id: 1,
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        player_name: 'Test Player',
-        implement_time: 120,
-        time_complexity: 'O(n)',
-        final_time: 100,
-        player_code: 'test code'
-      }
-    ]);
+    return HttpResponse.json({
+      games: [
+        {
+          game_id: 1,
+          user_id: userId,
+          created_at: new Date().toISOString(),
+          player_name: 'Test Player',
+          implement_time: 120,
+          time_complexity: 'O(n)',
+          final_time: 100,
+          player_code: 'test code'
+        }
+      ],
+      total_count: 1
+    });
   })
 ];
 

@@ -17,6 +17,7 @@ interface DifficultySelectorProps {
   userAvatar?: string;
   userName?: string;
   className?: string;
+  isGuest?: boolean;
 }
 
 const DifficultySelector: React.FC<DifficultySelectorProps> = ({
@@ -27,6 +28,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   userAvatar,
   userName,
   className = "",
+  isGuest = false,
 }) => {
   const router = useRouter();
   const difficulties = [
@@ -87,8 +89,8 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                 alt={`${userName} Avatar`}
                 name={userName}
                 size="md"
-                onClick={handleProfileClick}
-                clickable={true}
+                onClick={isGuest ? undefined : handleProfileClick}
+                clickable={!isGuest}
                 player="player1"
               />
             </div>

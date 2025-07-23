@@ -128,6 +128,7 @@ export default function GameSetupPage() {
                   ? context?.user?.username || context?.user?.name || "Guest"
                   : (session?.user as any)?.username || session?.user?.name || "Guest"
               }
+              isGuest={context?.isAnonymous}
             />
           )}
           {queueStatus === "searching" && (
