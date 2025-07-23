@@ -1,7 +1,10 @@
+import threading
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List
 import logging
 import asyncio
+
+from flask import json
 from backend.models.core import (
     RunTestCasesRequest, 
     CodeTestResult,
@@ -48,13 +51,20 @@ def get_score(timeComplexity: str, implementTime: int) -> int:
     return implementTime - timeReduction
 
 
-async def save_game_to_history(players: List[PlayerInfo]):
+async def save_game_to_history(players: List[PlayerInfo], difficulty: str, question_name: str = "Unknown"):
     """Save game history to the database."""
     try:
-        logger.info(f"Saving game history with {len(players)} players")
+        logger.info(f"Saving game history with {len(players)} players and difficulty {difficulty}")
 
-        game_query = "INSERT INTO games DEFAULT VALUES RETURNING id"
-        result = await database.fetch_one(query=game_query)
+        game_query = """INSERT INTO games (question_name, difficulty)
+            VALUES (:question_name, :difficulty)
+            RETURNING id;
+            """
+        values = {
+            "question_name": question_name if players else "Unknown",
+            "difficulty": difficulty
+        }
+        result = await database.fetch_one(query=game_query, values=values)
 
         db_game_id = None
 
@@ -88,7 +98,7 @@ async def save_game_to_history(players: List[PlayerInfo]):
                     "implement_time": player_stats.implement_time,
                     "time_complexity": player_stats.complexity,
                     "final_time": player_stats.final_time,
-                    "user_id": player.id,
+                    "user_id": player.id
                 }
                 await database.execute(query=participant_query, values=values)
             if not player.anonymous:
@@ -103,6 +113,67 @@ async def save_game_to_history(players: List[PlayerInfo]):
 
     except Exception as e:
         logger.error(f"Database error while saving game history: {str(e)}")
+
+def set_game_end_timer(game_id: str):
+    easy_timer = 60
+    medium_timer = 180
+    hard_timer = 300
+    timer_duration = None
+    game_state = game_states.get(game_id)
+    def delayed_task():
+        if game_state and not game_state.all_players_finished():
+            logger.info(f"Game {game_id} ended due to taking too much time")
+            winner_id = game_state.get_finished_players().pop() if game_state.get_finished_players() else None
+            game_state.set_winner(winner_id, reason="Time Limit Exceeded")
+
+            opponent_id = game_state.get_opponent_id(winner_id)
+            if opponent_id:
+                # Return an empty CodeTestResult if opponent did not finish
+                test_result = CodeTestResult(
+                    message="Last player did not finish in time.",
+                    code="",
+                    player_name=game_state.get_player_name(opponent_id),
+                    player_id=opponent_id,
+                    success=False,
+                    test_results=[],
+                    error=None,
+                    total_passed=0,
+                    total_failed=0,
+                    complexity="N/A",
+                    implement_time=0,
+                    final_time=0,
+                )
+                game_state.players[opponent_id].game_stats = test_result
+                save_game_to_history(list(game_state.players.values()), game_state.difficulty, game_state.question_name)
+
+                winner_name = game_state.get_player_name(game_state.winner_id)
+                loser_id = opponent_id
+                loser_name = game_state.get_player_name(loser_id) if loser_id else "error"
+
+                game_end_data = {
+                "message": f"{winner_name} won the game!",
+                "winner_id": game_state.winner_id,
+                "winner_name": winner_name,
+                "loser_id": loser_id,
+                "loser_name": loser_name,
+                    "game_end_reason": "Time Limit Exceeded",
+                },
+                
+                sio.emit("game_completed", game_end_data, room=game_id)
+
+    if game_state:
+        if game_state.difficulty == "easy":
+            timer_duration = easy_timer
+        elif game_state.difficulty == "medium":
+            timer_duration = medium_timer
+        elif game_state.difficulty == "hard":
+            timer_duration = hard_timer
+        else:
+            logger.warning(f"Unknown game difficulty: {game_state.difficulty}")
+
+    if timer_duration:
+        timer = threading.Timer(timer_duration, delayed_task)
+        timer.start()
 
 
 @router.post("/{game_id}/send-emoji")
@@ -162,6 +233,9 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     logger.info(
         f"🚀 [ENTRY DEBUG] Game found, players in game {game_id}: {game_state.players}"
     )
+    logger.info(
+        f"🚀 [ENTRY DEBUG] difficulty {game_state.difficulty} question-name {game_state.question_name}"
+    )
 
     # Verify player is in this game
     if player_id not in game_state.players:
@@ -195,12 +269,10 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
         complexity = "N/A"
 
         if test_results.success:
-            # FIRST PLAYER TO SOLVE WINS IMMEDIATELY
-            if not game_state.is_game_ended():
-                logger.info(f"🏆 [WINNER DEBUG] Player {player_id} is FIRST TO SOLVE - setting as winner!")
-                game_state.set_winner(player_id, "first_win")
-            else:
-                logger.info(f"⏰ [LATE DEBUG] Player {player_id} solved but game already ended - winner was {game_state.winner_id}")
+            game_state.mark_player_finished(player_id)
+
+            if not game_state.all_players_finished():
+                set_game_end_timer(game_id)  # Set a timer for game end if not all players finished
 
             if opponent_id:
                 # Emit to opponent only (don't expose full test results)
@@ -219,24 +291,49 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                     f"🔍 [OPPONENT DEBUG] SUCCESS: Complexity analysis: {complexity}"
                 )
 
-                test_result = CodeTestResult(
-                    message="Your opponent has finished their tests!",
-                    code=request.code,
-                    player_name=player_name,
-                    opponent_id=player_id,
-                    success=test_results.success,
-                    test_results=test_results.test_results,
-                    error=None,
-                    total_passed=test_results.total_passed,
-                    total_failed=(
-                        test_results.total_failed
-                        if hasattr(test_results, "total_failed")
-                        else 0
-                    ),
-                    complexity=complexity,
-                    implement_time=request.timer,
-                    final_time=get_score(complexity, request.timer),
-                )
+                test_result = None
+
+                try:
+                    # Convert TestCaseResult objects to dictionaries
+                    test_results_as_dicts = []
+                    for result in test_results.test_results:
+                        if hasattr(result, '__dict__'):
+                            test_results_as_dicts.append(result.__dict__)
+                        elif hasattr(result, 'model_dump'):  # If it's a Pydantic model
+                            test_results_as_dicts.append(result.model_dump())
+                        else:
+                            # Fallback: convert to dict manually
+                            test_results_as_dicts.append({
+                                'input': getattr(result, 'input', {}),
+                                'expected_output': getattr(result, 'expected_output', []),
+                                'actual_output': getattr(result, 'actual_output', ''),
+                                'passed': getattr(result, 'passed', False),
+                                'error': getattr(result, 'error', None),
+                                'execution_time': getattr(result, 'execution_time', 0)
+                            })
+
+                    test_result = CodeTestResult(
+                        message="Your opponent has finished their tests!",
+                        code=request.code,
+                        player_name=player_name,
+                        player_id=player_id,
+                        success=test_results.success,
+                        test_results=test_results_as_dicts,  # Use the converted dictionaries
+                        error=None,
+                        total_passed=test_results.total_passed,
+                        total_failed=(
+                            test_results.total_failed
+                            if hasattr(test_results, "total_failed")
+                            else 0
+                        ),
+                        complexity=complexity,
+                        implement_time=int(request.timer),
+                        final_time=int(get_score(complexity, request.timer)),
+                    )
+                    logger.info("✅ CodeTestResult created successfully")
+                except ValueError as e:
+                    logger.error(f"❌ ValueError in CodeTestResult: {e}")
+                    raise
 
                 game_state.players[player_id].game_stats = test_result
                 print(
@@ -276,26 +373,10 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             logger.info(
                 f"🔍 [OPPONENT DEBUG] PARTIAL: About to emit 'opponent_submitted' to room {opponent_sid}"
             )
+            test_results.message = "Opponent has finished their tests with partial success"
             await sio.emit(
                 "opponent_submitted",
-                CodeTestResult(
-                    message=f"Your opponents code has passed {test_results.total_passed} out of {test_results.total_passed + test_results.total_failed} test cases.",
-                    code=request.code,
-                    opponent_id=player_id,
-                    success=test_results.success,
-                    player_name=opponent_player_info.name,
-                    test_results=test_results.test_results,
-                    error=None,
-                    total_passed=test_results.total_passed,
-                    total_failed=(
-                        test_results.total_failed
-                        if hasattr(test_results, "total_failed")
-                        else 0
-                    ),
-                    complexity=complexity,
-                    implement_time=request.timer,
-                    final_time=0,  # No final time if tests failed,
-                ).model_dump(),
+                test_results.model_dump(),
                 room=opponent_sid,
             )
             logger.info(
@@ -307,14 +388,23 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             )
 
         # If game has ended (first player won), emit game completion immediately
-        if game_state.is_game_ended():
+        if game_state.all_players_finished():
+            opponent_id = game_state.get_opponent_id(player_id)
+            if game_state.players[player_id].game_stats.final_time < game_state.players[opponent_id].game_stats.final_time:
+                game_state.set_winner(player_id, reason="Better Score")
+            else:
+                game_state.set_winner(opponent_id, reason="Better Score")
+
             winner_name = game_state.get_player_name(game_state.winner_id)
-            loser_id = game_state.get_loser_id()
-            loser_name = game_state.get_player_name(loser_id) if loser_id else "Unknown"
+            loser_id = game_state.get_opponent_id(game_state.winner_id)
+            loser_name = game_state.get_player_name(loser_id) if loser_id else "error"
+
+            difficulty = game_state.difficulty if hasattr(game_state, 'difficulty') else "Unknown"
+            question_name = game_state.question_name if hasattr(game_state, 'question_name') else "Unknown"
             
             print(f"🏆 [GAME END DEBUG] Game {game_id} ended - Winner: {winner_name} ({game_state.winner_id})")
             
-            await save_game_to_history(list(game_state.players.values()))
+            await save_game_to_history(list(game_state.players.values()), difficulty, question_name)
             
             # Send comprehensive game end event with winner info
             game_end_data = {
@@ -323,15 +413,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                 "winner_name": winner_name,
                 "loser_id": loser_id,
                 "loser_name": loser_name,
-                "game_end_reason": game_state.game_end_reason,
-                "game_end_time": game_state.game_end_time,
-                "winner_stats": {
-                    "player_name": winner_name,
-                    "implement_time": request.timer,
-                    "complexity": complexity,
-                    "final_time": get_score(complexity, request.timer),
-                    "success": True
-                }
+                "game_end_reason": 'Better Score',
             }
             
             await sio.emit("game_completed", game_end_data, room=game_id)
@@ -355,26 +437,12 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             f"Final time for player {player_id} is {finalTime}ms based on complexity {complexity} and implementation time {request.timer}ms"
         )
 
-        results = CodeTestResult(
-            message="Test execution completed",
-            code=request.code,
-            opponent_id=opponent_id,
-            player_name=game_state.get_player_name(player_id),
-            success=test_results.success,
-            test_results=test_results.test_results,
-            total_passed=test_results.total_passed,
-            total_failed=(
-                test_results.total_failed
-                if hasattr(test_results, "total_failed")
-                else 0
-            ),
-            error=test_results.error,
-            complexity=complexity,  # Complexity will be sent separately to opponent
-            implement_time=request.timer,
-            final_time=finalTime,
-        )
+        if(test_results.success):
+            test_result.message = "All test cases passed successfully!"
+        else:
+            test_result.message = "Was not able to pass all test cases"
 
-        return results
+        return test_result
 
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

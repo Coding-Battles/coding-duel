@@ -133,6 +133,7 @@ class MatchmakingService:
                     player2.id: game.PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid, anonymous=player2.anonymous)
                 },
                 question_name=question_slug,
+                difficulty=difficulty_name,
                 # Set player1 and player2 for backward compatibility and opponent lookup
                 player1=player1.id,
                 player2=player2.id,

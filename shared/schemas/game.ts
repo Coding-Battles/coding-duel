@@ -30,6 +30,7 @@ export const GameStateSchema = z.object({
   finished_players: z.set(z.string()).default(new Set()),
   created_at: z.date().default(() => new Date()),
   question_name: z.string().default(''),
+  difficulty: DifficultyLevelSchema.default('easy'),
   
   // Player assignments
   player1: z.string().default(''),

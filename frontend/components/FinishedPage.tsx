@@ -202,7 +202,7 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats} : 
               <Trophy className="w-8 h-8 mx-auto mb-2 text-accent" />
               <p className="mb-1 text-sm text-foreground/70">Game Result</p>
               <p className="text-lg font-bold text-accent">
-                {gameEndData?.game_end_reason === "first_win" ? "First to Solve" : "Game Complete"}
+                {gameEndData?.game_end_reason}
               </p>
             </div>
             
