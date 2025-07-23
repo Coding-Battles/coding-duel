@@ -18,6 +18,7 @@ import Link from "next/link";
 
 import { useSession } from "@/lib/auth-client";
 import { UserStatsAndHistory } from "./components/UserStatsAndHistory";
+import { ZodError } from "zod";
 
 
 
@@ -76,65 +77,77 @@ const LeetCodeProfile: React.FC = () => {
             )
           : {} as Record<number, GameParticipant[]>;
 
-        // Convert grouped history to proper format
-        const processedHistory: GameHistoryItem[] = [];
+          console.log("Grouped Game History:", groupedHistory);
 
-        Object.entries(groupedHistory).forEach(([gameId, participants]) => {
-          var userTime = 40000;
-          var lowestTimeFromOther = 30000;
-          var result: "won" | "lost" | "tie" = "lost";
+          // Convert grouped history to proper format
+          const processedHistory: GameHistoryItem[] = [];
 
-          const gameParticipants = participants as GameParticipant[];
-          gameParticipants.forEach((participant) => {
-            if (participant.user_id == session?.user.id) {
-              userTime = parseInt(participant.final_time);
-            } else {
-              if (parseInt(participant.final_time) < lowestTimeFromOther) {
-                lowestTimeFromOther = parseInt(participant.final_time);
+          Object.entries(groupedHistory).forEach(([gameId, participants], index) => {
+            var userTime = 40000;
+            var lowestTimeFromOther = 30000;
+            var result: "won" | "lost" | "tie" = "lost";
+
+            const gameParticipants = participants as GameParticipant[];
+            gameParticipants.forEach((participant) => {
+              if (participant.user_id == session?.user.id) {
+                userTime = participant.final_time;
+              } else {
+                if (participant.final_time < lowestTimeFromOther) {
+                  lowestTimeFromOther = participant.final_time;
+                }
               }
+            });
+
+            if (userTime < lowestTimeFromOther) {
+              wins++;
+              result = "won";
+            } else if (userTime > lowestTimeFromOther) {
+              result = "lost";
+            } else {
+              result = "tie";
             }
+
+          processedHistory.push({
+            difficulty: gameParticipants[0].difficulty,
+            question_name: gameParticipants[0].question_name,
+            game_id: parseInt(gameId),
+            participants: gameParticipants,
+            user_won: result === "won",
+            result: result,
+            user_time: userTime,
+            opponent_best_time: lowestTimeFromOther
           });
-
-          if (userTime < lowestTimeFromOther) {
-            wins++;
-            result = "won";
-          } else if (userTime > lowestTimeFromOther) {
-            result = "lost";
-          } else {
-            result = "tie";
-          }
-
-        processedHistory.push({
-          game_id: parseInt(gameId),
-          participants: gameParticipants,
-          user_won: result === "won",
-          result: result,
-          user_time: userTime,
-          opponent_best_time: lowestTimeFromOther
         });
-      });
 
-      processedHistory.reverse();
+        processedHistory.reverse();
 
-      console.log("Processed Game History:", processedHistory);
+        console.log("Processed Game History:", processedHistory);
 
-      const compressedList: GameHistoryItem[][] = [];
-      for (let i = 0; i < processedHistory.length; i += itemsPerPage) {
-        compressedList.push(processedHistory.slice(i, i + itemsPerPage));
-      }
-    
-      setUserGameHistory(compressedList);
-      setTotalBattles(battles);
-      setTotalWins(wins);
-      
-        } catch (validationError) {
-          console.error("Game history validation failed:", validationError);
-          // Fallback to empty data on validation error
-          setUserGameHistory([]);
-          setTotalBattles(0);
-          setTotalWins(0);
-          setLoad(true);
+        const compressedList: GameHistoryItem[][] = [];
+        for (let i = 0; i < processedHistory.length; i += itemsPerPage) {
+          compressedList.push(processedHistory.slice(i, i + itemsPerPage));
         }
+      
+        setUserGameHistory(compressedList);
+        setTotalBattles(battles);
+        setTotalWins(wins);
+      
+      } catch (error) {
+        console.error("Game history validation failed:", error);
+
+        if (error instanceof ZodError) {
+          console.error("🔍 Zod Errors:", error.cause);
+          console.log("Formatted Zod Output:", error.format());
+        } else {
+          console.error("❌ Unknown validation error:", error);
+        }
+
+        // fallback logic
+        setUserGameHistory([]);
+        setTotalBattles(0);
+        setTotalWins(0);
+        setLoad(true);
+      }
     })
     .catch(error => {
       console.error("Error fetching game history:", error);
@@ -194,12 +207,13 @@ const LeetCodeProfile: React.FC = () => {
       {/* Header */}
       <ProfileBar />
 
-      <UserStatsAndHistory
+      { userGameHistory &&
+        <UserStatsAndHistory
         userStats={userStats}
         userGameHistory={userGameHistory}
         totalBattles={totalBattles}
         totalWins={totalWins}
-      />
+      />}
     </div>
   );
 };

@@ -111,9 +111,11 @@ export const GameParticipantSchema = z.object({
   game_id: z.number(),
   player_name: z.string(),
   player_code: z.string(),
-  implement_time: z.string(),
+  question_name: z.string(),
+  difficulty: z.string(),
+  implement_time: z.number(),
   time_complexity: z.string(),
-  final_time: z.string(),
+  final_time: z.number(),
   user_id: z.string(),
 });
 export type GameParticipant = z.infer<typeof GameParticipantSchema>;
