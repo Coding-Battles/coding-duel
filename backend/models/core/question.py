@@ -77,7 +77,7 @@ class TestCaseResult(BaseModel):
 class CodeTestResult(BaseModel):
     message: str
     code: str
-    opponent_id: str
+    player_id: str
     player_name: str
     success: bool
     test_results: List[TestCaseResult]

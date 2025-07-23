@@ -54,7 +54,7 @@ async def get_user_game_history(user_id: str):
         query = """
             SELECT g.id AS game_id,
                     g.question_name as question_name,
-                     g.difficulty, as difficulty,
+                     g.difficulty as difficulty,
                     gp.user_id,
                    g.created_at,
                    gp.player_name,

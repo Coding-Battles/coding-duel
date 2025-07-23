@@ -91,9 +91,9 @@ class GameParticipant(BaseModel):
     game_id: int
     player_name: str
     player_code: str
-    implement_time: str
+    implement_time: int
     time_complexity: str
-    final_time: str
+    final_time: int
     user_id: str
 
 
