@@ -343,20 +343,57 @@ def setup_java_persistent_server(container, config):
         error_msg = compile_result.output.decode("utf-8")
         raise Exception(f"Failed to compile Java server: {error_msg}")
     
-    # Start the server process in background
-    print("🐛 [DOCKER DEBUG] Starting Java server process")
-    server_result = container.exec_run(
-        config["startup_command"],
-        workdir="/tmp",
-        detach=True,
-        stdin=True,
-        stdout=True,
-        stderr=True
+    # Start the persistent Java server with named pipe communication
+    print("🐛 [DOCKER DEBUG] Setting up persistent Java server with named pipes")
+    
+    # Create named pipes for communication
+    pipe_setup = container.exec_run(
+        "sh -c 'mkfifo /tmp/java_server_input /tmp/java_server_output 2>/dev/null || true'",
+        workdir="/tmp"
     )
     
-    # Store the exec instance for communication
-    container._java_server_exec = server_result
-    print("🐛 [DOCKER DEBUG] Java server started successfully")
+    # Start the persistent Java server with proper stdin from named pipe
+    server_start_cmd = (
+        "sh -c 'echo \"Starting server...\" > /tmp/server_debug.log && "
+        "java -Xms32m -Xmx128m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 "
+        "PersistentJavaRunner < /tmp/java_server_input > /tmp/java_server_output 2>&1 & "
+        "echo $! > /tmp/server.pid && "
+        "echo \"Server started with PID: $(cat /tmp/server.pid)\" >> /tmp/server_debug.log'"
+    )
+    
+    server_result = container.exec_run(
+        server_start_cmd,
+        workdir="/tmp",
+        detach=False
+    )
+    
+    if server_result.exit_code != 0:
+        raise Exception(f"Failed to start persistent Java server: {server_result.output.decode('utf-8')}")
+    
+    # Give server time to start up and begin reading from pipe
+    import time
+    time.sleep(1)
+    
+    # Check if server is running
+    check_result = container.exec_run("cat /tmp/server.pid", workdir="/tmp")
+    if check_result.exit_code == 0:
+        server_pid = check_result.output.decode("utf-8").strip()
+        
+        # Verify process is actually running
+        verify_result = container.exec_run(f"kill -0 {server_pid} 2>/dev/null", workdir="/tmp")
+        if verify_result.exit_code == 0:
+            container._java_server_pid = server_pid
+            print(f"🐛 [DOCKER DEBUG] Persistent Java server running with PID: {server_pid}")
+        else:
+            # Check error logs
+            debug_check = container.exec_run("sh -c 'cat /tmp/server_debug.log 2>/dev/null || echo \"No debug log\"'", workdir="/tmp")
+            output_check = container.exec_run("sh -c 'cat /tmp/java_server_output 2>/dev/null || echo \"No output log\"'", workdir="/tmp")
+            raise Exception(f"Persistent Java server died immediately. Debug: {debug_check.output.decode('utf-8')} | Output: {output_check.output.decode('utf-8')}")
+    else:
+        raise Exception("Failed to get persistent Java server PID")
+    
+    container._java_server_ready = True
+    print("🐛 [DOCKER DEBUG] Persistent Java server ready for named pipe communication")
 
 
 # Test it

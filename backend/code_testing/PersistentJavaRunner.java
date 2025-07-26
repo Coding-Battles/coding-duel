@@ -8,6 +8,11 @@ public class PersistentJavaRunner {
     private static final Map<String, ClassLoader> userClassLoaders = new ConcurrentHashMap<>();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     
+    // Code caching for compilation optimization
+    private static final Map<String, Class<?>> COMPILED_CLASS_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, byte[]> BYTECODE_CACHE = new ConcurrentHashMap<>();
+    private static final int MAX_CACHE_SIZE = 100;
+    
     public static void main(String[] args) {
         System.err.println("PersistentJavaRunner started");
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -321,6 +326,21 @@ public class PersistentJavaRunner {
         return signature;
     }
     
+    // Cache management methods
+    private static void logCacheStats() {
+        System.err.println("📊 [CACHE STATS] Size: " + COMPILED_CLASS_CACHE.size() + " classes cached");
+    }
+    
+    private static void evictOldestIfNeeded() {
+        if (COMPILED_CLASS_CACHE.size() >= MAX_CACHE_SIZE) {
+            // Simple eviction - remove first entry (could improve with LRU later)
+            String oldestKey = COMPILED_CLASS_CACHE.keySet().iterator().next();
+            COMPILED_CLASS_CACHE.remove(oldestKey);
+            BYTECODE_CACHE.remove(oldestKey);
+            System.err.println("🗑️ [CACHE EVICT] Removed oldest entry: " + oldestKey);
+        }
+    }
+    
     private static String toJson(Object obj) {
         if (obj instanceof List) {
             List<?> list = (List<?>) obj;
@@ -375,14 +395,35 @@ public class PersistentJavaRunner {
         @Override
         protected Class<?> findClass(String name) throws ClassNotFoundException {
             if ("Solution".equals(name)) {
+                // Check cache first using the codeHash
+                if (COMPILED_CLASS_CACHE.containsKey(codeHash)) {
+                    System.err.println("🚀 [CACHE HIT] Using cached class for hash: " + codeHash);
+                    logCacheStats();
+                    // Return cached bytecode to defineClass
+                    byte[] cachedBytes = BYTECODE_CACHE.get(codeHash);
+                    return defineClass(name, cachedBytes, 0, cachedBytes.length);
+                }
+                
+                // Cache miss - compile and cache
+                System.err.println("❄️ [CACHE MISS] Compiling new class for hash: " + codeHash);
                 try {
                     // Compile user code - fix escaped newlines from JSON
                     String cleanUserCode = userCode.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"");
                     // Ensure Solution class is public for reflection access
                     String publicUserCode = cleanUserCode.replace("class Solution", "public class Solution");
                     String fullCode = "import java.util.*;\n" + publicUserCode;
+                    
                     byte[] classBytes = compileCode("Solution", fullCode);
-                    return defineClass(name, classBytes, 0, classBytes.length);
+                    Class<?> compiledClass = defineClass(name, classBytes, 0, classBytes.length);
+                    
+                    // Cache both bytecode and class (with eviction check)
+                    evictOldestIfNeeded();
+                    BYTECODE_CACHE.put(codeHash, classBytes);
+                    COMPILED_CLASS_CACHE.put(codeHash, compiledClass);
+                    
+                    System.err.println("✅ [CACHED] Stored compiled class for hash: " + codeHash);
+                    logCacheStats();
+                    return compiledClass;
                 } catch (Exception e) {
                     throw new ClassNotFoundException("Failed to compile user code", e);
                 }
