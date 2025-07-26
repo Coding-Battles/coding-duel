@@ -154,6 +154,13 @@ export default function HomePage() {
                   Sign in with Google
                 </GoogleSignInButton>
               </div>
+
+              {/* Practice Mode Link */}
+              <div className="mt-6">
+                <Link href="/practice" className="inline-flex items-center px-6 py-3 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                  📚 Practice Mode - No opponents, just code!
+                </Link>
+              </div>
             </div>
 
             {/* Right Column - Demo Video */}

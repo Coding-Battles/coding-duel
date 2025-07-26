@@ -1,0 +1,13 @@
+{
+  "id": "25",
+  "title": "Majority Element",
+  "methodName": "majorityElement",
+  "difficulty": "Easy",
+  "description_html": "<p>Given an array <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums</code> of size <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code>, return <em>the majority element</em>.</p><p>The majority element is the element that appears more than <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">⌊n / 2⌋</code> times. You may assume that the majority element always exists in the array.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [3,2,3]</div><div><strong>Output:</strong> 3</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [2,2,1,1,1,2,2]</div><div><strong>Output:</strong> 2</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">n == nums.length</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= n <= 5 * 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-10<sup>9</sup> <= nums[i] <= 10<sup>9</sup></code></li></ul></div><div class=\"bg-yellow-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-yellow-800\">Follow-up:</h4><p class=\"text-sm\">Could you solve the problem in linear time and in O(1) space?</p></div>",
+  "starter_code": {
+    "python": "class Solution:\n    def majorityElement(self, nums: list[int]) -> int:\n        ",
+    "javascript": "class Solution {\n    majorityElement(nums) {\n        \n    }\n}",
+    "java": "class Solution {\n    public int majorityElement(int[] nums) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    int majorityElement(vector<int>& nums) {\n        \n    }\n};"
+  }
+}

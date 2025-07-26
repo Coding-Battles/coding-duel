@@ -33,15 +33,31 @@ if __name__ == "__main__":
             solution_instance = globals()['Solution']()
             solution_method = getattr(solution_instance, function_name)
             
-            # Call the method with the input data as arguments
-            # Try both ways: as keyword arguments and as positional arguments
-            try:
-                result = solution_method(**input_data)
-            except TypeError:
-                # If keyword arguments don't work, try positional arguments
-                # This handles cases where the method expects (nums, target) instead of (nums=..., target=...)
-                args = list(input_data.values())
-                result = solution_method(*args)
+            # Special handling for first-bad-version problem
+            if function_name == 'firstBadVersion':
+                # Extract n and bad from input data
+                n = input_data.get('n')
+                bad = input_data.get('bad')
+                
+                # Create isBadVersion function based on the bad parameter
+                def isBadVersion(version):
+                    return version >= bad
+                
+                # Inject isBadVersion into the global namespace so Solution can use it
+                globals()['isBadVersion'] = isBadVersion
+                
+                # Call firstBadVersion with only n parameter
+                result = solution_method(n)
+            else:
+                # Call the method with the input data as arguments
+                # Try both ways: as keyword arguments and as positional arguments
+                try:
+                    result = solution_method(**input_data)
+                except TypeError:
+                    # If keyword arguments don't work, try positional arguments
+                    # This handles cases where the method expects (nums, target) instead of (nums=..., target=...)
+                    args = list(input_data.values())
+                    result = solution_method(*args)
         else:
             error = f"No Solution class found or method '{function_name}' not found in Solution class"
             
@@ -88,7 +104,22 @@ let result = null;
 try {{
     if (typeof Solution === 'function' && typeof Solution.prototype[functionName] === 'function') {{
         const solutionInstance = new Solution();
-        result = solutionInstance[functionName](...Object.values(inputData));
+        
+        // Special handling for first-bad-version problem
+        if (functionName === 'firstBadVersion') {{
+            const n = inputData.n;
+            const bad = inputData.bad;
+            
+            // Create isBadVersion function based on the bad parameter
+            global.isBadVersion = function(version) {{
+                return version >= bad;
+            }};
+            
+            // Call firstBadVersion with only n parameter
+            result = solutionInstance[functionName](n);
+        }} else {{
+            result = solutionInstance[functionName](...Object.values(inputData));
+        }}
     }} else {{
         result = `No Solution class found or method '${{functionName}}' not found in Solution class`;
     }}
@@ -256,6 +287,13 @@ public:
     }}
 }};
 
+// Global isBadVersion API for first-bad-version problem
+int globalBadVersion = 0;
+
+bool isBadVersion(int version) {{
+    return version >= globalBadVersion;
+}}
+
 string vectorToString(const vector<int>& vec) {{
     string result = "[";
     for (size_t i = 0; i < vec.size(); i++) {{
@@ -266,42 +304,69 @@ string vectorToString(const vector<int>& vec) {{
     return result;
 }}
 
+string intToString(int value) {{
+    return to_string(value);
+}}
+
 // User code starts here
 {code}
 // User code ends here
 
 int main(int argc, char* argv[]) {{
-    if (argc < 2) {{
-        cout << "{{\\"result\\": \\"No input provided\\", \\"execution_time\\": 0}}" << endl;
+    if (argc < 3) {{
+        cout << "{{\\"result\\": \\"Missing arguments: expected method name and input data\\", \\"execution_time\\": 0}}" << endl;
         return 1;
     }}
     
+    string methodName = argv[1];
+    string inputJson = argv[2];
     auto start = chrono::high_resolution_clock::now();
     
     try {{
-        string inputJson = argv[1];
         JSONParser parser(inputJson);
         auto inputData = parser.parseObject();
         
-        vector<int> result;
-        
-        // Call solution function - only accept exact function name "solution"
-        // User must implement a function named exactly "solution"
-        
-        // Call solution function with standard two parameters
-        vector<int> nums = inputData["nums"];
-        vector<int> targetVec = inputData["target"];
-        int target = targetVec.empty() ? 0 : targetVec[0];
-        
-        // Create Solution instance and call solution method
         Solution sol;
-        result = sol.solution(nums, target);
         
-        auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-        double executionTime = duration.count() / 1000.0;
-        
-        cout << "{{\\"result\\": " << vectorToString(result) << ", \\"execution_time\\": " << executionTime << "}}" << endl;
+        // Special handling for first-bad-version problem
+        if (methodName == "firstBadVersion") {{
+            vector<int> nVec = inputData["n"];
+            vector<int> badVec = inputData["bad"];
+            int n = nVec.empty() ? 0 : nVec[0];
+            int bad = badVec.empty() ? 0 : badVec[0];
+            
+            // Set up isBadVersion API
+            globalBadVersion = bad;
+            
+            // Call firstBadVersion with only n parameter
+            int result = sol.firstBadVersion(n);
+            
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+            double executionTime = duration.count() / 1000.0;
+            
+            cout << "{{\\"result\\": " << result << ", \\"execution_time\\": " << executionTime << "}}" << endl;
+        }} else {{
+            // Generic method invocation for other problems
+            vector<int> result;
+            
+            if (methodName == "solution") {{
+                // Call solution function with standard two parameters
+                vector<int> nums = inputData["nums"];
+                vector<int> targetVec = inputData["target"];
+                int target = targetVec.empty() ? 0 : targetVec[0];
+                
+                result = sol.solution(nums, target);
+                
+                auto end = chrono::high_resolution_clock::now();
+                auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+                double executionTime = duration.count() / 1000.0;
+                
+                cout << "{{\\"result\\": " << vectorToString(result) << ", \\"execution_time\\": " << executionTime << "}}" << endl;
+            }} else {{
+                throw runtime_error("Unsupported method: " + methodName + ". Only 'solution' and 'firstBadVersion' are supported.");
+            }}
+        }}
         
     }} catch (const exception& e) {{
         auto end = chrono::high_resolution_clock::now();
@@ -318,74 +383,149 @@ int main(int argc, char* argv[]) {{
     "java": {
         "image": "openjdk:11-jdk-slim",
         "file_extension": ".java", 
-        "compile_command": "javac -Xlint:none Solution.java",
+        "compile_command": "javac -Xlint:none PersistentJavaRunner.java",
+        "startup_command": "java -Xms32m -Xmx128m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 PersistentJavaRunner",
         "run_command": "java -Xms8m -Xmx32m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 Main",
         "mem_limit": "128m",
+        "persistent_server": True,
         "wrapper_template": """
 import java.util.*;
+import java.lang.reflect.*;
 {imports}
 
 {code}
 
+// Static isBadVersion API for first-bad-version problem
+class VersionControl {{
+    private static int badVersion = 0;
+    
+    public static void setBadVersion(int bad) {{
+        badVersion = bad;
+    }}
+    
+    public static boolean isBadVersion(int version) {{
+        return version >= badVersion;
+    }}
+}}
+
 class Main {{
     public static void main(String[] args) {{
-        if (args.length == 0) {{
-            System.out.println("{{\\\"result\\\": \\\"No input provided\\\", \\\"execution_time\\\": 0}}");
+        if (args.length < 3) {{
+            System.out.println("{{\\\"result\\\": \\\"Missing arguments: expected method name and input data\\\", \\\"execution_time\\\": 0}}");
             return;
         }}
         
+        String methodName = args[1];
+        String inputJson = args[2];
         long startTime = System.nanoTime();
         
         try {{
-            // Parse JSON manually for speed
-            String inputJson = args[0];
-            String[] nums = null;
-            int target = 0;
-            
-            // Quick JSON parsing for nums and target
-            int numsStart = inputJson.indexOf("[");
-            int numsEnd = inputJson.indexOf("]");
-            if (numsStart != -1 && numsEnd != -1) {{
-                String numsStr = inputJson.substring(numsStart + 1, numsEnd);
-                if (!numsStr.trim().isEmpty()) {{
-                    nums = numsStr.split(",");
-                }}
-            }}
-            
-            int targetStart = inputJson.indexOf("target") + 8;
-            if (targetStart > 7) {{
-                String targetStr = inputJson.substring(targetStart);
-                target = Integer.parseInt(targetStr.replaceAll("[^\\\\d-]", ""));
-            }}
-            
-            // Convert to int array
-            int[] numArray = new int[nums != null ? nums.length : 0];
-            if (nums != null) {{
-                for (int i = 0; i < nums.length; i++) {{
-                    numArray[i] = Integer.parseInt(nums[i].trim());
-                }}
-            }}
-            
-            // Call solution
             Solution sol = new Solution();
-            int[] result = sol.solution(numArray, target);
+            Object result = null;
+            
+            // Special handling for first-bad-version problem
+            if ("firstBadVersion".equals(methodName)) {{
+                // Simple JSON parsing for first-bad-version: {{"n":5,"bad":4}}
+                int n = extractIntValue(inputJson, "n");
+                int bad = extractIntValue(inputJson, "bad");
+                
+                // Set up isBadVersion API
+                VersionControl.setBadVersion(bad);
+                
+                // Call firstBadVersion with only n parameter
+                Method method = Solution.class.getMethod("firstBadVersion", int.class);
+                result = method.invoke(sol, n);
+            }} else {{
+                // Generic method invocation for other problems
+                // Try to find the method by reflection
+                Method[] methods = Solution.class.getMethods();
+                Method targetMethod = null;
+                
+                for (Method method : methods) {{
+                    if (method.getName().equals(methodName)) {{
+                        targetMethod = method;
+                        break;
+                    }}
+                }}
+                
+                if (targetMethod == null) {{
+                    throw new RuntimeException("Method " + methodName + " not found in Solution class");
+                }}
+                
+                // Extract parameters based on input data - simplified for common cases
+                Class<?>[] paramTypes = targetMethod.getParameterTypes();
+                Object[] params = new Object[paramTypes.length];
+                
+                if (paramTypes.length == 2 && paramTypes[0] == int[].class && paramTypes[1] == int.class) {{
+                    // Common case: (int[] nums, int target)
+                    int[] nums = extractIntArray(inputJson, "nums");
+                    int target = extractIntValue(inputJson, "target");
+                    params[0] = nums;
+                    params[1] = target;
+                }} else if (paramTypes.length == 1 && paramTypes[0] == int[].class) {{
+                    // Single array parameter
+                    int[] nums = extractIntArray(inputJson, "nums");
+                    params[0] = nums;
+                }} else {{
+                    throw new RuntimeException("Unsupported parameter types for method " + methodName);
+                }}
+                
+                result = targetMethod.invoke(sol, params);
+            }}
             
             long endTime = System.nanoTime();
             double executionTime = (endTime - startTime) / 1_000_000.0;
             
-            // Output result
-            System.out.print("{{\\\"result\\\": [");
-            for (int i = 0; i < result.length; i++) {{
-                System.out.print(result[i]);
-                if (i < result.length - 1) System.out.print(",");
+            // Format output based on result type
+            if (result instanceof int[]) {{
+                int[] intArrayResult = (int[]) result;
+                System.out.print("{{\\\"result\\\": [");
+                for (int i = 0; i < intArrayResult.length; i++) {{
+                    System.out.print(intArrayResult[i]);
+                    if (i < intArrayResult.length - 1) System.out.print(",");
+                }}
+                System.out.println("], \\\"execution_time\\\": " + executionTime + "}}");
+            }} else if (result instanceof Integer) {{
+                System.out.println("{{\\\"result\\\": " + result + ", \\\"execution_time\\\": " + executionTime + "}}");
+            }} else {{
+                System.out.println("{{\\\"result\\\": \\\"" + String.valueOf(result).replace("\\"", "\\\\\\"") + "\\\", \\\"execution_time\\\": " + executionTime + "}}");
             }}
-            System.out.println("], \\\"execution_time\\\": " + executionTime + "}}");
             
         }} catch (Exception e) {{
             long endTime = System.nanoTime();
             double executionTime = (endTime - startTime) / 1_000_000.0;
             System.out.println("{{\\\"result\\\": \\\"" + e.getMessage().replace("\\"", "\\\\\\"") + "\\\", \\\"execution_time\\\": " + executionTime + "}}");
         }}
+    }}
+    
+    // Simple JSON parsing helpers
+    private static int extractIntValue(String json, String key) {{
+        String pattern = "\\"" + key + "\\"\\\\s*:\\\\s*(-?\\\\d+)";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher m = p.matcher(json);
+        if (m.find()) {{
+            return Integer.parseInt(m.group(1));
+        }}
+        throw new RuntimeException("Could not find key: " + key);
+    }}
+    
+    private static int[] extractIntArray(String json, String key) {{
+        String pattern = "\\"" + key + "\\"\\\\s*:\\\\s*\\\\[(.*?)\\\\]";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher m = p.matcher(json);
+        if (m.find()) {{
+            String arrayContent = m.group(1).trim();
+            if (arrayContent.isEmpty()) {{
+                return new int[0];
+            }}
+            String[] parts = arrayContent.split(",");
+            int[] result = new int[parts.length];
+            for (int i = 0; i < parts.length; i++) {{
+                result[i] = Integer.parseInt(parts[i].trim());
+            }}
+            return result;
+        }}
+        throw new RuntimeException("Could not find array key: " + key);
     }}
 }}""",
     },

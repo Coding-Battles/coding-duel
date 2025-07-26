@@ -1,0 +1,13 @@
+{
+  "id": "40",
+  "title": "Median of Two Sorted Arrays",
+  "methodName": "findMedianSortedArrays",
+  "difficulty": "Hard",
+  "description_html": "<p>Given two sorted arrays <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums1</code> and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums2</code> of size <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">m</code> and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code> respectively, return <em>the median of the two sorted arrays</em>.</p><p>The overall run time complexity should be <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">O(log (m+n))</code>.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums1 = [1,3], nums2 = [2]</div><div><strong>Output:</strong> 2.00000</div><div><strong>Explanation:</strong> merged array = [1,2,3] and median is 2.</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums1 = [1,2], nums2 = [3,4]</div><div><strong>Output:</strong> 2.50000</div><div><strong>Explanation:</strong> merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">nums1.length == m</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">nums2.length == n</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">0 <= m <= 1000</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">0 <= n <= 1000</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= m + n <= 2000</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-10<sup>6</sup> <= nums1[i], nums2[i] <= 10<sup>6</sup></code></li></ul></div>",
+  "starter_code": {
+    "python": "class Solution:\n    def findMedianSortedArrays(self, nums1: list[int], nums2: list[int]) -> float:\n        ",
+    "javascript": "class Solution {\n    findMedianSortedArrays(nums1, nums2) {\n        \n    }\n}",
+    "java": "class Solution {\n    public double findMedianSortedArrays(int[] nums1, int[] nums2) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+  }
+}

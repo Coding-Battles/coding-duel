@@ -1,0 +1,13 @@
+{
+  "id": "28",
+  "title": "3Sum",
+  "methodName": "threeSum",
+  "difficulty": "Medium",
+  "description_html": "<p>Given an integer array nums, return all the triplets <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">[nums[i], nums[j], nums[k]]</code> such that <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">i != j</code>, <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">i != k</code>, and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">j != k</code>, and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums[i] + nums[j] + nums[k] == 0</code>.</p><p>Notice that the solution set must not contain duplicate triplets.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [-1,0,1,2,-1,-4]</div><div><strong>Output:</strong> [[-1,-1,2],[-1,0,1]]</div><div><strong>Explanation:</strong></div><div>nums[0] + nums[1] + nums[2] = (-1) + 0 + 1 = 0.</div><div>nums[1] + nums[2] + nums[4] = 0 + 1 + (-1) = 0.</div><div>nums[0] + nums[3] + nums[4] = (-1) + 2 + (-1) = 0.</div><div>The distinct triplets are [-1,0,1] and [-1,-1,2].</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [0,1,1]</div><div><strong>Output:</strong> []</div><div><strong>Explanation:</strong> The only possible triplet does not sum up to 0.</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [0,0,0]</div><div><strong>Output:</strong> [[0,0,0]]</div><div><strong>Explanation:</strong> The only possible triplet sums up to 0.</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">3 <= nums.length <= 3000</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-10<sup>5</sup> <= nums[i] <= 10<sup>5</sup></code></li></ul></div>",
+  "starter_code": {
+    "python": "class Solution:\n    def threeSum(self, nums: list[int]) -> list[list[int]]:\n        ",
+    "javascript": "class Solution {\n    threeSum(nums) {\n        \n    }\n}",
+    "java": "class Solution {\n    public List<List<Integer>> threeSum(int[] nums) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    vector<vector<int>> threeSum(vector<int>& nums) {\n        \n    }\n};"
+  }
+}

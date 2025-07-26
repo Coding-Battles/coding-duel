@@ -1,0 +1,13 @@
+{
+  "id": "6",
+  "title": "Palindrome Number",
+  "methodName": "isPalindrome",
+  "difficulty": "Easy",
+  "description_html": "<p>Given an integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">x</code>, return <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">true</code> <em>if <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">x</code> is a <strong>palindrome</strong>, and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">false</code> otherwise</em>.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> x = 121</div><div><strong>Output:</strong> true</div><div><strong>Explanation:</strong> 121 reads as 121 from left to right and from right to left.</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> x = -121</div><div><strong>Output:</strong> false</div><div><strong>Explanation:</strong> From left to right, it reads -121. From right to left, it becomes 121-. Therefore it is not a palindrome.</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> x = 10</div><div><strong>Output:</strong> false</div><div><strong>Explanation:</strong> Reads 01 from right to left. Therefore it is not a palindrome.</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">-2<sup>31</sup> <= x <= 2<sup>31</sup> - 1</code></li></ul></div><div class=\"bg-yellow-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-yellow-800\">Follow up:</h4><p class=\"text-sm\">Could you solve it without converting the integer to a string?</p></div>",
+  "starter_code": {
+    "python": "class Solution:\n    def isPalindrome(self, x: int) -> bool:\n        ",
+    "javascript": "class Solution {\n    isPalindrome(x) {\n        \n    }\n}",
+    "java": "class Solution {\n    public boolean isPalindrome(int x) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    bool isPalindrome(int x) {\n        \n    }\n};"
+  }
+}

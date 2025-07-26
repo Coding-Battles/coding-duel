@@ -1,0 +1,62 @@
+[
+  {
+    "input": {
+      "x": 121
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "x": -121
+    },
+    "expected": false
+  },
+  {
+    "input": {
+      "x": 10
+    },
+    "expected": false
+  },
+  {
+    "input": {
+      "x": 0
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "x": 1
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "x": 12321
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "x": 123
+    },
+    "expected": false
+  },
+  {
+    "input": {
+      "x": -101
+    },
+    "expected": false
+  },
+  {
+    "input": {
+      "x": 1001
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "x": 2147447412
+    },
+    "expected": false
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "id": "13",
+  "title": "Power of Two",
+  "methodName": "isPowerOfTwo",
+  "difficulty": "Easy",
+  "description_html": "<p>Given an integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code>, return <em><code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">true</code> if it is a power of two. Otherwise, return <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">false</code></em>.</p><p>An integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code> is a power of two, if there exists an integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">x</code> such that <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n == 2<sup>x</sup></code>.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 1</div><div><strong>Output:</strong> true</div><div><strong>Explanation:</strong> 2<sup>0</sup> = 1</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 16</div><div><strong>Output:</strong> true</div><div><strong>Explanation:</strong> 2<sup>4</sup> = 16</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 3</div><div><strong>Output:</strong> false</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">-2<sup>31</sup> <= n <= 2<sup>31</sup> - 1</code></li></ul></div>",
+  "starter_code": {
+    "python": "class Solution:\n    def isPowerOfTwo(self, n: int) -> bool:\n        ",
+    "javascript": "class Solution {\n    isPowerOfTwo(n) {\n        \n    }\n}",
+    "java": "class Solution {\n    public boolean isPowerOfTwo(int n) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    bool isPowerOfTwo(int n) {\n        \n    }\n};"
+  }
+}

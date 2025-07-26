@@ -101,8 +101,113 @@ def create_batch_cpp_wrapper(user_code: str, test_cases: List[Dict], function_na
     
     test_cases_array = ",\n        ".join(f'"{tc}"' for tc in test_cases_json)
     
-    wrapper = f"""
-#include <iostream>
+    # Check if this is the firstBadVersion function
+    is_first_bad_version = (function_name == "firstBadVersion")
+    
+    # Function signature mapping for dynamic parameter handling
+    def get_function_signature(fn_name):
+        """Return parameter info for each function"""
+        signatures = {
+            "twoSum": {"params": ["nums", "target"], "return_type": "vector<int>"},
+            "missingNumber": {"params": ["nums"], "return_type": "int"},
+            "singleNumber": {"params": ["nums"], "return_type": "int"},
+            "containsDuplicate": {"params": ["nums"], "return_type": "bool"},
+            "climbStairs": {"params": ["n"], "return_type": "int"},
+            "isPalindrome": {"params": ["x"], "return_type": "bool"},
+            "isValid": {"params": ["s"], "return_type": "bool"},
+            "moveZeroes": {"params": ["nums"], "return_type": "void"},
+            "isAnagram": {"params": ["s", "t"], "return_type": "bool"},
+            "isPowerOfTwo": {"params": ["n"], "return_type": "bool"},
+            "firstBadVersion": {"params": ["n"], "return_type": "int"},
+            # Add more as needed
+        }
+        return signatures.get(fn_name, {"params": ["nums", "target"], "return_type": "vector<int>"})
+    
+    signature = get_function_signature(function_name)
+    
+    # Generate conditional execution logic
+    if is_first_bad_version:
+        execution_logic = (
+            '            vector<int> nVec = inputData["n"];\n'
+            '            vector<int> badVec = inputData["bad"];\n'
+            '            int n = nVec.empty() ? 0 : nVec[0];\n'
+            '            int bad = badVec.empty() ? 0 : badVec[0];\n'
+            '            \n'
+            '            globalBadVersion = bad;\n'
+            '            int intResult = sol.firstBadVersion(n);\n'
+            '            \n'
+            '            auto end = chrono::high_resolution_clock::now();\n'
+            '            auto duration = chrono::duration_cast<chrono::microseconds>(end - start);\n'
+            '            double executionTime = duration.count() / 1000.0;\n'
+            '            \n'
+            '            cout << "{\\"success\\": true, \\"output\\": " << intResult << ", \\"execution_time\\": " << executionTime << "}" << endl;'
+        )
+    else:
+        # Generate dynamic parameter handling based on signature
+        params = signature["params"]
+        return_type = signature["return_type"]
+        
+        # Generate parameter extraction code
+        param_extractions = []
+        param_names = []
+        
+        for param in params:
+            if param == "nums":
+                param_extractions.append('            vector<int> nums = inputData["nums"];')
+                param_names.append("nums")
+            elif param == "target":
+                param_extractions.append('            vector<int> targetVec = inputData["target"];')
+                param_extractions.append('            int target = targetVec.empty() ? 0 : targetVec[0];')
+                param_names.append("target")
+            elif param == "n":
+                param_extractions.append('            vector<int> nVec = inputData["n"];')
+                param_extractions.append('            int n = nVec.empty() ? 0 : nVec[0];')
+                param_names.append("n")
+            elif param == "x":
+                param_extractions.append('            vector<int> xVec = inputData["x"];')
+                param_extractions.append('            int x = xVec.empty() ? 0 : xVec[0];')
+                param_names.append("x")
+            elif param == "s":
+                param_extractions.append('            string s = inputData.find("s") != inputData.end() ? inputData["s"][0] : "";')
+                param_names.append("s")
+            elif param == "t":
+                param_extractions.append('            string t = inputData.find("t") != inputData.end() ? inputData["t"][0] : "";')
+                param_names.append("t")
+        
+        param_extraction_code = '\n'.join(param_extractions)
+        function_params = ", ".join(param_names)
+        
+        # Generate result handling based on return type
+        if return_type == "vector<int>":
+            result_code = f'            vector<int> result = sol.{function_name}({function_params});'
+            output_code = 'vectorToString(result)'
+        elif return_type == "int":
+            result_code = f'            int result = sol.{function_name}({function_params});'
+            output_code = 'result'
+        elif return_type == "bool":
+            result_code = f'            bool result = sol.{function_name}({function_params});'
+            output_code = '(result ? "true" : "false")'
+        elif return_type == "void":
+            result_code = f'            sol.{function_name}({function_params});'
+            output_code = '"void"'
+        else:
+            result_code = f'            auto result = sol.{function_name}({function_params});'
+            output_code = 'result'
+        
+        execution_logic = (
+            f'{param_extraction_code}\n'
+            '            \n'
+            f'{result_code}\n'
+            '            \n'
+            '            auto end = chrono::high_resolution_clock::now();\n'
+            '            auto duration = chrono::duration_cast<chrono::microseconds>(end - start);\n'
+            '            double executionTime = duration.count() / 1000.0;\n'
+            '            \n'
+            f'            cout << "{{\\"success\\": true, \\"output\\": " << {output_code} << ", \\"execution_time\\": " << executionTime << "}}" << endl;'
+        )
+    
+    # Build the wrapper in parts to avoid escaping issues
+    includes = """#include <iostream>
 #include <string>
 #include <vector>
 #include <map>
@@ -119,81 +224,82 @@ def create_batch_cpp_wrapper(user_code: str, test_cases: List[Dict], function_na
 #include <deque>
 #include <list>
 #include <functional>
-using namespace std;
+using namespace std;"""
 
+    json_parser = '''
 // JSON parsing helpers
-class JSONParser {{
+class JSONParser {
 private:
     string json;
     size_t pos = 0;
     
-    void skipWhitespace() {{
+    void skipWhitespace() {
         while (pos < json.length() && isspace(json[pos])) pos++;
-    }}
+    }
     
-    int parseInt() {{
+    int parseInt() {
         string numStr;
-        if (json[pos] == '-') {{
+        if (json[pos] == '-') {
             numStr += json[pos++];
-        }}
-        while (pos < json.length() && isdigit(json[pos])) {{
+        }
+        while (pos < json.length() && isdigit(json[pos])) {
             numStr += json[pos++];
-        }}
+        }
         return stoi(numStr);
-    }}
+    }
     
-    vector<int> parseIntArray() {{
+    vector<int> parseIntArray() {
         if (json[pos] != '[') throw runtime_error("Expected array");
         pos++;
         vector<int> result;
         skipWhitespace();
         
-        if (json[pos] == ']') {{
+        if (json[pos] == ']') {
             pos++;
             return result;
-        }}
+        }
         
-        while (true) {{
+        while (true) {
             skipWhitespace();
             result.push_back(parseInt());
             skipWhitespace();
             
-            if (json[pos] == ']') {{
+            if (json[pos] == ']') {
                 pos++;
                 break;
-            }} else if (json[pos] == ',') {{
+            } else if (json[pos] == ',') {
                 pos++;
-            }} else {{
+            } else {
                 throw runtime_error("Expected ',' or ']'");
-            }}
-        }}
+            }
+        }
         return result;
-    }}
+    }
     
 public:
-    JSONParser(const string& jsonStr) : json(jsonStr) {{}}
+    JSONParser(const string& jsonStr) : json(jsonStr) {}
     
-    map<string, vector<int>> parseObject() {{
+    map<string, vector<int>> parseObject() {
         map<string, vector<int>> result;
-        if (json[pos] != '{{') throw runtime_error("Expected object");
+        if (json[pos] != '{') throw runtime_error("Expected object");
         pos++;
         skipWhitespace();
         
-        if (json[pos] == '}}') {{
+        if (json[pos] == '}') {
             pos++;
             return result;
-        }}
+        }
         
-        while (true) {{
+        while (true) {
             skipWhitespace();
             
             // Parse key
             if (json[pos] != '"') throw runtime_error("Expected string key");
             pos++;
             string key;
-            while (pos < json.length() && json[pos] != '"') {{
+            while (pos < json.length() && json[pos] != '"') {
                 key += json[pos++];
-            }}
+            }
             pos++; // skip closing quote
             
             skipWhitespace();
@@ -202,43 +308,52 @@ public:
             skipWhitespace();
             
             vector<int> value;
-            if (json[pos] == '[') {{
+            if (json[pos] == '[') {
                 // Parse array
                 value = parseIntArray();
-            }} else {{
+            } else {
                 // Parse single integer
                 value.push_back(parseInt());
-            }}
+            }
             result[key] = value;
             skipWhitespace();
             
-            if (json[pos] == '}}') {{
+            if (json[pos] == '}') {
                 pos++;
                 break;
-            }} else if (json[pos] == ',') {{
+            } else if (json[pos] == ',') {
                 pos++;
-            }} else {{
-                throw runtime_error("Expected ',' or '}}'");
-            }}
-        }}
+            } else {
+                throw runtime_error("Expected ',' or '}'");
+            }
+        }
         return result;
-    }}
-}};
+    }
+};'''
 
-string vectorToString(const vector<int>& vec) {{
+    helpers = '''
+// Global isBadVersion API for first-bad-version problem
+int globalBadVersion = 0;
+
+bool isBadVersion(int version) {
+    return version >= globalBadVersion;
+}
+
+string vectorToString(const vector<int>& vec) {
     string result = "[";
-    for (size_t i = 0; i < vec.size(); i++) {{
+    for (size_t i = 0; i < vec.size(); i++) {
         result += to_string(vec[i]);
         if (i < vec.size() - 1) result += ",";
-    }}
+    }
     result += "]";
     return result;
-}}
+}
 
-// User code starts here
-{user_code}
-// User code ends here
+string intToString(int value) {
+    return to_string(value);
+}'''
 
+    main_function = f'''
 int main() {{
     string testInputs[] = {{
         {test_cases_array}
@@ -253,28 +368,18 @@ int main() {{
             JSONParser parser(testInputs[i]);
             auto inputData = parser.parseObject();
             
-            vector<int> nums = inputData["nums"];
-            vector<int> targetVec = inputData["target"];
-            int target = targetVec.empty() ? 0 : targetVec[0];
-            
-            // Call solution
             Solution sol;
-            vector<int> result = sol.{function_name}(nums, target);
-            
-            auto end = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-            double executionTime = duration.count() / 1000.0;
-            
-            cout << "{{\\"success\\": true, \\"output\\": " << vectorToString(result) << ", \\"execution_time\\": " << executionTime << "}}" << endl;
+            {execution_logic}
             
         }} catch (const exception& e) {{
-            cout << "{{\\"success\\": false, \\"output\\": null, \\"error\\": \\"" << e.what() << "\\", \\"execution_time\\": null}}" << endl;
+            cout << "{{" + string("\\"success\\": false, \\"output\\": null, \\"error\\": \\"") + e.what() + string("\\", \\"execution_time\\": null}}") << endl;
         }}
     }}
     
     return 0;
-}}
-"""
+}}'''
+
+    wrapper = includes + json_parser + helpers + f"\n\n// User code starts here\n{user_code}\n// User code ends here\n" + main_function
     return wrapper
 
 

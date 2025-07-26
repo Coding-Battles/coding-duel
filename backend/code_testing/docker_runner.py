@@ -61,22 +61,44 @@ def get_persistent_container(language: str):
         except:
             pass
 
-        # Create new container
+        # Create new container with appropriate startup command
+        startup_cmd = config.get("startup_command", "sleep infinity")
         print(
             f"🐛 [DOCKER DEBUG] Starting new {language} container with image {config['image']}"
         )
-        container = docker_client.containers.run(
-            config["image"],
-            command="sleep infinity",
-            name=container_name,
-            detach=True,
-            mem_limit=config.get("mem_limit", "128m"),
-            nano_cpus=300000000,  # 0.3 CPU core
-            network_mode="none",
-            security_opt=["no-new-privileges:true"],
-            working_dir="/tmp",
-            remove=False,
-        )
+        print(f"🐛 [DOCKER DEBUG] Startup command: {startup_cmd}")
+        
+        # For Java, we need to setup the persistent server
+        if language == "java" and "persistent_server" in config:
+            # Start with sleep first, then setup server
+            container = docker_client.containers.run(
+                config["image"],
+                command="sleep infinity",
+                name=container_name,
+                detach=True,
+                mem_limit=config.get("mem_limit", "128m"),
+                nano_cpus=300000000,  # 0.3 CPU core
+                network_mode="none",
+                security_opt=["no-new-privileges:true"],
+                working_dir="/tmp",
+                remove=False,
+            )
+            
+            # Setup the persistent Java server
+            setup_java_persistent_server(container, config)
+        else:
+            container = docker_client.containers.run(
+                config["image"],
+                command=startup_cmd,
+                name=container_name,
+                detach=True,
+                mem_limit=config.get("mem_limit", "128m"),
+                nano_cpus=300000000,  # 0.3 CPU core
+                network_mode="none",
+                security_opt=["no-new-privileges:true"],
+                working_dir="/tmp",
+                remove=False,
+            )
 
         print(
             f"🐛 [DOCKER DEBUG] Created new {language} container: {container.id[:12]}"
@@ -111,9 +133,18 @@ def run_code_in_docker(
         # Prepare code with wrapper template
         print(f"🐛 [DOCKER DEBUG] About to format wrapper template for {request.language}")
         try:
+            # Special processing for Java firstBadVersion to avoid class conflicts
+            processed_code = request.code
+            additional_imports = ""
+            
+            if request.language == "java" and request.function_name == "firstBadVersion":
+                # Remove "extends VersionControl" from user code if present to avoid conflicts
+                processed_code = processed_code.replace("extends VersionControl", "").replace("  {", " {")
+                print(f"🐛 [DOCKER DEBUG] Cleaned Java code for firstBadVersion")
+            
             wrapped_code = config["wrapper_template"].format(
-                code=request.code, 
-                imports="",
+                code=processed_code, 
+                imports=additional_imports,
                 function_name=request.function_name
             )
             print(f"🐛 [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
@@ -169,10 +200,10 @@ def run_code_in_docker(
         print(f"🐛 [DOCKER DEBUG] Base run command: {run_command}")
 
         # Pass arguments based on language
-        print(f"🐛 [DOCKER DEBUG] About to check language condition: {request.language} in ['python', 'javascript']")
-        if request.language in ["python", "javascript"]:
-            print(f"🐛 [DOCKER DEBUG] ENTERING PYTHON/JS BRANCH")
-            # For Python and JavaScript, pass function name and input as separate arguments
+        print(f"🐛 [DOCKER DEBUG] About to check language condition: {request.language} in ['python', 'javascript', 'java']")
+        if request.language in ["python", "javascript", "java"]:
+            print(f"🐛 [DOCKER DEBUG] ENTERING PYTHON/JS/JAVA BRANCH")
+            # For Python, JavaScript, and Java, pass function name and input as separate arguments
             function_name = getattr(request, 'function_name', 'solution')
             print(f"🐛 [DOCKER DEBUG] Raw function_name from request: {repr(function_name)}")
             print(f"🐛 [DOCKER DEBUG] Type of function_name: {type(function_name)}")
@@ -181,7 +212,7 @@ def run_code_in_docker(
             run_command += f' "{function_name}" "{input_json}"'
             print(f"🐛 [DOCKER DEBUG] Run command after args: {run_command}")
         else:
-            # For other languages (Java, C++), pass input as single argument
+            # For other languages (C++), pass input as single argument
             input_json = json.dumps(request.test_input).replace('"', '\\"')
             run_command += f' "{input_json}"'
 
@@ -279,6 +310,53 @@ def cleanup_persistent_containers():
                 print(f"Error cleaning up container {container_name}: {e}")
 
         _persistent_containers.clear()
+
+
+def setup_java_persistent_server(container, config):
+    """Setup the persistent Java server in the container."""
+    import base64
+    import os
+    
+    print("🐛 [DOCKER DEBUG] Setting up Java persistent server")
+    
+    # Copy PersistentJavaRunner.java to container
+    server_file_path = os.path.join(os.path.dirname(__file__), "PersistentJavaRunner.java")
+    with open(server_file_path, "r") as f:
+        server_code = f.read()
+    
+    encoded_code = base64.b64encode(server_code.encode("utf-8")).decode("ascii")
+    create_result = container.exec_run(
+        f"sh -c 'echo {encoded_code} | base64 -d > /tmp/PersistentJavaRunner.java'",
+        workdir="/tmp"
+    )
+    
+    if create_result.exit_code != 0:
+        raise Exception(f"Failed to copy server code: {create_result.output.decode('utf-8')}")
+    
+    # Compile the server
+    compile_result = container.exec_run(
+        config["compile_command"],
+        workdir="/tmp"
+    )
+    
+    if compile_result.exit_code != 0:
+        error_msg = compile_result.output.decode("utf-8")
+        raise Exception(f"Failed to compile Java server: {error_msg}")
+    
+    # Start the server process in background
+    print("🐛 [DOCKER DEBUG] Starting Java server process")
+    server_result = container.exec_run(
+        config["startup_command"],
+        workdir="/tmp",
+        detach=True,
+        stdin=True,
+        stdout=True,
+        stderr=True
+    )
+    
+    # Store the exec instance for communication
+    container._java_server_exec = server_result
+    print("🐛 [DOCKER DEBUG] Java server started successfully")
 
 
 # Test it

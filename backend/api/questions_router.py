@@ -29,6 +29,25 @@ def get_file_name_from_slug(slug: str) -> str:
     """Return slug as file name since they are now the same."""
     return slug
 
+@router.get("/questions")
+async def get_all_questions():
+    """Get all available questions organized by difficulty."""
+    try:
+        questions_file_path = Path("backend/data/questions.json")
+        
+        if not questions_file_path.exists():
+            raise HTTPException(status_code=404, detail="Questions data not found")
+            
+        with open(questions_file_path, "r", encoding="utf-8") as file:
+            questions_data = json.load(file)
+        return questions_data
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in questions file: {str(e)}")
+        raise HTTPException(status_code=500, detail="Invalid questions data format")
+    except Exception as e:
+        logger.error(f"Error loading questions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error loading questions")
+
 @router.get("/get-question/{question_slug}", response_model=QuestionData)
 async def get_question(question_slug: str):
     try:
@@ -92,6 +111,40 @@ async def run_sample_tests(request: RunTestCasesRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Unexpected error in /run-sample-tests: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@router.post("/{question_slug}/test", response_model=RunTestCasesResponse)
+async def test_question(question_slug: str, request: RunTestCasesRequest):
+    """Test individual question with either sample tests or full test suite."""
+    try:
+        # Override question_name with the slug from URL
+        request.question_name = question_slug
+        
+        # Check if this is a sample test request (first 3 tests only)
+        # This can be determined by a query parameter or request field
+        return TestExecutionService.execute_test_cases(request)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error in /test-question: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@router.post("/{question_slug}/test-sample", response_model=RunTestCasesResponse)
+async def test_question_sample(question_slug: str, request: RunTestCasesRequest):
+    """Test individual question with sample tests only (first 3 test cases)."""
+    try:
+        # Override question_name with the slug from URL
+        request.question_name = question_slug
+        
+        return TestExecutionService.execute_sample_test_cases(request)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error in /test-question-sample: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post("/analyze-complexity", response_model=TimeComplexityResponse)

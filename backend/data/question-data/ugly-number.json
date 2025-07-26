@@ -1,0 +1,13 @@
+{
+  "id": "14",
+  "title": "Ugly Number",
+  "methodName": "isUgly",
+  "difficulty": "Easy",
+  "description_html": "<p>An <strong>ugly number</strong> is a positive integer whose prime factors are limited to <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">2</code>, <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">3</code>, and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">5</code>.</p><p>Given an integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code>, return <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">true</code> <em>if <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code> is an <strong>ugly number</strong></em>.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 6</div><div><strong>Output:</strong> true</div><div><strong>Explanation:</strong> 6 = 2 × 3</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 1</div><div><strong>Output:</strong> true</div><div><strong>Explanation:</strong> 1 has no prime factors, therefore all of its prime factors are limited to 2, 3, and 5.</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 14</div><div><strong>Output:</strong> false</div><div><strong>Explanation:</strong> 14 is not ugly since it includes the prime factor 7.</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">-2<sup>31</sup> <= n <= 2<sup>31</sup> - 1</code></li></ul></div>",
+  "starter_code": {
+    "python": "class Solution:\n    def isUgly(self, n: int) -> bool:\n        ",
+    "javascript": "class Solution {\n    isUgly(n) {\n        \n    }\n}",
+    "java": "class Solution {\n    public boolean isUgly(int n) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    bool isUgly(int n) {\n        \n    }\n};"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "31",
+  "title": "Product of Array Except Self",
+  "methodName": "productExceptSelf",
+  "difficulty": "Medium",
+  "description_html": "<p>Given an integer array <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums</code>, return <em>an array <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">answer</code> such that <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">answer[i]</code> is equal to the product of all the elements of <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums</code> except <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums[i]</code></em>.</p><p>The product of any prefix or suffix of <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums</code> is guaranteed to fit in a <strong>32-bit</strong> integer.</p><p>You must write an algorithm that runs in <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">O(n)</code> time and without using the division operation.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [1,2,3,4]</div><div><strong>Output:</strong> [24,12,8,6]</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [-1,1,0,-3,3]</div><div><strong>Output:</strong> [0,0,9,0,0]</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">2 <= nums.length <= 10<sup>5</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-30 <= nums[i] <= 30</code></li><li>The product of any prefix or suffix of <code class=\"bg-white px-1 py-0.5 rounded\">nums</code> is <strong>guaranteed</strong> to fit in a <strong>32-bit</strong> integer.</li></ul></div>",
+  "starter_code": {
+    "python": "class Solution:\n    def productExceptSelf(self, nums: list[int]) -> list[int]:\n        ",
+    "javascript": "class Solution {\n    productExceptSelf(nums) {\n        \n    }\n}",
+    "java": "class Solution {\n    public int[] productExceptSelf(int[] nums) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        \n    }\n};"
+  }
+}
