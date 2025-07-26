@@ -59,74 +59,90 @@ def run_java_batch(
         # Send request to Java server - simplified approach for now  
         comm_start = time.time()
         
-        # Check if persistent server is alive
-        check_server = container.exec_run("kill -0 $(cat /tmp/server.pid) 2>/dev/null", workdir="/tmp")
-        if check_server.exit_code != 0:
-            print(f"🐛 [JAVA BATCH] Persistent server died, falling back to direct execution")
-            use_persistent = False
-        else:
+        # Check if persistent server is available and ready
+        if hasattr(container, '_java_server_ready') and container._java_server_ready:
             print(f"🐛 [JAVA BATCH] Using persistent server (PID: {container._java_server_pid})")
             use_persistent = True
+        else:
+            print(f"🐛 [JAVA BATCH] Persistent server not ready, falling back to direct execution")
+            use_persistent = False
         
         if use_persistent:
-            # Use TRUE persistent server via named pipe
-            print(f"🐛 [JAVA BATCH] Sending request to persistent server via named pipe...")
+            # Use TRUE persistent server via socket connection
+            print(f"🐛 [JAVA BATCH] Sending request to persistent server via socket...")
             
             try:
-                # Send JSON request directly to named pipe (this goes to server's stdin)
-                pipe_write = container.exec_run(
-                    f"sh -c 'echo {base64.b64encode(request_json.encode()).decode()} | base64 -d > /tmp/java_server_input'",
+                # Send JSON request via socket using bash TCP redirect 
+                # (since nc/netcat is not available in minimal containers)
+                print(f"🐛 [JAVA BATCH] Sending request via bash TCP redirect...")
+                
+                # Create a temporary script to handle the socket communication
+                comm_script = f'''#!/bin/bash
+exec 3<>/dev/tcp/localhost/8899
+echo '{request_json}' >&3
+cat <&3
+exec 3<&-
+exec 3>&-
+'''
+                
+                # Write the script to container
+                script_encoded = base64.b64encode(comm_script.encode()).decode()
+                script_create = container.exec_run(
+                    f"sh -c 'echo {script_encoded} | base64 -d > /tmp/socket_comm.sh && chmod +x /tmp/socket_comm.sh'",
                     workdir="/tmp"
                 )
                 
-                if pipe_write.exit_code != 0:
-                    print(f"🐛 [JAVA BATCH] Failed to write to named pipe: {pipe_write.output.decode('utf-8')}")
+                if script_create.exit_code != 0:
+                    print(f"🐛 [JAVA BATCH] Failed to create communication script")
                     use_persistent = False
                 else:
-                    # Read response from server output pipe
-                    print(f"🐛 [JAVA BATCH] Reading response from persistent server...")
-                    
-                    # Use timeout to read response from output pipe
-                    read_response = container.exec_run(
-                        "sh -c 'timeout 10 head -1 /tmp/java_server_output 2>/dev/null || echo \"TIMEOUT\"'",
+                    # Execute the communication script
+                    socket_send = container.exec_run(
+                        "timeout 10 bash /tmp/socket_comm.sh",
                         workdir="/tmp"
                     )
                     
-                    if read_response.exit_code == 0:
-                        response_output = read_response.output.decode("utf-8").strip()
-                        if response_output and "TIMEOUT" not in response_output:
-                            output = response_output
+                    if socket_send.exit_code != 0 and socket_send.exit_code != 124:  # 124 = timeout
+                        print(f"🐛 [JAVA BATCH] Failed to send via socket: {socket_send.output.decode('utf-8')}")
+                        use_persistent = False
+                    else:
+                        output = socket_send.output.decode("utf-8").strip()
+                        if output and output != "timeout: failed to run command" and not output.startswith("bash:"):
                             print(f"🐛 [JAVA BATCH] ✅ Got response from persistent server: {len(output)} chars")
                         else:
-                            print(f"🐛 [JAVA BATCH] Persistent server timeout or empty response, falling back")
-                            # Check if server died
-                            check_server_alive = container.exec_run(f"kill -0 {container._java_server_pid} 2>/dev/null", workdir="/tmp")
-                            if check_server_alive.exit_code != 0:
-                                print(f"🐛 [JAVA BATCH] ❌ Persistent server died!")
+                            print(f"🐛 [JAVA BATCH] No valid response from persistent server, falling back")
+                            print(f"🐛 [JAVA BATCH] Output was: {output}")
                             use_persistent = False
-                    else:
-                        print(f"🐛 [JAVA BATCH] Failed to read from output pipe, falling back")
-                        use_persistent = False
                         
             except Exception as e:
                 print(f"🐛 [JAVA BATCH] Persistent server communication error: {str(e)}")
                 use_persistent = False
         
         if not use_persistent:
-            # Fallback to direct execution (current working approach)
-            print(f"🐛 [JAVA BATCH] Using direct execution fallback...")
-            encoded_request = base64.b64encode(request_json.encode("utf-8")).decode("ascii")
-            exec_result = container.exec_run(
-                f"sh -c 'echo {encoded_request} | base64 -d | java PersistentJavaRunner'",
-                workdir="/tmp"
-            )
+            # Fallback to single test case execution using the docker_runner
+            print(f"🐛 [JAVA BATCH] Using single test case fallback...")
+            from backend.code_testing.docker_runner import run_code_in_docker
+            from backend.models.questions import DockerRunRequest
             
-            if exec_result.exit_code != 0:
-                error_msg = exec_result.output.decode("utf-8")
-                print(f"🐛 [JAVA BATCH] Fallback execution failed: {error_msg}")
-                return [{"success": False, "output": None, "error": f"Server execution failed: {error_msg}", "execution_time": None}] * len(test_cases)
+            results = []
+            for test_case in test_cases:
+                request = DockerRunRequest(
+                    code=code,
+                    language="java",
+                    test_input=test_case["input"],
+                    timeout=timeout,
+                    function_name=function_name
+                )
+                
+                result = run_code_in_docker(request)
+                results.append({
+                    "success": result.get("success", False),
+                    "output": result.get("output"),
+                    "execution_time": result.get("execution_time"),
+                    "error": result.get("error")
+                })
             
-            output = exec_result.output.decode("utf-8").strip()
+            return results
         
         comm_time = (time.time() - comm_start) * 1000
         if use_persistent:
