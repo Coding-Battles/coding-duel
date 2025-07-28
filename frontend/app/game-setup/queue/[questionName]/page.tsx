@@ -1,7 +1,14 @@
 // This file was moved from in-game/page.tsx to [questionName]/page.tsx for dynamic routing.
 "use client";
-import { QuestionData, TestResultsData, CustomUser, OpponentData, ProgrammingLanguage } from "@/shared/types";
+import {
+  QuestionData,
+  TestResultsData,
+  CustomUser,
+  OpponentData,
+  ProgrammingLanguage,
+} from "@/shared/types";
 import EditorWithTerminal from "@/components/EditorWithTerminal";
+import QuestionColumn from "@/components/QuestionColumn";
 import { Language, getLanguageConfig } from "@/types/languages";
 import { useParams, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -12,26 +19,23 @@ import { StackableAlerts } from "@/components/ui/alert";
 import FinishedPage from "@/components/FinishedPage";
 
 import DuelInfo from "@/components/DuelInfo";
-import {
-  transformLeetCodeHtml,
-  getDifficultyClass,
-} from "@/lib/leetcode-html-transformer";
 
 type AlertType = { id: string; message: string; variant?: string };
 
 // Dummy data - User wins scenario
 export const dummyUserWinsData = {
   opponent: {
-    image_url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    name: "Alex Thompson"
+    image_url:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+    name: "Alex Thompson",
   } as OpponentData,
-  
+
   user: {
     id: "user123",
     name: "John Doe",
-    email: "john@example.com"
+    email: "john@example.com",
   } as CustomUser,
-  
+
   opponentStats: {
     player_name: "Alex Thompson",
     implement_time: 165, // Changed from "2:45" to a number (e.g., seconds)
@@ -44,9 +48,9 @@ export const dummyUserWinsData = {
     error: "",
     message: "",
     code: "",
-    opponent_id: "opponent123"
+    opponent_id: "opponent123",
   } as TestResultsData,
-  
+
   userStats: {
     player_name: "John Doe",
     implement_time: 132, // Changed from "2:12" (string) to 132 (number, e.g., seconds)
@@ -59,8 +63,8 @@ export const dummyUserWinsData = {
     error: "",
     message: "",
     code: "",
-    opponent_id: ""
-  } as TestResultsData
+    opponent_id: "",
+  } as TestResultsData,
 };
 
 const debugFinishedPage = false; // Set to true to debug FinishedPage component
@@ -111,7 +115,9 @@ export default function InGamePage() {
   // Function to emit code updates - we'll set this up later
   const emitCodeUpdateRef = useRef<((code: string) => void) | null>(null);
   // Function to emit instant code updates
-  const emitInstantCodeUpdateRef = useRef<((code: string, reason: string) => void) | null>(null);
+  const emitInstantCodeUpdateRef = useRef<
+    ((code: string, reason: string) => void) | null
+  >(null);
   // Refs to always have current values (avoid stale closures)
   const questionDataRef = useRef<QuestionData | null>(null);
   const userCodeRef = useRef<string>("");
@@ -218,7 +224,9 @@ export default function InGamePage() {
       setGameEndData(data);
 
       // Get unified player ID for winner comparison
-      const playerId = context?.isAnonymous ? context.anonymousId : userSession?.user?.id;
+      const playerId = context?.isAnonymous
+        ? context.anonymousId
+        : userSession?.user?.id;
 
       setAlerts((prev) => [
         ...prev,
@@ -261,7 +269,10 @@ export default function InGamePage() {
     const questionName = params?.questionName;
     const fetchQuestion = async () => {
       try {
-        console.log("🚀 [QUESTION DEBUG] Starting to fetch question:", questionName);
+        console.log(
+          "🚀 [QUESTION DEBUG] Starting to fetch question:",
+          questionName
+        );
         setLoading(true);
         if (!questionName)
           throw new Error(
@@ -276,7 +287,12 @@ export default function InGamePage() {
         }
 
         const data = await response.json();
-        console.log("🚀 [QUESTION DEBUG] Question data loaded successfully:", !!data, "starter_code keys:", Object.keys(data?.starter_code || {}));
+        console.log(
+          "🚀 [QUESTION DEBUG] Question data loaded successfully:",
+          !!data,
+          "starter_code keys:",
+          Object.keys(data?.starter_code || {})
+        );
         setQuestionData(data);
         questionDataRef.current = data;
       } catch (err) {
@@ -297,89 +313,164 @@ export default function InGamePage() {
   }, [params?.questionName]);
 
   useEffect(() => {
-    console.log("🚀 [USERCODE DEBUG] useEffect triggered - questionData:", !!questionData, "selectedLanguage:", selectedLanguage);
+    console.log(
+      "🚀 [USERCODE DEBUG] useEffect triggered - questionData:",
+      !!questionData,
+      "selectedLanguage:",
+      selectedLanguage
+    );
     if (questionData && questionData.starter_code) {
       const starterCode = questionData.starter_code[selectedLanguage];
-      console.log("🚀 [USERCODE DEBUG] Found starter code for", selectedLanguage, ":", !!starterCode, "length:", starterCode?.length);
+      console.log(
+        "🚀 [USERCODE DEBUG] Found starter code for",
+        selectedLanguage,
+        ":",
+        !!starterCode,
+        "length:",
+        starterCode?.length
+      );
       if (starterCode) {
         setUserCode(starterCode);
         userCodeRef.current = starterCode;
         console.log("🚀 [USERCODE DEBUG] Set userCode to starter code");
       }
     } else {
-      console.warn("🚀 [USERCODE DEBUG] Missing questionData or starter_code:", {
-        questionData: !!questionData,
-        starter_code: !!questionData?.starter_code,
-        selectedLanguage
-      });
+      console.warn(
+        "🚀 [USERCODE DEBUG] Missing questionData or starter_code:",
+        {
+          questionData: !!questionData,
+          starter_code: !!questionData?.starter_code,
+          selectedLanguage,
+        }
+      );
     }
   }, [questionData, selectedLanguage]);
 
   // Join game room and set up debounced code update function
   useEffect(() => {
     // Get player ID - either from authenticated user or anonymous user
-    const playerId = context?.isAnonymous ? context.anonymousId : userSession?.user?.id;
-    
+    const playerId = context?.isAnonymous
+      ? context.anonymousId
+      : userSession?.user?.id;
+
     if (context?.socket && context.gameId && playerId) {
       // Set up socket event listeners for timer synchronization
-      context.socket.on("game_joined", (data: { game_id: string; start_time?: number | null }) => {
-        console.log("🚀 [TIMER DEBUG] Received game_joined event:", data);
-        if (data.start_time) {
-          console.log("🚀 [TIMER DEBUG] Game already started, setting start time:", data.start_time);
+      context.socket.on(
+        "game_joined",
+        (data: { game_id: string; start_time?: number | null }) => {
+          console.log("🚀 [TIMER DEBUG] Received game_joined event:", data);
+          if (data.start_time) {
+            console.log(
+              "🚀 [TIMER DEBUG] Game already started, setting start time:",
+              data.start_time
+            );
+            setGameStartTime(data.start_time);
+            setIsGameStarted(true);
+          }
+        }
+      );
+
+      context.socket.on(
+        "game_start",
+        (data: { game_id: string; start_time: number }) => {
+          console.log("🚀 [TIMER DEBUG] Received game_start event:", data);
+          console.log(
+            "🚀 [TIMER DEBUG] Setting gameStartTime to:",
+            data.start_time,
+            "and isGameStarted to: true"
+          );
           setGameStartTime(data.start_time);
           setIsGameStarted(true);
-        }
-      });
 
-      context.socket.on("game_start", (data: { game_id: string; start_time: number }) => {
-        console.log("🚀 [TIMER DEBUG] Received game_start event:", data);
-        console.log("🚀 [TIMER DEBUG] Setting gameStartTime to:", data.start_time, "and isGameStarted to: true");
-        setGameStartTime(data.start_time);
-        setIsGameStarted(true);
-        
-        // Emit instant code update when timer starts
-        // Use refs to avoid stale closure issues
-        const attemptInstantUpdate = (attempt = 1, maxAttempts = 5) => {
-          // Access current values from refs (not closure variables)
-          const currentUserCode = userCodeRef.current;
-          const currentQuestionData = questionDataRef.current;
-          const codeToSend = currentUserCode || (currentQuestionData?.starter_code?.[selectedLanguage] || "");
-          
-          if (emitInstantCodeUpdateRef.current && codeToSend && currentQuestionData) {
-            console.log("🚀 [INSTANT DEBUG] Emitting instant code update on timer start (attempt", attempt, "), code length:", codeToSend.length);
-            console.log("🚀 [INSTANT DEBUG] Current userCode from ref:", currentUserCode?.substring(0, 50) + "...");
-            console.log("🚀 [INSTANT DEBUG] Selected language:", selectedLanguage);
-            emitInstantCodeUpdateRef.current(codeToSend, "timer_start");
-          } else if (attempt < maxAttempts) {
-            console.warn("🚀 [INSTANT DEBUG] Attempt", attempt, "failed - userCodeRef:", !!currentUserCode, "questionDataRef:", !!currentQuestionData, "emitRef:", !!emitInstantCodeUpdateRef.current, "- retrying in 500ms");
-            setTimeout(() => attemptInstantUpdate(attempt + 1, maxAttempts), 500);
-          } else {
-            console.error("🚀 [INSTANT DEBUG] Failed to send instant update after", maxAttempts, "attempts - userCodeRef:", !!currentUserCode, "questionDataRef:", !!currentQuestionData, "emitRef:", !!emitInstantCodeUpdateRef.current);
-          }
-        };
-        
-        setTimeout(() => attemptInstantUpdate(), 1000);
-      });
+          // Emit instant code update when timer starts
+          // Use refs to avoid stale closure issues
+          const attemptInstantUpdate = (attempt = 1, maxAttempts = 5) => {
+            // Access current values from refs (not closure variables)
+            const currentUserCode = userCodeRef.current;
+            const currentQuestionData = questionDataRef.current;
+            const codeToSend =
+              currentUserCode ||
+              currentQuestionData?.starter_code?.[selectedLanguage] ||
+              "";
+
+            if (
+              emitInstantCodeUpdateRef.current &&
+              codeToSend &&
+              currentQuestionData
+            ) {
+              console.log(
+                "🚀 [INSTANT DEBUG] Emitting instant code update on timer start (attempt",
+                attempt,
+                "), code length:",
+                codeToSend.length
+              );
+              console.log(
+                "🚀 [INSTANT DEBUG] Current userCode from ref:",
+                currentUserCode?.substring(0, 50) + "..."
+              );
+              console.log(
+                "🚀 [INSTANT DEBUG] Selected language:",
+                selectedLanguage
+              );
+              emitInstantCodeUpdateRef.current(codeToSend, "timer_start");
+            } else if (attempt < maxAttempts) {
+              console.warn(
+                "🚀 [INSTANT DEBUG] Attempt",
+                attempt,
+                "failed - userCodeRef:",
+                !!currentUserCode,
+                "questionDataRef:",
+                !!currentQuestionData,
+                "emitRef:",
+                !!emitInstantCodeUpdateRef.current,
+                "- retrying in 500ms"
+              );
+              setTimeout(
+                () => attemptInstantUpdate(attempt + 1, maxAttempts),
+                500
+              );
+            } else {
+              console.error(
+                "🚀 [INSTANT DEBUG] Failed to send instant update after",
+                maxAttempts,
+                "attempts - userCodeRef:",
+                !!currentUserCode,
+                "questionDataRef:",
+                !!currentQuestionData,
+                "emitRef:",
+                !!emitInstantCodeUpdateRef.current
+              );
+            }
+          };
+
+          setTimeout(() => attemptInstantUpdate(), 1000);
+        }
+      );
 
       // Join the game room first
       console.log("🚀 [JOIN DEBUG] Emitting join_game event with:", {
         game_id: context.gameId,
-        player_id: playerId
+        player_id: playerId,
       });
       context.socket.emit("join_game", {
         game_id: context.gameId,
-        player_id: playerId
+        player_id: playerId,
       });
 
       // Set up simple code update function (no debouncing - backend handles timing)
       emitCodeUpdateRef.current = (code: string) => {
         // Only emit if we have all required data and the socket is connected
-        if (context.socket && context.socket.connected && context.gameId && playerId) {
+        if (
+          context.socket &&
+          context.socket.connected &&
+          context.gameId &&
+          playerId
+        ) {
           context.socket.emit("code_update", {
             game_id: context.gameId,
             player_id: playerId,
             code: code,
-            language: selectedLanguage
+            language: selectedLanguage,
           });
         }
       };
@@ -387,18 +478,23 @@ export default function InGamePage() {
       // Set up instant code update function (bypasses 30-second delay)
       emitInstantCodeUpdateRef.current = (code: string, reason: string) => {
         // Only emit if we have all required data and the socket is connected
-        if (context.socket && context.socket.connected && context.gameId && playerId) {
+        if (
+          context.socket &&
+          context.socket.connected &&
+          context.gameId &&
+          playerId
+        ) {
           context.socket.emit("instant_code_update", {
             game_id: context.gameId,
             player_id: playerId,
             code: code,
             language: selectedLanguage,
-            reason: reason
+            reason: reason,
           });
         }
       };
     }
-    
+
     // Cleanup on unmount or dependencies change
     return () => {
       if (context?.socket) {
@@ -406,7 +502,14 @@ export default function InGamePage() {
         context.socket.off("game_start");
       }
     };
-  }, [context?.socket, context?.gameId, context?.isAnonymous, context?.anonymousId, userSession?.user?.id, selectedLanguage]);
+  }, [
+    context?.socket,
+    context?.gameId,
+    context?.isAnonymous,
+    context?.anonymousId,
+    userSession?.user?.id,
+    selectedLanguage,
+  ]);
 
   // NOW all conditional returns can happen AFTER all hooks are declared
   if (!context) {
@@ -442,18 +545,24 @@ export default function InGamePage() {
       const starterCode = questionData.starter_code[language];
       if (starterCode) {
         setUserCode(starterCode);
-        
+
         // Update ref
         userCodeRef.current = starterCode;
-        
+
         // Check if we're in the first 30 seconds and emit instant update
         if (gameStartTime && isGameStarted) {
           const currentTime = Date.now();
-          const gameElapsedSeconds = (currentTime - gameStartTime * 1000) / 1000;
-          
+          const gameElapsedSeconds =
+            (currentTime - gameStartTime * 1000) / 1000;
+
           if (gameElapsedSeconds < 30 && emitInstantCodeUpdateRef.current) {
-            console.log("🚀 [INSTANT DEBUG] Emitting instant code update on language switch in first 30s");
-            emitInstantCodeUpdateRef.current(starterCode, "language_switch_early");
+            console.log(
+              "🚀 [INSTANT DEBUG] Emitting instant code update on language switch in first 30s"
+            );
+            emitInstantCodeUpdateRef.current(
+              starterCode,
+              "language_switch_early"
+            );
           }
         }
       }
@@ -579,151 +688,135 @@ export default function InGamePage() {
 
   console.log("context: ", context);
   return (
-    <div ref={containerRef} className="flex items-center justify-center w-screen h-screen">
+    <div
+      ref={containerRef}
+      className="flex items-center justify-center w-screen h-screen"
+    >
       <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
 
-      {!debugFinishedPage && <>{!gameFinished ? (
-        <div className="flex w-full h-full">
-          {/* Left Column - Question */}
-          <div
-            className="relative overflow-y-auto border-r"
-            style={{ width: `${leftWidth}%` }}
-          >
-            <div className="p-4">
-              {questionData ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <h2 className="text-xl font-bold">{questionData.title}</h2>
-                    <span
-                      className={getDifficultyClass(questionData.difficulty)}
-                    >
-                      {questionData.difficulty}
-                    </span>
-                  </div>
-                  <div
-                    className="text-sm prose-sm prose max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: transformLeetCodeHtml(
-                        questionData.description_html
-                      ),
-                    }}
+      {!debugFinishedPage && (
+        <>
+          {!gameFinished ? (
+            <div className="flex w-full h-full">
+              {/* Left Column - Question */}
+              <QuestionColumn
+                questionData={questionData}
+                loading={loading}
+                width={leftWidth}
+              />{" "}
+              {/* Left Resizer */}
+              <div
+                className="relative w-1 transition-colors duration-200 cursor-col-resize group"
+                style={{ backgroundColor: "var(--border)" }}
+                onMouseDown={handleLeftMouseDown}
+              >
+                <div className="absolute inset-0 w-3 -ml-1" />
+                <div
+                  className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded top-1/2 left-1/2"
+                  style={{
+                    backgroundColor: "var(--border)",
+                    opacity: "0.8",
+                  }}
+                />
+              </div>
+              {/* Middle Column - Editor */}
+              <div className="h-full" style={{ width: `${middleWidth}%` }}>
+                <EditorWithTerminal
+                  code={userCode}
+                  onCodeChange={(value) => {
+                    const newCode = value || "";
+                    setUserCode(newCode);
+                    userCodeRef.current = newCode;
+                    if (emitCodeUpdateRef.current) {
+                      emitCodeUpdateRef.current(newCode);
+                    }
+                  }}
+                  language={getLanguageConfig(selectedLanguage).monacoLanguage}
+                  theme={monacoTheme}
+                  onRunCode={runSampleTests}
+                  selectedLanguage={selectedLanguage}
+                  onLanguageChange={handleLanguageChange}
+                  onRun={() => runSampleTests(userCode)}
+                  onSubmit={() => runAllTests(userCode)}
+                  testResults={testResults}
+                  isRunning={isRunning}
+                  hasResults={hasResults}
+                  onCloseResults={handleCloseResults}
+                />
+              </div>
+              {/* Right Resizer */}
+              <div
+                className="relative w-1 transition-colors duration-200 cursor-col-resize group"
+                style={{ backgroundColor: "var(--border)" }}
+                onMouseDown={handleRightMouseDown}
+              >
+                <div className="absolute inset-0 w-3 -ml-1" />
+                <div
+                  className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded top-1/2 left-1/2"
+                  style={{
+                    backgroundColor: "var(--border)",
+                    opacity: "0.8",
+                  }}
+                />
+              </div>
+              {/* Right Column - DuelInfo */}
+              <div
+                className="relative overflow-y-auto"
+                style={{ width: `${rightWidth}%` }}
+              >
+                <div className="p-4">
+                  {opponentStatus && (
+                    <div className="p-3 mb-4 border rounded-lg bg-accent/10 border-accent/20">
+                      <p className="text-sm font-medium text-accent">
+                        {opponentStatus}
+                      </p>
+                    </div>
+                  )}
+                  {/* Add timer state logging */}
+                  {console.log(
+                    "🚀 [TIMER DEBUG] Passing to DuelInfo - gameStartTime:",
+                    gameStartTime,
+                    "isGameStarted:",
+                    isGameStarted
+                  )}
+                  <DuelInfo
+                    timeRef={timeRef}
+                    opponentData={context.opponent}
+                    user={context.user ?? undefined}
+                    socket={context.socket ?? undefined}
+                    gameId={context.gameId ?? undefined}
+                    starterCode={
+                      questionData?.starter_code?.[selectedLanguage] || ""
+                    }
+                    selectedLanguage={selectedLanguage}
+                    gameStartTime={gameStartTime}
+                    isGameStarted={isGameStarted}
                   />
                 </div>
-              ) : (
-                <div>Loading question...</div>
-              )}
+              </div>
             </div>
-          </div>
-
-          {/* Left Resizer */}
-          <div
-            className="relative w-1 transition-colors duration-200 cursor-col-resize group"
-            style={{ backgroundColor: "var(--border)" }}
-            onMouseDown={handleLeftMouseDown}
-          >
-            <div className="absolute inset-0 w-3 -ml-1" />
-            <div
-              className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded top-1/2 left-1/2"
-              style={{
-                backgroundColor: "var(--border)",
-                opacity: "0.8",
-              }}
-            />
-          </div>
-
-          {/* Middle Column - Editor */}
-          <div className="h-full" style={{ width: `${middleWidth}%` }}>
-            <EditorWithTerminal
-              code={userCode}
-              onCodeChange={(value) => {
-                const newCode = value || "";
-                setUserCode(newCode);
-                userCodeRef.current = newCode;
-                if (emitCodeUpdateRef.current) {
-                  emitCodeUpdateRef.current(newCode);
-                }
-              }}
-              language={getLanguageConfig(selectedLanguage).monacoLanguage}
-              theme={monacoTheme}
-              onRunCode={runSampleTests}
-              selectedLanguage={selectedLanguage}
-              onLanguageChange={handleLanguageChange}
-              onRun={() => runSampleTests(userCode)}
-              onSubmit={() => runAllTests(userCode)}
-              testResults={testResults}
-              isRunning={isRunning}
-              hasResults={hasResults}
-              onCloseResults={handleCloseResults}
-            />
-          </div>
-
-          {/* Right Resizer */}
-          <div
-            className="relative w-1 transition-colors duration-200 cursor-col-resize group"
-            style={{ backgroundColor: "var(--border)" }}
-            onMouseDown={handleRightMouseDown}
-          >
-            <div className="absolute inset-0 w-3 -ml-1" />
-            <div
-              className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded top-1/2 left-1/2"
-              style={{
-                backgroundColor: "var(--border)",
-                opacity: "0.8",
-              }}
-            />
-          </div>
-
-          {/* Right Column - DuelInfo */}
-          <div
-            className="relative overflow-y-auto"
-            style={{ width: `${rightWidth}%` }}
-          >
-            <div className="p-4">
-              {opponentStatus && (
-                <div className="p-3 mb-4 border rounded-lg bg-accent/10 border-accent/20">
-                  <p className="text-sm font-medium text-accent">
-                    {opponentStatus}
-                  </p>
-                </div>
-              )}
-              {/* Add timer state logging */}
-              {console.log("🚀 [TIMER DEBUG] Passing to DuelInfo - gameStartTime:", gameStartTime, "isGameStarted:", isGameStarted)}
-              <DuelInfo
-                timeRef={timeRef}
-                opponentData={context.opponent}
-                user={context.user ?? undefined}
-                socket={context.socket ?? undefined}
-                gameId={context.gameId ?? undefined}
-                starterCode={questionData?.starter_code?.[selectedLanguage] || ""}
-                selectedLanguage={selectedLanguage}
-                gameStartTime={gameStartTime}
-                isGameStarted={isGameStarted}
+          ) : (
+            gameEndData && (
+              <FinishedPage
+                opponent={context.opponent}
+                user={context.user}
+                gameEndData={gameEndData}
+                userStats={testResults}
+                opponentStats={opponentTestStatsRef.current}
               />
-            </div>
-          </div>
-        </div>
-      ) : (
-        gameEndData && (
-          <FinishedPage
-            opponent={context.opponent}
-            user={context.user}
-            gameEndData={gameEndData}
-            userStats={testResults}
-            opponentStats={opponentTestStatsRef.current}
-          />
-        )
+            )
+          )}
+        </>
       )}
-      </>
-    }
 
-    {debugFinishedPage && 
-      <FinishedPage
-        opponent={dummyUserWinsData.opponent}
-        user={dummyUserWinsData.user}
-        opponentStats={dummyUserWinsData.opponentStats}
-        userStats={dummyUserWinsData.userStats}
-      />
-    }
+      {debugFinishedPage && (
+        <FinishedPage
+          opponent={dummyUserWinsData.opponent}
+          user={dummyUserWinsData.user}
+          opponentStats={dummyUserWinsData.opponentStats}
+          userStats={dummyUserWinsData.userStats}
+        />
+      )}
     </div>
   );
 }
