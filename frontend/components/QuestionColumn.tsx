@@ -26,9 +26,13 @@ export default function QuestionColumn({
             {/* Terminal-style header */}
             <div className="flex items-center justify-between mb-4">
               <div className="font-mono text-xl">
-                <span className="text-secondary">~/{questionData.difficulty.toLowerCase()}/</span>
-                <span className="text-accent">{questionData.title.toLowerCase().replace(/\s+/g, '_')}</span>
-                <span className="text-secondary">$</span>
+                <span className="text-secondary">
+                  ~/{questionData.difficulty.toLowerCase()}/
+                </span>
+                <span className="text-accent">
+                  {questionData.title.toLowerCase().replace(/\s+/g, "_")}
+                </span>
+                {/* <span className="text-secondary">$</span> */}
               </div>
             </div>
             <div
