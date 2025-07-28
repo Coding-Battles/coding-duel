@@ -2,6 +2,10 @@
   "id": "5",
   "title": "Valid Parentheses",
   "methodName": "isValid",
+  "signature": {
+    "params": [{"name": "s", "type": "string"}],
+    "return_type": "boolean"
+  },
   "difficulty": "Easy",
   "description_html": "<p>Given a string <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">s</code> containing just the characters <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">'('</code>, <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">')'</code>, <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">'{'</code>, <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">'}'</code>, <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">'['</code> and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">']'</code>, determine if the input string is valid.</p><p>An input string is valid if:</p><ol class=\"list-decimal list-inside space-y-1\"><li>Open brackets must be closed by the same type of brackets.</li><li>Open brackets must be closed in the correct order.</li><li>Every close bracket has a corresponding open bracket of the same type.</li></ol><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> s = \"()\"</div><div><strong>Output:</strong> true</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> s = \"()[]{}\"</div><div><strong>Output:</strong> true</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> s = \"(]\"</div><div><strong>Output:</strong> false</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= s.length <= 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">s consists of parentheses only '()[]{}'.</code></li></ul></div>",
   "starter_code": {

@@ -2,6 +2,10 @@
   "id": "37",
   "title": "Find All Anagrams in a String",
   "methodName": "findAnagrams",
+  "signature": {
+    "params": [{"name": "s", "type": "string"}, {"name": "p", "type": "string"}],
+    "return_type": "int[]"
+  },
   "difficulty": "Medium",
   "description_html": "<p>Given two strings <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">s</code> and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">p</code>, return <em>an array of all the start indices of <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">p</code>'s anagrams in <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">s</code></em>. You may return the answer in <strong>any order</strong>.</p><p>An <strong>Anagram</strong> is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> s = \"abab\", p = \"ab\"</div><div><strong>Output:</strong> [0,2]</div><div><strong>Explanation:</strong></div><div>The substring with start index = 0 is \"ab\", which is an anagram of \"ab\".</div><div>The substring with start index = 2 is \"ab\", which is an anagram of \"ab\".</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> s = \"abcdefg\", p = \"cba\"</div><div><strong>Output:</strong> [0]</div><div><strong>Explanation:</strong></div><div>The substring with start index = 0 is \"abc\", which is an anagram of \"cba\".</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= s.length, p.length <= 3 * 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">s</code> and <code class=\"bg-white px-1 py-0.5 rounded\">p</code> consist of lowercase English letters only.</li></ul></div>",
   "starter_code": {

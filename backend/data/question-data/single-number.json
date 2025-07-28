@@ -2,6 +2,10 @@
   "id": "10",
   "title": "Single Number",
   "methodName": "singleNumber",
+  "signature": {
+    "params": [{"name": "nums", "type": "int[]"}],
+    "return_type": "int"
+  },
   "difficulty": "Easy",
   "description_html": "<p>Given a <strong>non-empty</strong> array of integers <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums</code>, every element appears <em>twice</em> except for one. Find that single one.</p><p>You must implement a solution with a linear runtime complexity and use only constant extra space.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [2,2,1]</div><div><strong>Output:</strong> 1</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [4,1,2,1,2]</div><div><strong>Output:</strong> 4</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [1]</div><div><strong>Output:</strong> 1</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= nums.length <= 3 * 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-3 * 10<sup>4</sup> <= nums[i] <= 3 * 10<sup>4</sup></code></li><li>Each element in the array appears twice except for one element which appears only once.</li></ul></div>",
   "starter_code": {

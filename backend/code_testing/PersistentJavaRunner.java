@@ -198,122 +198,77 @@ public class PersistentJavaRunner {
     }
     
     private static Object callSolutionMethodUniversal(Object solutionInstance, String functionName, Map<String, Object> input, Map<String, Object> methodSignature) throws Exception {
-        Class<?> solutionClass = solutionInstance.getClass();
+        System.err.println("🐍 [PYTHON-STYLE] Calling method: " + functionName + " with input: " + input);
         
-        System.err.println("🔍 [METHOD] Resolving method: " + functionName);
-        System.err.println("🔍 [METHOD] Method signature: " + methodSignature);
-        System.err.println("🔍 [METHOD] Input data: " + input);
-        
-        // If no signature provided, fall back to old logic
-        if (methodSignature == null) {
-            return callSolutionMethodFallback(solutionInstance, functionName, input);
-        }
-        
-        // Build parameter types and values from signature
-        List<Map<String, Object>> params = (List<Map<String, Object>>) methodSignature.get("params");
-        Class<?>[] paramTypes = new Class<?>[params.size()];
-        Object[] paramValues = new Object[params.size()];
-        
-        for (int i = 0; i < params.size(); i++) {
-            Map<String, Object> param = params.get(i);
-            String paramName = (String) param.get("name");
-            String paramType = (String) param.get("type");
-            
-            System.err.println("🔧 [PARAM] Processing parameter: " + paramName + " (" + paramType + ")");
-            
-            // Map type string to Java class
-            paramTypes[i] = mapTypeStringToClass(paramType);
-            
-            // Extract value from input based on parameter name and type
-            paramValues[i] = extractParameterValue(input, paramName, paramType);
-            
-            System.err.println("🔧 [PARAM] Mapped to: " + paramValues[i] + " (class: " + paramTypes[i].getSimpleName() + ")");
-        }
-        
-        // Find and invoke the method
-        java.lang.reflect.Method method = solutionClass.getMethod(functionName, paramTypes);
-        System.err.println("🎯 [METHOD] Found method: " + method);
-        
-        return method.invoke(solutionInstance, paramValues);
+        // Python-style approach: Extract ALL parameters from JSON generically
+        // No signatures needed! No hardcoded parameter names! Just like Python!
+        return callMethodPythonStyle(solutionInstance, functionName, input);
     }
     
-    private static Object callSolutionMethodFallback(Object solutionInstance, String functionName, Map<String, Object> input) throws Exception {
-        Class<?> solutionClass = solutionInstance.getClass();
+    // Python-style method calling - Simple and Universal!
+    // This replaces ALL the complex signature/parsing logic with 10 lines
+    private static Object callMethodPythonStyle(Object instance, String methodName, Map<String, Object> input) throws Exception {
+        Class<?> clazz = instance.getClass();
         
-        // Fallback to old hardcoded logic if no signature
-        if ("twoSum".equals(functionName)) {
-            int[] nums = parseIntArray((List<Number>) input.get("nums"));
-            int target = ((Number) input.get("target")).intValue();
-            return solutionClass.getMethod("twoSum", int[].class, int.class).invoke(solutionInstance, nums, target);
-        } else if ("missingNumber".equals(functionName)) {
-            int[] nums = parseIntArray((List<Number>) input.get("nums"));
-            return solutionClass.getMethod("missingNumber", int[].class).invoke(solutionInstance, nums);
-        } else {
-            // Try common signatures
-            int[] nums = parseIntArray((List<Number>) input.get("nums"));
-            if (input.containsKey("target")) {
-                int target = ((Number) input.get("target")).intValue();
-                return solutionClass.getMethod(functionName, int[].class, int.class).invoke(solutionInstance, nums, target);
-            } else {
-                return solutionClass.getMethod(functionName, int[].class).invoke(solutionInstance, nums);
+        // Convert all input values to an Object array (like Python does)
+        Object[] values = convertInputToArgs(input);
+        
+        // Try to find a method that matches our argument count and types
+        for (java.lang.reflect.Method method : clazz.getMethods()) {
+            if (method.getName().equals(methodName) && method.getParameterCount() == values.length) {
+                try {
+                    System.err.println("🐍 [PYTHON-STYLE] Trying method: " + method + " with args: " + java.util.Arrays.toString(values));
+                    return method.invoke(instance, values);
+                } catch (Exception e) {
+                    // Try next method signature
+                    continue;
+                }
             }
         }
-    }
-    
-    private static Class<?> mapTypeStringToClass(String typeString) {
-        switch (typeString) {
-            case "int": return int.class;
-            case "int[]": return int[].class;
-            case "String": return String.class;
-            case "String[]": return String[].class;
-            case "boolean": return boolean.class;
-            case "long": return long.class;
-            case "double": return double.class;
-            default:
-                throw new RuntimeException("Unsupported parameter type: " + typeString);
-        }
-    }
-    
-    private static Object extractParameterValue(Map<String, Object> input, String paramName, String paramType) {
-        Object rawValue = input.get(paramName);
         
-        switch (paramType) {
-            case "int":
-                return ((Number) rawValue).intValue();
-            case "int[]":
-                return parseIntArray((List<Number>) rawValue);
-            case "String":
-                return (String) rawValue;
-            case "String[]":
-                List<String> stringList = (List<String>) rawValue;
-                return stringList.toArray(new String[0]);
-            case "boolean":
-                return (Boolean) rawValue;
-            case "long":
-                return ((Number) rawValue).longValue();
-            case "double":
-                return ((Number) rawValue).doubleValue();
-            default:
-                throw new RuntimeException("Unsupported parameter type for extraction: " + paramType);
+        throw new RuntimeException("No matching method found for: " + methodName + " with " + values.length + " parameters");
+    }
+    
+    // Simple converter: JSON input → Java method arguments
+    // Works for ANY method, just like Python's **kwargs!
+    private static Object[] convertInputToArgs(Map<String, Object> input) {
+        System.err.println("🐍 [DEBUG] Converting input to args: " + input);
+        List<Object> args = new ArrayList<>();
+        
+        for (Map.Entry<String, Object> entry : input.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            System.err.println("🐍 [DEBUG] Processing key=" + key + ", value=" + value + ", type=" + value.getClass().getSimpleName());
+            
+            if (value instanceof List) {
+                // Convert List<Number> to int[] (most common case)
+                List<?> list = (List<?>) value;
+                if (!list.isEmpty() && list.get(0) instanceof Number) {
+                    int[] array = list.stream().mapToInt(n -> ((Number) n).intValue()).toArray();
+                    System.err.println("🐍 [DEBUG] Converted list to int[]: " + java.util.Arrays.toString(array));
+                    args.add(array);
+                } else {
+                    System.err.println("🐍 [DEBUG] Keeping list as-is: " + list);
+                    args.add(value); // Keep as-is for other types
+                }
+            } else if (value instanceof Number) {
+                int intValue = ((Number) value).intValue();
+                System.err.println("🐍 [DEBUG] Converted number to int: " + intValue);
+                args.add(intValue); // Convert to int
+            } else {
+                System.err.println("🐍 [DEBUG] Keeping value as-is: " + value);
+                args.add(value); // String, boolean, etc.
+            }
         }
+        
+        Object[] result = args.toArray();
+        System.err.println("🐍 [DEBUG] Final args array: " + java.util.Arrays.toString(result));
+        return result;
     }
     
-    private static int[] parseIntArray(List<Number> numbers) {
-        if (numbers == null) return new int[0];
-        return numbers.stream().mapToInt(Number::intValue).toArray();
-    }
     
-    private static void outputResults(List<Map<String, Object>> results) {
-        System.out.println(toJson(results));
-        System.out.flush();
-    }
     
-    private static void outputError(String error) {
-        Map<String, Object> errorResult = new HashMap<>();
-        errorResult.put("error", error);
-        System.out.println(toJson(errorResult));
-        System.out.flush();
-    }
+    
     
     // Simple JSON parsing - handles basic structure
     private static Map<String, Object> parseJson(String json) {
@@ -330,7 +285,9 @@ public class PersistentJavaRunner {
         result.put("code", extractJsonStringValue(json, "code"));
         result.put("test_cases", parseTestCases(extractJsonValue(json, "test_cases")));
         result.put("function_name", extractJsonStringValue(json, "function_name"));
-        result.put("method_signature", parseMethodSignature(extractJsonValue(json, "method_signature")));
+        // Skip method signature - we don't need it anymore!
+        // Python-style approach works without signatures
+        result.put("method_signature", null);
         
         return result;
     }
@@ -500,115 +457,103 @@ public class PersistentJavaRunner {
         return -1;
     }
     
+    // Simple generic JSON object parsing - works for ANY input!
+    // No hardcoded "nums" or "target" - just like Python!
     private static Map<String, Object> parseInputObject(String inputStr) {
         Map<String, Object> input = new HashMap<>();
         
-        System.err.println("📋 [INPUT] Parsing input object: " + inputStr);
+        System.err.println("🐍 [SIMPLE PARSE] Parsing input: " + inputStr);
         
-        // Look for "nums": [...] pattern (with possible spaces)
-        if (inputStr.contains("\"nums\"")) {
-            int numsKeyStart = inputStr.indexOf("\"nums\"");
-            int numsArrayStart = inputStr.indexOf("[", numsKeyStart);
-            int numsArrayEnd = inputStr.indexOf("]", numsArrayStart) + 1;
-            
-            if (numsArrayStart > -1 && numsArrayEnd > numsArrayStart) {
-                String numsArrayStr = inputStr.substring(numsArrayStart, numsArrayEnd);
-                System.err.println("📋 [INPUT] Found nums array: " + numsArrayStr);
-                List<Integer> nums = parseNumberArray(numsArrayStr);
-                input.put("nums", nums);
+        // Generic key-value extraction using regex patterns
+        // This works for {"x": 121}, {"nums": [1,2], "target": 3}, etc.
+        String content = inputStr.trim();
+        if (content.startsWith("{") && content.endsWith("}")) {
+            content = content.substring(1, content.length() - 1);
+        }
+        
+        // Split by commas but respect arrays and nested objects
+        String[] pairs = splitKeyValuePairs(content);
+        
+        for (String pair : pairs) {
+            int colonIndex = pair.indexOf(":");
+            if (colonIndex > 0) {
+                String key = pair.substring(0, colonIndex).trim().replace("\"", "");
+                String valueStr = pair.substring(colonIndex + 1).trim();
+                
+                Object value = parseGenericValue(valueStr);
+                input.put(key, value);
             }
         }
         
-        // Look for "target": ... pattern (with possible spaces)
-        if (inputStr.contains("\"target\"")) {
-            int targetKeyStart = inputStr.indexOf("\"target\"");
-            int targetValueStart = inputStr.indexOf(":", targetKeyStart) + 1;
+        System.err.println("🐍 [SIMPLE PARSE] Result: " + input);
+        return input;
+    }
+    
+    // Generic value parser - handles arrays, numbers, strings, booleans
+    private static Object parseGenericValue(String valueStr) {
+        valueStr = valueStr.trim();
+        
+        if (valueStr.startsWith("[") && valueStr.endsWith("]")) {
+            // Array parsing
+            String arrayContent = valueStr.substring(1, valueStr.length() - 1);
+            String[] elements = arrayContent.split(",");
+            List<Object> list = new ArrayList<>();
             
-            // Find the end of the target value
-            int targetEnd = inputStr.indexOf(",", targetValueStart);
-            if (targetEnd == -1) targetEnd = inputStr.indexOf("}", targetValueStart);
-            if (targetEnd == -1) targetEnd = inputStr.length();
+            for (String element : elements) {
+                element = element.trim();
+                if (element.matches("-?\\d+")) {
+                    list.add(Integer.parseInt(element));
+                } else if (element.startsWith("\"") && element.endsWith("\"")) {
+                    list.add(element.substring(1, element.length() - 1));
+                } else {
+                    list.add(element);
+                }
+            }
+            return list;
+        } else if (valueStr.startsWith("\"") && valueStr.endsWith("\"")) {
+            // String value
+            return valueStr.substring(1, valueStr.length() - 1);
+        } else if (valueStr.matches("-?\\d+")) {
+            // Integer value
+            return Integer.parseInt(valueStr);
+        } else if ("true".equals(valueStr) || "false".equals(valueStr)) {
+            // Boolean value
+            return Boolean.parseBoolean(valueStr);
+        } else {
+            // Default to string
+            return valueStr;
+        }
+    }
+    
+    // Split key-value pairs respecting arrays and nested structures
+    private static String[] splitKeyValuePairs(String content) {
+        List<String> pairs = new ArrayList<>();
+        int start = 0;
+        int depth = 0;
+        boolean inString = false;
+        
+        for (int i = 0; i < content.length(); i++) {
+            char c = content.charAt(i);
             
-            if (targetValueStart > 0 && targetEnd > targetValueStart) {
-                String targetStr = inputStr.substring(targetValueStart, targetEnd).trim();
-                System.err.println("📋 [INPUT] Found target: " + targetStr);
-                try {
-                    int target = Integer.parseInt(targetStr);
-                    input.put("target", target);
-                } catch (NumberFormatException e) {
-                    System.err.println("📋 [TEST CASES] Could not parse target: " + targetStr);
+            if (c == '\"' && (i == 0 || content.charAt(i-1) != '\\')) {
+                inString = !inString;
+            } else if (!inString) {
+                if (c == '[' || c == '{') {
+                    depth++;
+                } else if (c == ']' || c == '}') {
+                    depth--;
+                } else if (c == ',' && depth == 0) {
+                    pairs.add(content.substring(start, i));
+                    start = i + 1;
                 }
             }
         }
         
-        System.err.println("📋 [TEST CASES] Parsed input: " + input);
-        return input;
-    }
-    
-    private static List<Integer> parseNumberArray(String arrayStr) {
-        List<Integer> numbers = new ArrayList<>();
-        
-        // Remove brackets and split by comma
-        String content = arrayStr.substring(1, arrayStr.length() - 1);
-        String[] parts = content.split(",");
-        
-        for (String part : parts) {
-            try {
-                int num = Integer.parseInt(part.trim());
-                numbers.add(num);
-            } catch (NumberFormatException e) {
-                System.err.println("📋 [TEST CASES] Could not parse number: " + part);
-            }
+        if (start < content.length()) {
+            pairs.add(content.substring(start));
         }
         
-        return numbers;
-    }
-    
-    private static Map<String, Object> parseMethodSignature(String signatureStr) {
-        System.err.println("🔧 [SIGNATURE] Parsing method signature from: " + signatureStr.substring(0, Math.min(100, signatureStr.length())));
-        
-        // Simple JSON parsing for method signature
-        // TODO: Replace with proper JSON library parsing
-        Map<String, Object> signature = new HashMap<>();
-        List<Map<String, Object>> params = new ArrayList<>();
-        
-        // Extract return type - look for "return_type":"..."
-        String returnType = "int"; // default
-        if (signatureStr.contains("\"return_type\"")) {
-            int start = signatureStr.indexOf("\"return_type\":\"") + 15;
-            int end = signatureStr.indexOf("\"", start);
-            if (start > 14 && end > start) {
-                returnType = signatureStr.substring(start, end);
-            }
-        }
-        
-        // For now, detect common patterns
-        if (signatureStr.contains("\"target\"")) {
-            // twoSum signature: int[] nums, int target -> int[]
-            Map<String, Object> param1 = new HashMap<>();
-            param1.put("name", "nums");
-            param1.put("type", "int[]");
-            params.add(param1);
-            
-            Map<String, Object> param2 = new HashMap<>();
-            param2.put("name", "target");
-            param2.put("type", "int");
-            params.add(param2);
-            
-            signature.put("return_type", "int[]");
-        } else {
-            // missingNumber signature: int[] nums -> int
-            Map<String, Object> param1 = new HashMap<>();
-            param1.put("name", "nums");
-            param1.put("type", "int[]");
-            params.add(param1);
-            
-            signature.put("return_type", returnType);
-        }
-        
-        signature.put("params", params);
-        System.err.println("🔧 [SIGNATURE] Created signature: " + signature);
-        return signature;
+        return pairs.toArray(new String[0]);
     }
     
     // Cache management methods

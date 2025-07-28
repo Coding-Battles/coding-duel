@@ -2,6 +2,10 @@
   "id": "17",
   "title": "First Bad Version",
   "methodName": "firstBadVersion",
+  "signature": {
+    "params": [{"name": "n", "type": "int"}],
+    "return_type": "int"
+  },
   "difficulty": "Easy",
   "description_html": "<p>You are a product manager and currently leading a team to develop a new product. Unfortunately, the latest version of your product fails the quality check. Since each version is developed based on the previous version, all the versions after a bad version are also bad.</p><p>Suppose you have <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code> versions <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">[1, 2, ..., n]</code> and you want to find out the first bad one, which causes all the following ones to be bad.</p><p>You are given an API <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">bool isBadVersion(version)</code> which returns whether <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">version</code> is bad. Implement a function to find the first bad version. You should minimize the number of calls to the API.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 5, bad = 4</div><div><strong>Output:</strong> 4</div><div><strong>Explanation:</strong></div><div>call isBadVersion(3) -> false</div><div>call isBadVersion(5) -> true</div><div>call isBadVersion(4) -> true</div><div>Then 4 is the first bad version.</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 1, bad = 1</div><div><strong>Output:</strong> 1</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= bad <= n <= 2<sup>31</sup> - 1</code></li></ul></div>",
   "starter_code": {

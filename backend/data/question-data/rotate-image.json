@@ -2,6 +2,10 @@
   "id": "35",
   "title": "Rotate Image",
   "methodName": "rotate",
+  "signature": {
+    "params": [{"name": "matrix", "type": "int[][]"}],
+    "return_type": "int[][]"
+  },
   "difficulty": "Medium",
   "description_html": "<p>You are given an <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n x n</code> 2D <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">matrix</code> representing an image, rotate the image by <strong>90</strong> degrees (clockwise).</p><p>You have to rotate the image <strong>in-place</strong>, which means you have to modify the input 2D matrix directly. <strong>DO NOT</strong> allocate another 2D matrix and do the rotation.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> matrix = [[1,2,3],[4,5,6],[7,8,9]]</div><div><strong>Output:</strong> [[7,4,1],[8,5,2],[9,6,3]]</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> matrix = [[5,1,9,11],[2,4,8,10],[13,3,6,7],[15,14,12,16]]</div><div><strong>Output:</strong> [[15,13,2,5],[14,3,4,1],[12,6,8,9],[16,7,10,11]]</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">n == matrix.length == matrix[i].length</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= n <= 20</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-1000 <= matrix[i][j] <= 1000</code></li></ul></div>",
   "starter_code": {
