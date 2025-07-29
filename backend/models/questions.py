@@ -93,10 +93,3 @@ class QuestionMetadata(BaseModel):
     last_updated: str
 
 
-class QuestionData(BaseModel):
-    id: str
-    title: str
-    difficulty: str
-    tags: Optional[List[str]] = None
-    description_html: str
-    starter_code: StarterCode

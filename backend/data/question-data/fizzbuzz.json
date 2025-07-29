@@ -7,7 +7,15 @@
     "return_type": "string[]"
   },
   "difficulty": "Easy",
-  "description_html": "<p>Given an integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code>, return <em>a string array <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">answer</code> (<strong>1-indexed</strong>) where</em>:</p><ul class=\"list-disc list-inside space-y-1\"><li><code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">answer[i] == \"FizzBuzz\"</code> if <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">i</code> is divisible by <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">3</code> and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">5</code>.</li><li><code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">answer[i] == \"Fizz\"</code> if <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">i</code> is divisible by <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">3</code>.</li><li><code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">answer[i] == \"Buzz\"</code> if <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">i</code> is divisible by <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">5</code>.</li><li><code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">answer[i] == i</code> (as a string) if none of the above conditions are true.</li></ul><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 3</div><div><strong>Output:</strong> [\"1\",\"2\",\"Fizz\"]</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 5</div><div><strong>Output:</strong> [\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\"]</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> n = 15</div><div><strong>Output:</strong> [\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\",\"Fizz\",\"7\",\"8\",\"Fizz\",\"Buzz\",\"11\",\"Fizz\",\"13\",\"14\",\"FizzBuzz\"]</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= n <= 10<sup>4</sup></code></li></ul></div>",
+  "problemDescription": "Given an integer n, return a string array answer (1-indexed) where: answer[i] == 'FizzBuzz' if i is divisible by 3 and 5, answer[i] == 'Fizz' if i is divisible by 3, answer[i] == 'Buzz' if i is divisible by 5, answer[i] == i (as a string) if none of the above conditions are true.",
+  "examples": [
+    { "input": "n = 3", "output": "[\"1\",\"2\",\"Fizz\"]" },
+    { "input": "n = 5", "output": "[\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\"]" },
+    { "input": "n = 15", "output": "[\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\",\"Fizz\",\"7\",\"8\",\"Fizz\",\"Buzz\",\"11\",\"Fizz\",\"13\",\"14\",\"FizzBuzz\"]" }
+  ],
+  "constraints": [
+    "1 <= n"
+  ],
   "starter_code": {
     "python": "class Solution:\n    def fizzBuzz(self, n: int) -> list[str]:\n        ",
     "javascript": "class Solution {\n    fizzBuzz(n) {\n        \n    }\n}",

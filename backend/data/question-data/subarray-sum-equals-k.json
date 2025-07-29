@@ -7,7 +7,12 @@
     "return_type": "int"
   },
   "difficulty": "Medium",
-  "description_html": "<p>Given an array of integers <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums</code> and an integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">k</code>, return <em>the total number of subarrays whose sum equals to <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">k</code></em>.</p><p>A subarray is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [1,1,1], k = 2</div><div><strong>Output:</strong> 2</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [1,2,3], k = 3</div><div><strong>Output:</strong> 2</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= nums.length <= 2 * 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-1000 <= nums[i] <= 1000</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-10<sup>7</sup> <= k <= 10<sup>7</sup></code></li></ul></div>",
+  "problemDescription": "Given an array of integers nums and an integer k, return the total number of subarrays whose sum equals to k. A subarray is a contiguous non-empty sequence of elements within an array.",
+  "examples": [
+    {"input": "nums = [1,1,1], k = 2", "output": "2"},
+    {"input": "nums = [1,2,3], k = 3", "output": "2"}
+  ],
+  "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def subarraySum(self, nums: list[int], k: int) -> int:\n        ",
     "javascript": "class Solution {\n    subarraySum(nums, k) {\n        \n    }\n}",

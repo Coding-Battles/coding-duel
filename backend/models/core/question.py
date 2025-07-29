@@ -45,14 +45,13 @@ class TestCase(BaseModel):
 
 class QuestionData(BaseModel):
     id: str
-    name: str
     title: str
-    description: str
-    examples: List[Any] = Field(default_factory=list)
-    constraints: List[str] = Field(default_factory=list)
+    problemDescription: str
+    examples: List[Dict[str, str]]
+    constraints: List[str]
     starter_code: Dict[str, str] = Field(default_factory=dict)  # {language: code}
     test_cases: Optional[List[TestCase]] = None
-    difficulty: DifficultyLevel
+    difficulty: DifficultyLevel | str
     category: Optional[str] = None
 
 

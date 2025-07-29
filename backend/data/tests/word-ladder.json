@@ -5,7 +5,7 @@
       "endWord": "cog",
       "wordList": ["hot", "dot", "dog", "lot", "log", "cog"]
     },
-    "expected": [5]
+    "expected": 5
   },
   {
     "input": {
@@ -13,7 +13,7 @@
       "endWord": "cog",
       "wordList": ["hot", "dot", "dog", "lot", "log"]
     },
-    "expected": [0]
+    "expected": 0
   },
   {
     "input": {
@@ -21,7 +21,7 @@
       "endWord": "c",
       "wordList": ["a", "b", "c"]
     },
-    "expected": [2]
+    "expected": 2
   },
   {
     "input": {
@@ -29,7 +29,7 @@
       "endWord": "dog",
       "wordList": ["hot", "dog"]
     },
-    "expected": [0]
+    "expected": 0
   },
   {
     "input": {
@@ -37,6 +37,6 @@
       "endWord": "hit",
       "wordList": ["hit"]
     },
-    "expected": [1]
+    "expected": 1
   }
 ]

@@ -7,7 +7,13 @@
     "return_type": "int"
   },
   "difficulty": "Easy",
-  "description_html": "<p>Given a signed 32-bit integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">x</code>, return <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">x</code> <em>with its digits reversed</em>. If reversing <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">x</code> causes the value to go outside the signed 32-bit integer range <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">[-2<sup>31</sup>, 2<sup>31</sup> - 1]</code>, then return <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">0</code>.</p><p><strong>Assume the environment does not allow you to store 64-bit integers (signed or unsigned).</strong></p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> x = 123</div><div><strong>Output:</strong> 321</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> x = -123</div><div><strong>Output:</strong> -321</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> x = 120</div><div><strong>Output:</strong> 21</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">-2<sup>31</sup> <= x <= 2<sup>31</sup> - 1</code></li></ul></div>",
+  "problemDescription": "Given a signed 32-bit integer x, return x with its digits reversed. If reversing x causes the value to go outside the signed 32-bit integer range [-2³¹, 2³¹ - 1], then return 0. Assume the environment does not allow you to store 64-bit integers.",
+  "examples": [
+    { "input": "x = 123", "output": "321" },
+    { "input": "x = -123", "output": "-321" },
+    { "input": "x = 120", "output": "21" }
+  ],
+  "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def reverse(self, x: int) -> int:\n        ",
     "javascript": "class Solution {\n    reverse(x) {\n        \n    }\n}",

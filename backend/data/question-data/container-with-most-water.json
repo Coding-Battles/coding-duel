@@ -7,7 +7,15 @@
     "return_type": "int"
   },
   "difficulty": "Medium",
-  "description_html": "<p>You are given an integer array <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">height</code> of length <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code>. There are <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">n</code> vertical lines drawn such that the two endpoints of the <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">i<sup>th</sup></code> line are <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">(i, 0)</code> and <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">(i, height[i])</code>.</p><p>Find two lines that together with the x-axis form a container, such that the container contains the most water.</p><p>Return <em>the maximum amount of water a container can store</em>.</p><p><strong>Notice</strong> that you may not slant the container.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> height = [1,8,6,2,5,4,8,3,7]</div><div><strong>Output:</strong> 49</div><div><strong>Explanation:</strong> The above vertical lines are represented by array [1,8,6,2,5,4,8,3,7]. In this case, the max area of water (blue section) the container can contain is 49.</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> height = [1,1]</div><div><strong>Output:</strong> 1</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">n == height.length</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">2 <= n <= 10<sup>5</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">0 <= height[i] <= 10<sup>4</sup></code></li></ul></div>",
+  "problemDescription": "You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water. Return the maximum amount of water a container can store. Notice that you may not slant the container.",
+  "examples": [
+    {"input": "height = [1,8,6,2,5,4,8,3,7]", "output": "49"},
+    {"input": "height = [1,1]", "output": "1"}
+  ],
+  "constraints": [
+    "2 <= height.length",
+    "0 <= height[i]"
+  ],
   "starter_code": {
     "python": "class Solution:\n    def maxArea(self, height: list[int]) -> int:\n        ",
     "javascript": "class Solution {\n    maxArea(height) {\n        \n    }\n}",

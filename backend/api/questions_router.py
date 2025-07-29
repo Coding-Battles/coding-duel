@@ -12,9 +12,9 @@ from backend.models.questions import (
     RunTestCasesRequest,
     RunTestCasesResponse,
     DockerRunRequest,
-    QuestionData,
     CodeTestResult
 )
+from backend.models.core.question import QuestionData
 from backend.services.test_execution_service import TestExecutionService
 from backend.code_testing.ai_complexity_analyzer import analyze_time_complexity_ai
 from backend.code_testing.docker_runner import run_code_in_docker

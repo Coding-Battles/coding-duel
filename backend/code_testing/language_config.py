@@ -11,6 +11,15 @@ import sys
 import json
 import time
 
+# Common algorithm imports
+from collections import deque, defaultdict, Counter, OrderedDict
+import heapq
+import itertools
+import bisect
+from functools import lru_cache, reduce
+import math
+import re
+
 # User code starts here
 {code}
 # User code ends here

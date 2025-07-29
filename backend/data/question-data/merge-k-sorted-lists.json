@@ -7,7 +7,15 @@
     "return_type": "ListNode"
   },
   "difficulty": "Hard",
-  "description_html": "<p>You are given an array of <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">k</code> linked-lists <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">lists</code>, each linked-list is sorted in ascending order.</p><p><em>Merge all the linked-lists into one sorted linked-list and return it.</em></p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> lists = [[1,4,5],[1,3,4],[2,6]]</div><div><strong>Output:</strong> [1,1,2,3,4,4,5,6]</div><div><strong>Explanation:</strong> The linked-lists are:</div><div>[</div><div>  1->4->5,</div><div>  1->3->4,</div><div>  2->6</div><div>]</div><div>merging them into one sorted list:</div><div>1->1->2->3->4->4->5->6</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> lists = []</div><div><strong>Output:</strong> []</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> lists = [[]]</div><div><strong>Output:</strong> []</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">k == lists.length</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">0 <= k <= 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">0 <= lists[i].length <= 500</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-10<sup>4</sup> <= lists[i][j] <= 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">lists[i]</code> is sorted in <strong>ascending</strong> order.</li><li>The sum of <code class=\"bg-white px-1 py-0.5 rounded\">lists[i].length</code> will not exceed <code class=\"bg-white px-1 py-0.5 rounded\">10<sup>4</sup></code>.</li></ul></div>",
+  "problemDescription": "You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.",
+  "examples": [
+    {"input": "lists = [[1,4,5],[1,3,4],[2,6]]", "output": "[1,1,2,3,4,4,5,6]"},
+    {"input": "lists = []", "output": "[]"},
+    {"input": "lists = [[]]", "output": "[]"}
+  ],
+  "constraints": [
+    "lists[i] is sorted in ascending order"
+  ],
   "starter_code": {
     "python": "class Solution:\n    def mergeKLists(self, lists: list[ListNode]) -> ListNode:\n        ",
     "javascript": "class Solution {\n    mergeKLists(lists) {\n        \n    }\n}",

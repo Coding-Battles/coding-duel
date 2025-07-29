@@ -7,7 +7,12 @@
     "return_type": "int[]"
   },
   "difficulty": "Medium",
-  "description_html": "<p>Given an <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">m x n</code> <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">matrix</code>, return <em>all elements of the <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">matrix</code> in spiral order</em>.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> matrix = [[1,2,3],[4,5,6],[7,8,9]]</div><div><strong>Output:</strong> [1,2,3,6,9,8,7,4,5]</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]</div><div><strong>Output:</strong> [1,2,3,4,8,12,11,10,9,5,6,7]</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">m == matrix.length</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">n == matrix[i].length</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= m, n <= 10</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-100 <= matrix[i][j] <= 100</code></li></ul></div>",
+  "problemDescription": "Given an m x n matrix, return all elements of the matrix in spiral order.",
+  "examples": [
+    {"input": "matrix = [[1,2,3],[4,5,6],[7,8,9]]", "output": "[1,2,3,6,9,8,7,4,5]"},
+    {"input": "matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]", "output": "[1,2,3,4,8,12,11,10,9,5,6,7]"}
+  ],
+  "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def spiralOrder(self, matrix: list[list[int]]) -> list[int]:\n        ",
     "javascript": "class Solution {\n    spiralOrder(matrix) {\n        \n    }\n}",

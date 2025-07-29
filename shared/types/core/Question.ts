@@ -23,15 +23,13 @@ export interface TestCase {
 
 export interface QuestionData {
   id: string;
-  name: string;
   title: string;
-  description: string;
-  description_html?: string; // HTML formatted description
-  examples: any[];
+  problemDescription: string;
+  examples: Array<{ input: string; output: string }>;
   constraints: string[];
   starter_code: Record<string, string>; // {language: code}
   test_cases?: TestCase[];
-  difficulty: DifficultyLevel;
+  difficulty: DifficultyLevel | string;
   category?: string;
 }
 

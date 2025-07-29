@@ -29,7 +29,8 @@ export interface QuestionData {
   id: string;
   title: string;
   difficulty: string;
-  tags: string[];
-  description_html: string;
+  problemDescription: string;
+  examples: Array<{ input: string; output: string }>;
+  constraints: string[];
   starter_code: StarterCode;
 }

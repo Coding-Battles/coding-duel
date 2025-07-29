@@ -7,7 +7,16 @@
     "return_type": "int[][]"
   },
   "difficulty": "Medium",
-  "description_html": "<p>Given an array of <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">intervals</code> where <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">intervals[i] = [start<sub>i</sub>, end<sub>i</sub>]</code>, merge all overlapping intervals, and return <em>an array of the non-overlapping intervals that cover all the intervals in the input</em>.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> intervals = [[1,3],[2,6],[8,10],[15,18]]</div><div><strong>Output:</strong> [[1,6],[8,10],[15,18]]</div><div><strong>Explanation:</strong> Since intervals [1,3] and [2,6] overlap, merge them into [1,6].</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> intervals = [[1,4],[4,5]]</div><div><strong>Output:</strong> [[1,5]]</div><div><strong>Explanation:</strong> Intervals [1,4] and [4,5] are considered overlapping.</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">1 <= intervals.length <= 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">intervals[i].length == 2</code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">0 <= start<sub>i</sub> <= end<sub>i</sub> <= 10<sup>4</sup></code></li></ul></div>",
+  "problemDescription": "Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.",
+  "examples": [
+    {"input": "intervals = [[1,3],[2,6],[8,10],[15,18]]", "output": "[[1,6],[8,10],[15,18]]"},
+    {"input": "intervals = [[1,4],[4,5]]", "output": "[[1,5]]"}
+  ],
+  "constraints": [
+    "1 <= intervals.length",
+    "intervals[i].length == 2",
+    "starti <= endi"
+  ],
   "starter_code": {
     "python": "class Solution:\n    def merge(self, intervals: list[list[int]]) -> list[list[int]]:\n        ",
     "javascript": "class Solution {\n    merge(intervals) {\n        \n    }\n}",
