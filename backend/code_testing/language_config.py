@@ -392,15 +392,12 @@ int main(int argc, char* argv[]) {{
     "java": {
         "image": "openjdk:11-jdk-slim",
         "file_extension": ".java", 
-        "compile_command": "javac -Xlint:none PersistentJavaRunner.java",
-        "startup_command": "java -Xms32m -Xmx128m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 PersistentJavaRunner",
-        "run_command": "java -Xms8m -Xmx32m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 Main",
+        "compile_command": "javac -Xlint:none Main.java",
+        "run_command": "java -Xms8m -Xmx64m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 Main",
         "mem_limit": "128m",
-        "persistent_server": True,
         "wrapper_template": """
 import java.util.*;
 import java.lang.reflect.*;
-{imports}
 
 {code}
 
@@ -419,13 +416,13 @@ class VersionControl {{
 
 class Main {{
     public static void main(String[] args) {{
-        if (args.length < 3) {{
+        if (args.length < 2) {{
             System.out.println("{{\\\"result\\\": \\\"Missing arguments: expected method name and input data\\\", \\\"execution_time\\\": 0}}");
             return;
         }}
         
-        String methodName = args[1];
-        String inputJson = args[2];
+        String methodName = args[0];
+        String inputJson = args[1];
         long startTime = System.nanoTime();
         
         try {{
@@ -434,22 +431,17 @@ class Main {{
             
             // Special handling for first-bad-version problem
             if ("firstBadVersion".equals(methodName)) {{
-                // Simple JSON parsing for first-bad-version: {{"n":5,"bad":4}}
                 int n = extractIntValue(inputJson, "n");
                 int bad = extractIntValue(inputJson, "bad");
                 
-                // Set up isBadVersion API
                 VersionControl.setBadVersion(bad);
                 
-                // Call firstBadVersion with only n parameter
                 Method method = Solution.class.getMethod("firstBadVersion", int.class);
                 result = method.invoke(sol, n);
             }} else {{
-                // Generic method invocation for other problems
-                // Try to find the method by reflection
-                Method[] methods = Solution.class.getMethods();
+                // Find method by name only (like Python does)
                 Method targetMethod = null;
-                
+                Method[] methods = Solution.class.getMethods();
                 for (Method method : methods) {{
                     if (method.getName().equals(methodName)) {{
                         targetMethod = method;
@@ -461,23 +453,8 @@ class Main {{
                     throw new RuntimeException("Method " + methodName + " not found in Solution class");
                 }}
                 
-                // Extract parameters based on input data - simplified for common cases
-                Class<?>[] paramTypes = targetMethod.getParameterTypes();
-                Object[] params = new Object[paramTypes.length];
-                
-                if (paramTypes.length == 2 && paramTypes[0] == int[].class && paramTypes[1] == int.class) {{
-                    // Common case: (int[] nums, int target)
-                    int[] nums = extractIntArray(inputJson, "nums");
-                    int target = extractIntValue(inputJson, "target");
-                    params[0] = nums;
-                    params[1] = target;
-                }} else if (paramTypes.length == 1 && paramTypes[0] == int[].class) {{
-                    // Single array parameter
-                    int[] nums = extractIntArray(inputJson, "nums");
-                    params[0] = nums;
-                }} else {{
-                    throw new RuntimeException("Unsupported parameter types for method " + methodName);
-                }}
+                // Extract parameters in JSON key order (like Python's list(input_data.values()))
+                Object[] params = extractParametersInJsonOrder(inputJson);
                 
                 result = targetMethod.invoke(sol, params);
             }}
@@ -496,6 +473,10 @@ class Main {{
                 System.out.println("], \\\"execution_time\\\": " + executionTime + "}}");
             }} else if (result instanceof Integer) {{
                 System.out.println("{{\\\"result\\\": " + result + ", \\\"execution_time\\\": " + executionTime + "}}");
+            }} else if (result instanceof Boolean) {{
+                System.out.println("{{\\\"result\\\": " + result + ", \\\"execution_time\\\": " + executionTime + "}}");
+            }} else if (result instanceof String) {{
+                System.out.println("{{\\\"result\\\": \\\"" + result.toString().replace("\\"", "\\\\\\"") + "\\\", \\\"execution_time\\\": " + executionTime + "}}");
             }} else {{
                 System.out.println("{{\\\"result\\\": \\\"" + String.valueOf(result).replace("\\"", "\\\\\\"") + "\\\", \\\"execution_time\\\": " + executionTime + "}}");
             }}
@@ -535,6 +516,93 @@ class Main {{
             return result;
         }}
         throw new RuntimeException("Could not find array key: " + key);
+    }}
+    
+    private static String extractStringValue(String json, String key) {{
+        String pattern = "\\"" + key + "\\"\\\\s*:\\\\s*\\"(.*?)\\"";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher m = p.matcher(json);
+        if (m.find()) {{
+            return m.group(1);
+        }}
+        throw new RuntimeException("Could not find string key: " + key);
+    }}
+    
+    private static String[] extractStringArray(String json, String key) {{
+        String pattern = "\\"" + key + "\\"\\\\s*:\\\\s*\\\\[(.*?)\\\\]";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher m = p.matcher(json);
+        if (m.find()) {{
+            String arrayContent = m.group(1).trim();
+            if (arrayContent.isEmpty()) {{
+                return new String[0];
+            }}
+            String[] parts = arrayContent.split(",");
+            String[] result = new String[parts.length];
+            for (int i = 0; i < parts.length; i++) {{
+                String trimmed = parts[i].trim();
+                if (trimmed.startsWith("\\"") && trimmed.endsWith("\\"")) {{
+                    result[i] = trimmed.substring(1, trimmed.length() - 1);
+                }} else {{
+                    result[i] = trimmed;
+                }}
+            }}
+            return result;
+        }}
+        throw new RuntimeException("Could not find string array key: " + key);
+    }}
+    
+    private static Object[] extractParametersInJsonOrder(String json) {{
+        // Extract JSON values in order (like Python's list(input_data.values()))
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        
+        // Parse JSON manually to extract key-value pairs in order
+        String cleanJson = json.trim();
+        if (cleanJson.startsWith("{{") && cleanJson.endsWith("}}")) {{
+            cleanJson = cleanJson.substring(1, cleanJson.length() - 1);
+        }}
+        
+        // Split by commas (simple approach for well-formed JSON)
+        String[] parts = cleanJson.split(",");
+        
+        for (String part : parts) {{
+            part = part.trim();
+            if (part.contains(":")) {{
+                String[] keyValue = part.split(":", 2);
+                if (keyValue.length == 2) {{
+                    String key = keyValue[0].trim().replaceAll("^\\\"|\\\"$", "");
+                    String value = keyValue[1].trim();
+                    
+                    try {{
+                        // Try to extract this parameter by key
+                        if (value.startsWith("[")) {{
+                            // Array parameter
+                            if (value.contains("\\\"")) {{
+                                // String array - convert to List<String> for Java
+                                String[] stringArray = extractStringArray(json, key);
+                                java.util.List<String> stringList = java.util.Arrays.asList(stringArray);
+                                params.add(stringList);
+                            }} else {{
+                                params.add(extractIntArray(json, key));
+                            }}
+                        }} else if (value.startsWith("\\\"")) {{
+                            // String parameter
+                            params.add(extractStringValue(json, key));
+                        }} else if (value.equals("true") || value.equals("false")) {{
+                            // Boolean parameter
+                            params.add(Boolean.parseBoolean(value));
+                        }} else {{
+                            // Integer parameter
+                            params.add(extractIntValue(json, key));
+                        }}
+                    }} catch (Exception e) {{
+                        // Skip if extraction fails
+                    }}
+                }}
+            }}
+        }}
+        
+        return params.toArray();
     }}
 }}""",
     },

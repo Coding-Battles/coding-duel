@@ -6,7 +6,7 @@
     "params": [
       { "name": "beginWord", "type": "string" },
       { "name": "endWord", "type": "string" },
-      { "name": "wordList", "type": "string[]" }
+      { "name": "wordList", "type": "list<string>" }
     ],
     "return_type": "int"
   },

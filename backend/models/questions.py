@@ -64,6 +64,7 @@ class DockerRunRequest(BaseModel):
     test_input: dict
     timeout: int = 5
     function_name: Optional[str] = "solution"  # Default to "solution" for backward compatibility
+    signature: Optional[Dict[str, Any]] = None  # Question signature metadata for dynamic parameter handling
 
 
 class TestCase(BaseModel):
