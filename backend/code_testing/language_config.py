@@ -393,8 +393,8 @@ int main(int argc, char* argv[]) {{
         "image": "openjdk:11-jdk-slim",
         "file_extension": ".java", 
         "compile_command": "javac -Xlint:none Main.java",
-        "run_command": "java -Xms8m -Xmx64m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 Main",
-        "mem_limit": "128m",
+        "run_command": "java -Xms8m -Xmx64m -XX:+UseSerialGC Main",
+        "mem_limit": "512m",
         "wrapper_template": """
 import java.util.*;
 import java.lang.reflect.*;

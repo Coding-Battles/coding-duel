@@ -68,13 +68,16 @@ def get_persistent_container(language: str):
         )
         print(f"🐛 [DOCKER DEBUG] Startup command: {startup_cmd}")
 
+        # Allocate more resources for Java containers due to compilation overhead
+        cpu_allocation = 1000000000 if language == "java" else 300000000  # 1.0 vs 0.3 CPU cores
+        
         container = docker_client.containers.run(
             config["image"],
             command=startup_cmd,
             name=container_name,
             detach=True,
             mem_limit=config.get("mem_limit", "128m"),
-            nano_cpus=300000000,  # 0.3 CPU core
+            nano_cpus=cpu_allocation,
             network_mode="none",
             security_opt=["no-new-privileges:true"],
             working_dir="/tmp",
@@ -173,14 +176,45 @@ def run_code_in_docker(
         commands = []
         print(f"🐛 [DOCKER DEBUG] Building commands...")
 
-        # Add compilation step if needed
+        # Add compilation step if needed - with caching for Java
         if "compile_command" in config:
-            compile_cmd = config["compile_command"].format(filename=filename)
-            commands.append(compile_cmd)
-            print(f"🐛 [DOCKER DEBUG] Added compile command: {compile_cmd}")
+            if request.language == "java":
+                # Java compilation caching - do cache setup first via separate exec
+                import hashlib
+                code_hash = hashlib.md5(wrapped_code.encode()).hexdigest()[:8]
+                cache_dir = f"/tmp/java_cache_{code_hash}"
+                
+                # Setup cache directory with separate exec call
+                cache_setup = container.exec_run(f"sh -c 'mkdir -p {cache_dir} && cp /tmp/{filename} {cache_dir}/'", workdir="/tmp")
+                if cache_setup.exit_code != 0:
+                    print(f"🐛 [DOCKER DEBUG] Cache setup failed: {cache_setup.output.decode()}")
+                
+                # Check if compilation needed
+                check_compiled = container.exec_run(f"test -f {cache_dir}/Main.class", workdir="/tmp")
+                
+                if check_compiled.exit_code != 0:
+                    # Need to compile
+                    print(f"🐛 [CACHE] Compiling Java code (cache miss for {code_hash})")
+                    compile_result = container.exec_run(f"sh -c 'cd {cache_dir} && javac -Xlint:none Main.java'", workdir="/tmp")
+                    if compile_result.exit_code != 0:
+                        print(f"🐛 [DOCKER DEBUG] Compilation failed: {compile_result.output.decode()}")
+                else:
+                    print(f"🐛 [CACHE] Using cached compilation for {code_hash}")
+                    
+                print(f"🐛 [DOCKER DEBUG] Java caching complete for hash {code_hash}")
+            else:
+                # Non-Java languages: compile normally
+                compile_cmd = config["compile_command"].format(filename=filename)  
+                commands.append(compile_cmd)
+                print(f"🐛 [DOCKER DEBUG] Added compile command: {compile_cmd}")
 
         # Add run command
-        run_command = config["run_command"].format(filename=filename) if "{filename}" in config["run_command"] else config["run_command"]
+        if request.language == "java" and "compile_command" in config:
+            # For Java with caching, run from cache directory
+            run_command = f"cd {cache_dir}; " + config["run_command"].format(filename=filename) if "{filename}" in config["run_command"] else f"cd {cache_dir}; " + config["run_command"]
+        else:
+            # Normal run command
+            run_command = config["run_command"].format(filename=filename) if "{filename}" in config["run_command"] else config["run_command"]
 
         print(f"🐛 [DOCKER DEBUG] Base run command: {run_command}")
 
