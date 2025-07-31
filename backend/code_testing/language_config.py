@@ -395,6 +395,7 @@ int main(int argc, char* argv[]) {{
         "compile_command": "javac -Xlint:none Main.java",
         "run_command": "java -Xms8m -Xmx64m -XX:+UseSerialGC Main",
         "mem_limit": "512m",
+        "startup_command": "sh -c 'javac /tmp/CompilationServer.java && java -cp /tmp CompilationServer'",
         "wrapper_template": """
 import java.util.*;
 import java.lang.reflect.*;
