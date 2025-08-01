@@ -3,20 +3,34 @@
   "title": "Reverse Integer",
   "methodName": "reverse",
   "signature": {
-    "params": [{"name": "x", "type": "int"}],
+    "params": [
+      {
+        "name": "x",
+        "type": "int"
+      }
+    ],
     "return_type": "int"
   },
   "difficulty": "Easy",
   "problemDescription": "Given a signed 32-bit integer x, return x with its digits reversed. If reversing x causes the value to go outside the signed 32-bit integer range [-2³¹, 2³¹ - 1], then return 0. Assume the environment does not allow you to store 64-bit integers.",
   "examples": [
-    { "input": "x = 123", "output": "321" },
-    { "input": "x = -123", "output": "-321" },
-    { "input": "x = 120", "output": "21" }
+    {
+      "input": "x = 123",
+      "output": "321"
+    },
+    {
+      "input": "x = -123",
+      "output": "-321"
+    },
+    {
+      "input": "x = 120",
+      "output": "21"
+    }
   ],
   "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def reverse(self, x: int) -> int:\n        ",
-    "javascript": "class Solution {\n    reverse(x) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    reverse(x) {\n        // @return {number}\n        \n    }\n}",
     "java": "class Solution {\n    public int reverse(int x) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    int reverse(int x) {\n        \n    }\n};"
   }

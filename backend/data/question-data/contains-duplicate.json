@@ -3,22 +3,36 @@
   "title": "Contains Duplicate",
   "methodName": "containsDuplicate",
   "signature": {
-    "params": [{"name": "nums", "type": "int[]"}],
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
     "return_type": "boolean"
   },
   "difficulty": "Easy",
   "problemDescription": "Given an integer array nums, return true if any value appears at least twice in the array, and return false if every element is distinct.",
   "examples": [
-    { "input": "nums = [1,2,3,1]", "output": "true" },
-    { "input": "nums = [1,2,3,4]", "output": "false" },
-    { "input": "nums = [1,1,1,3,3,4,3,2,4,2]", "output": "true" }
+    {
+      "input": "nums = [1,2,3,1]",
+      "output": "true"
+    },
+    {
+      "input": "nums = [1,2,3,4]",
+      "output": "false"
+    },
+    {
+      "input": "nums = [1,1,1,3,3,4,3,2,4,2]",
+      "output": "true"
+    }
   ],
   "constraints": [
     "1 <= nums.length <= 10⁵"
   ],
   "starter_code": {
     "python": "class Solution:\n    def containsDuplicate(self, nums: list[int]) -> bool:\n        ",
-    "javascript": "class Solution {\n    containsDuplicate(nums) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    containsDuplicate(nums) {\n        // @return {boolean}\n        \n    }\n}",
     "java": "class Solution {\n    public boolean containsDuplicate(int[] nums) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    bool containsDuplicate(vector<int>& nums) {\n        \n    }\n};"
   }

@@ -3,22 +3,36 @@
   "title": "Single Number",
   "methodName": "singleNumber",
   "signature": {
-    "params": [{"name": "nums", "type": "int[]"}],
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
     "return_type": "int"
   },
   "difficulty": "Easy",
   "problemDescription": "Given a non-empty array of integers nums, every element appears twice except for one. Find that single one.",
   "examples": [
-    {"input": "nums = [2,2,1]", "output": "1"},
-    {"input": "nums = [4,1,2,1,2]", "output": "4"},
-    {"input": "nums = [1]", "output": "1"}
+    {
+      "input": "nums = [2,2,1]",
+      "output": "1"
+    },
+    {
+      "input": "nums = [4,1,2,1,2]",
+      "output": "4"
+    },
+    {
+      "input": "nums = [1]",
+      "output": "1"
+    }
   ],
   "constraints": [
     "Each element in the array appears twice except for one element which appears only once"
   ],
   "starter_code": {
     "python": "class Solution:\n    def singleNumber(self, nums: list[int]) -> int:\n        ",
-    "javascript": "class Solution {\n    singleNumber(nums) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    singleNumber(nums) {\n        // @return {number}\n        \n    }\n}",
     "java": "class Solution {\n    public int singleNumber(int[] nums) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    int singleNumber(vector<int>& nums) {\n        \n    }\n};"
   }

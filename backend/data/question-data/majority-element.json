@@ -3,19 +3,30 @@
   "title": "Majority Element",
   "methodName": "majorityElement",
   "signature": {
-    "params": [{"name": "nums", "type": "int[]"}],
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
     "return_type": "int"
   },
   "difficulty": "Easy",
   "problemDescription": "Given an array nums of size n, return the majority element. The majority element is the element that appears more than ⌊n / 2⌋ times. You may assume that the majority element always exists in the array.",
   "examples": [
-    {"input": "nums = [3,2,3]", "output": "3"},
-    {"input": "nums = [2,2,1,1,1,2,2]", "output": "2"}
+    {
+      "input": "nums = [3,2,3]",
+      "output": "3"
+    },
+    {
+      "input": "nums = [2,2,1,1,1,2,2]",
+      "output": "2"
+    }
   ],
   "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def majorityElement(self, nums: list[int]) -> int:\n        ",
-    "javascript": "class Solution {\n    majorityElement(nums) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    majorityElement(nums) {\n        // @return {number}\n        \n    }\n}",
     "java": "class Solution {\n    public int majorityElement(int[] nums) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    int majorityElement(vector<int>& nums) {\n        \n    }\n};"
   }

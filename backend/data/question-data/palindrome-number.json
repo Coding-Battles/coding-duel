@@ -3,20 +3,34 @@
   "title": "Palindrome Number",
   "methodName": "isPalindrome",
   "signature": {
-    "params": [{"name": "x", "type": "int"}],
+    "params": [
+      {
+        "name": "x",
+        "type": "int"
+      }
+    ],
     "return_type": "boolean"
   },
   "difficulty": "Easy",
   "problemDescription": "Given an integer x, return true if x is a palindrome, and false otherwise.",
   "examples": [
-    { "input": "x = 121", "output": "true" },
-    { "input": "x = -121", "output": "false" },
-    { "input": "x = 10", "output": "false" }
+    {
+      "input": "x = 121",
+      "output": "true"
+    },
+    {
+      "input": "x = -121",
+      "output": "false"
+    },
+    {
+      "input": "x = 10",
+      "output": "false"
+    }
   ],
   "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def isPalindrome(self, x: int) -> bool:\n        ",
-    "javascript": "class Solution {\n    isPalindrome(x) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    isPalindrome(x) {\n        // @return {boolean}\n        \n    }\n}",
     "java": "class Solution {\n    public boolean isPalindrome(int x) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    bool isPalindrome(int x) {\n        \n    }\n};"
   }

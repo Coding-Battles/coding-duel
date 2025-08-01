@@ -3,22 +3,40 @@
   "title": "Minimum Window Substring",
   "methodName": "minWindow",
   "signature": {
-    "params": [{"name": "s", "type": "string"}, {"name": "t", "type": "string"}],
+    "params": [
+      {
+        "name": "s",
+        "type": "string"
+      },
+      {
+        "name": "t",
+        "type": "string"
+      }
+    ],
     "return_type": "string"
   },
   "difficulty": "Hard",
   "problemDescription": "Given two strings s and t of lengths m and n respectively, return the minimum window substring of s such that every character in t (including duplicates) is included in the window. If there is no such substring, return the empty string \"\". The testcases will be generated such that the answer is unique. A substring is a contiguous sequence of characters within the string.",
   "examples": [
-    {"input": "s = \"ADOBECODEBANC\", t = \"ABC\"", "output": "\"BANC\""},
-    {"input": "s = \"a\", t = \"a\"", "output": "\"a\""},
-    {"input": "s = \"a\", t = \"aa\"", "output": "\"\""}
+    {
+      "input": "s = \"ADOBECODEBANC\", t = \"ABC\"",
+      "output": "\"BANC\""
+    },
+    {
+      "input": "s = \"a\", t = \"a\"",
+      "output": "\"a\""
+    },
+    {
+      "input": "s = \"a\", t = \"aa\"",
+      "output": "\"\""
+    }
   ],
   "constraints": [
     "s and t consist of uppercase and lowercase English letters"
   ],
   "starter_code": {
     "python": "class Solution:\n    def minWindow(self, s: str, t: str) -> str:\n        ",
-    "javascript": "class Solution {\n    minWindow(s, t) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    minWindow(s, t) {\n        // @return {string}\n        \n    }\n}",
     "java": "class Solution {\n    public String minWindow(String s, String t) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    string minWindow(string s, string t) {\n        \n    }\n};"
   }

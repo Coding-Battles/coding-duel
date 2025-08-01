@@ -225,28 +225,7 @@ class TestExecutionService:
         logger.info(f"🐛 [DEBUG] Bypassing Java batch runner, using simplified individual execution")
         raise Exception("Bypassing Java batch runner to use simplified approach")
 
-    @staticmethod
-    def run_cpp_batch_execution(
-        code: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str
-    ) -> Tuple[List[TestCaseResult], int, int]:
-        """Execute C++ code using batch runner."""
-        try:
-            batch_start_time = time.time()
-            logger.info(f"🐛 [DEBUG] Using batch execution for C++")
-
-            from backend.code_testing.cpp_batch_runner import run_cpp_batch
-
-            batch_results = run_cpp_batch(code, test_cases, timeout, function_name)
-            batch_time = (time.time() - batch_start_time) * 1000
-            logger.info(
-                f"🐛 [DEBUG] C++ batch execution took {batch_time:.0f}ms for {len(test_cases)} test cases"
-            )
-
-            return TestExecutionService.process_batch_results(test_cases, batch_results)
-
-        except Exception as e:
-            logger.error(f"🐛 [DEBUG] C++ batch execution failed: {str(e)}")
-            raise
+    # C++ batch processing removed - now uses standard docker_runner execution like Java
 
     @staticmethod
     def validate_language(language: str) -> None:
@@ -314,20 +293,12 @@ class TestExecutionService:
                         )
                     )
             elif request.language == "cpp":
-                try:
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_cpp_batch_execution(
-                            request.code, test_cases, request.timeout, method_name
-                        )
+                # C++ now uses standard individual execution like Java (no batch processing)
+                logger.info(f"🐛 [DEBUG] Using standard individual execution for C++")
+                test_results, total_passed, total_failed = (
+                    TestExecutionService.run_individual_test_cases(
+                        request.code, request.language, test_cases, request.timeout, method_name, signature
                     )
-                except Exception:
-                    logger.info(
-                        f"🐛 [DEBUG] Falling back to individual test case execution"
-                    )
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name, signature
-                        )
                     )
             else:
                 # For other languages, use individual execution
@@ -423,20 +394,12 @@ class TestExecutionService:
                         )
                     )
             elif request.language == "cpp":
-                try:
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_cpp_batch_execution(
-                            request.code, test_cases, request.timeout, method_name
-                        )
+                # C++ now uses standard individual execution like Java (no batch processing)
+                logger.info(f"🐛 [DEBUG] Using standard individual execution for C++ sample tests")
+                test_results, total_passed, total_failed = (
+                    TestExecutionService.run_individual_test_cases(
+                        request.code, request.language, test_cases, request.timeout, method_name, signature
                     )
-                except Exception:
-                    logger.info(
-                        f"🐛 [DEBUG] Falling back to individual test case execution for sample tests"
-                    )
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name, signature
-                        )
                     )
             else:
                 # For other languages, use individual execution

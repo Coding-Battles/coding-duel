@@ -3,21 +3,36 @@
   "title": "Find All Anagrams in a String",
   "methodName": "findAnagrams",
   "signature": {
-    "params": [{"name": "s", "type": "string"}, {"name": "p", "type": "string"}],
+    "params": [
+      {
+        "name": "s",
+        "type": "string"
+      },
+      {
+        "name": "p",
+        "type": "string"
+      }
+    ],
     "return_type": "int[]"
   },
   "difficulty": "Medium",
   "problemDescription": "Given two strings s and p, return an array of all the start indices of p's anagrams in s. You may return the answer in any order. An Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.",
   "examples": [
-    {"input": "s = \"abab\", p = \"ab\"", "output": "[0,2]"},
-    {"input": "s = \"abcdefg\", p = \"cba\"", "output": "[0]"}
+    {
+      "input": "s = \"abab\", p = \"ab\"",
+      "output": "[0,2]"
+    },
+    {
+      "input": "s = \"abcdefg\", p = \"cba\"",
+      "output": "[0]"
+    }
   ],
   "constraints": [
     "s and p consist of lowercase English letters only"
   ],
   "starter_code": {
     "python": "class Solution:\n    def findAnagrams(self, s: str, p: str) -> list[int]:\n        ",
-    "javascript": "class Solution {\n    findAnagrams(s, p) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    findAnagrams(s, p) {\n        // @return {number[]}\n        \n    }\n}",
     "java": "class Solution {\n    public List<Integer> findAnagrams(String s, String p) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    vector<int> findAnagrams(string s, string p) {\n        \n    }\n};"
   }

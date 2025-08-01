@@ -4,9 +4,18 @@
   "methodName": "ladderLength",
   "signature": {
     "params": [
-      { "name": "beginWord", "type": "string" },
-      { "name": "endWord", "type": "string" },
-      { "name": "wordList", "type": "list<string>" }
+      {
+        "name": "beginWord",
+        "type": "string"
+      },
+      {
+        "name": "endWord",
+        "type": "string"
+      },
+      {
+        "name": "wordList",
+        "type": "list<string>"
+      }
     ],
     "return_type": "int"
   },
@@ -30,7 +39,7 @@
   ],
   "starter_code": {
     "python": "class Solution:\n    def ladderLength(self, beginWord: str, endWord: str, wordList: list[str]) -> int:\n        ",
-    "javascript": "class Solution {\n    ladderLength(beginWord, endWord, wordList) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    ladderLength(beginWord, endWord, wordList) {\n        // @return {number}\n        \n    }\n}",
     "java": "class Solution {\n    public int ladderLength(String beginWord, String endWord, List<String> wordList) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {\n        \n    }\n};"
   }

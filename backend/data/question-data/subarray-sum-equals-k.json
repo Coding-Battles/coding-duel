@@ -3,19 +3,34 @@
   "title": "Subarray Sum Equals K",
   "methodName": "subarraySum",
   "signature": {
-    "params": [{"name": "nums", "type": "int[]"}, {"name": "k", "type": "int"}],
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      },
+      {
+        "name": "k",
+        "type": "int"
+      }
+    ],
     "return_type": "int"
   },
   "difficulty": "Medium",
   "problemDescription": "Given an array of integers nums and an integer k, return the total number of subarrays whose sum equals to k. A subarray is a contiguous non-empty sequence of elements within an array.",
   "examples": [
-    {"input": "nums = [1,1,1], k = 2", "output": "2"},
-    {"input": "nums = [1,2,3], k = 3", "output": "2"}
+    {
+      "input": "nums = [1,1,1], k = 2",
+      "output": "2"
+    },
+    {
+      "input": "nums = [1,2,3], k = 3",
+      "output": "2"
+    }
   ],
   "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def subarraySum(self, nums: list[int], k: int) -> int:\n        ",
-    "javascript": "class Solution {\n    subarraySum(nums, k) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    subarraySum(nums, k) {\n        // @return {number}\n        \n    }\n}",
     "java": "class Solution {\n    public int subarraySum(int[] nums, int k) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    int subarraySum(vector<int>& nums, int k) {\n        \n    }\n};"
   }

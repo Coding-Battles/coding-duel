@@ -3,21 +3,32 @@
   "title": "First Bad Version",
   "methodName": "firstBadVersion",
   "signature": {
-    "params": [{"name": "n", "type": "int"}],
+    "params": [
+      {
+        "name": "n",
+        "type": "int"
+      }
+    ],
     "return_type": "int"
   },
   "difficulty": "Easy",
   "problemDescription": "You are a product manager and currently leading a team to develop a new product. Unfortunately, the latest version of your product fails the quality check. Since each version is developed based on the previous version, all the versions after a bad version are also bad. Suppose you have n versions [1, 2, ..., n] and you want to find out the first bad one, which causes all the following ones to be bad. You are given an API bool isBadVersion(version) which returns whether version is bad. Implement a function to find the first bad version.",
   "examples": [
-    {"input": "n = 5, bad = 4", "output": "4"},
-    {"input": "n = 1, bad = 1", "output": "1"}
+    {
+      "input": "n = 5, bad = 4",
+      "output": "4"
+    },
+    {
+      "input": "n = 1, bad = 1",
+      "output": "1"
+    }
   ],
   "constraints": [
     "1 <= n"
   ],
   "starter_code": {
     "python": "# The isBadVersion API is already defined for you.\n# def isBadVersion(version: int) -> bool:\n\nclass Solution:\n    def firstBadVersion(self, n: int) -> int:\n        ",
-    "javascript": "// The isBadVersion API is already defined for you.\n// isBadVersion = function(version) { ... };\n\nclass Solution {\n    firstBadVersion(n) {\n        \n    }\n}",
+    "javascript": "// The isBadVersion API is already defined for you.\n// isBadVersion = function(version) { ... };\n\nclass Solution {\n    firstBadVersion(n) {\n        // @return {number}\n        \n    }\n}",
     "java": "// The isBadVersion API is already defined for you.\n// You can call VersionControl.isBadVersion(version)\n\npublic class Solution {\n    public int firstBadVersion(int n) {\n        // You can call VersionControl.isBadVersion(version) to check if a version is bad\n        \n    }\n}",
     "cpp": "// The API isBadVersion is defined for you.\n// bool isBadVersion(int version);\n\nclass Solution {\npublic:\n    int firstBadVersion(int n) {\n        \n    }\n};"
   }

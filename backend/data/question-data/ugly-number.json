@@ -3,20 +3,34 @@
   "title": "Ugly Number",
   "methodName": "isUgly",
   "signature": {
-    "params": [{"name": "n", "type": "int"}],
+    "params": [
+      {
+        "name": "n",
+        "type": "int"
+      }
+    ],
     "return_type": "boolean"
   },
   "difficulty": "Easy",
   "problemDescription": "An ugly number is a positive integer whose prime factors are limited to 2, 3, and 5. Given an integer n, return true if n is an ugly number.",
   "examples": [
-    {"input": "n = 6", "output": "true"},
-    {"input": "n = 1", "output": "true"},
-    {"input": "n = 14", "output": "false"}
+    {
+      "input": "n = 6",
+      "output": "true"
+    },
+    {
+      "input": "n = 1",
+      "output": "true"
+    },
+    {
+      "input": "n = 14",
+      "output": "false"
+    }
   ],
   "constraints": [],
   "starter_code": {
     "python": "class Solution:\n    def isUgly(self, n: int) -> bool:\n        ",
-    "javascript": "class Solution {\n    isUgly(n) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    isUgly(n) {\n        // @return {boolean}\n        \n    }\n}",
     "java": "class Solution {\n    public boolean isUgly(int n) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    bool isUgly(int n) {\n        \n    }\n};"
   }

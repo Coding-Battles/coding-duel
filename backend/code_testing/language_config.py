@@ -171,130 +171,91 @@ console.log(JSON.stringify({{
 #include <functional>
 using namespace std;
 
-// JSON parsing helpers
-class JSONParser {{
-private:
-    string json;
+// Simple JSON parsing helpers (no complex parsing needed)
+int parseIntValue(const string& json, const string& key) {{
+    string searchKey = string(1, 34) + key + string(1, 34) + string(1, 58); // "key":
+    size_t pos = json.find(searchKey);
+    if (pos == string::npos) return 0;
+    
+    pos = json.find(":", pos) + 1;
+    while (pos < json.length() && isspace(json[pos])) pos++;
+    
+    string numStr;
+    while (pos < json.length() && (isdigit(json[pos]) || json[pos] == '-')) {{
+        numStr += json[pos++];
+    }}
+    return numStr.empty() ? 0 : stoi(numStr);
+}}
+
+string parseStringValue(const string& json, const string& key) {{
+    string searchKey = string(1, 34) + key + string(1, 34) + string(1, 58) + string(1, 34); // "key":"
+    size_t start = json.find(searchKey);
+    if (start == string::npos) return "";
+    
+    start += searchKey.length(); // Skip "key":"
+    size_t end = json.find(string(1, 34), start);
+    return json.substr(start, end - start);
+}}
+
+vector<string> parseStringArrayValue(const string& json, const string& key) {{
+    string searchKey = string(1, 34) + key + string(1, 34) + string(1, 58); // "key":
+    size_t keyPos = json.find(searchKey);
+    if (keyPos == string::npos) return {{}};
+    
+    size_t start = json.find("[", keyPos);
+    if (start == string::npos) return {{}};
+    
+    start++; // Skip the [
+    size_t end = json.find("]", start);
+    string arrayStr = json.substr(start, end - start);
+    
+    vector<string> result;
+    if (arrayStr.empty()) return result;
+    
+    // Parse string array: ["word1","word2","word3"]
     size_t pos = 0;
-    
-    void skipWhitespace() {{
-        while (pos < json.length() && isspace(json[pos])) pos++;
-    }}
-    
-    string parseString() {{
-        if (json[pos] != '"') throw runtime_error("Expected string");
-        pos++; // skip opening quote
-        string result;
-        while (pos < json.length() && json[pos] != '"') {{
-            if (json[pos] == '\\\\') {{
-                pos++;
-                if (pos >= json.length()) throw runtime_error("Unterminated string");
-                switch (json[pos]) {{
-                    case '"': result += '"'; break;
-                    case '\\\\': result += '\\\\'; break;
-                    case '/': result += '/'; break;
-                    case 'b': result += '\\b'; break;
-                    case 'f': result += '\\f'; break;
-                    case 'n': result += '\\n'; break;
-                    case 'r': result += '\\r'; break;
-                    case 't': result += '\\t'; break;
-                    default: result += json[pos]; break;
-                }}
-            }} else {{
-                result += json[pos];
-            }}
-            pos++;
-        }}
-        if (pos >= json.length()) throw runtime_error("Unterminated string");
-        pos++; // skip closing quote
-        return result;
-    }}
-    
-    int parseInt() {{
-        string numStr;
-        if (json[pos] == '-') {{
-            numStr += json[pos++];
-        }}
-        while (pos < json.length() && isdigit(json[pos])) {{
-            numStr += json[pos++];
-        }}
-        return stoi(numStr);
-    }}
-    
-    vector<int> parseIntArray() {{
-        if (json[pos] != '[') throw runtime_error("Expected array");
-        pos++;
-        vector<int> result;
-        skipWhitespace();
+    while (pos < arrayStr.length()) {{
+        size_t quoteStart = arrayStr.find(string(1, 34), pos);
+        if (quoteStart == string::npos) break;
         
-        if (json[pos] == ']') {{
-            pos++;
-            return result;
-        }}
+        size_t quoteEnd = arrayStr.find(string(1, 34), quoteStart + 1);
+        if (quoteEnd == string::npos) break;
         
-        while (true) {{
-            skipWhitespace();
-            result.push_back(parseInt());
-            skipWhitespace();
-            
-            if (json[pos] == ']') {{
-                pos++;
-                break;
-            }} else if (json[pos] == ',') {{
-                pos++;
-            }} else {{
-                throw runtime_error("Expected ',' or ']'");
-            }}
-        }}
-        return result;
+        string word = arrayStr.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+        result.push_back(word);
+        pos = quoteEnd + 1;
     }}
+    return result;
+}}
+
+vector<int> parseArrayValue(const string& json, const string& key) {{
+    string searchKey = string(1, 34) + key + string(1, 34) + string(1, 58); // "key":
+    size_t keyPos = json.find(searchKey);
+    if (keyPos == string::npos) return {{}};
     
-public:
-    JSONParser(const string& jsonStr) : json(jsonStr) {{}}
+    size_t start = json.find("[", keyPos);
+    if (start == string::npos) return {{}};
     
-    map<string, vector<int>> parseObject() {{
-        map<string, vector<int>> result;
-        if (json[pos] != '{{') throw runtime_error("Expected object");
-        pos++;
-        skipWhitespace();
-        
-        if (json[pos] == '}}') {{
-            pos++;
-            return result;
+    start++; // Skip the [
+    size_t end = json.find("]", start);
+    string arrayStr = json.substr(start, end - start);
+    
+    vector<int> result;
+    if (arrayStr.empty()) return result;
+    
+    // Simple parsing: split by comma and convert to int
+    stringstream ss(arrayStr);
+    string item;
+    while (getline(ss, item, ',')) {{
+        // Remove whitespace
+        item.erase(0, item.find_first_not_of(" \t"));
+        item.erase(item.find_last_not_of(" \t") + 1);
+        if (!item.empty()) {{
+            result.push_back(stoi(item));
         }}
-        
-        while (true) {{
-            skipWhitespace();
-            string key = parseString();
-            skipWhitespace();
-            
-            if (json[pos] != ':') throw runtime_error("Expected ':'");
-            pos++;
-            skipWhitespace();
-            
-            vector<int> value;
-            if (json[pos] == '[') {{
-                // Parse array
-                value = parseIntArray();
-            }} else {{
-                // Parse single integer
-                value.push_back(parseInt());
-            }}
-            result[key] = value;
-            skipWhitespace();
-            
-            if (json[pos] == '}}') {{
-                pos++;
-                break;
-            }} else if (json[pos] == ',') {{
-                pos++;
-            }} else {{
-                throw runtime_error("Expected ',' or '}}'");
-            }}
-        }}
-        return result;
     }}
-}};
+    return result;
+}}
 
 // Global isBadVersion API for first-bad-version problem
 int globalBadVersion = 0;
@@ -317,13 +278,95 @@ string intToString(int value) {{
     return to_string(value);
 }}
 
+// Dynamic parameter extraction (like Java's extractParametersInJsonOrder)
+struct JsonParam {{
+    string key;
+    string valueType; // "int", "string", "array_int", "array_string"
+    
+    // Union-like storage for different types
+    int intVal;
+    string stringVal;
+    vector<int> intArrayVal;
+    vector<string> stringArrayVal;
+}};
+
+vector<JsonParam> extractParametersInOrder(const string& json) {{
+    vector<JsonParam> params;
+    
+    // Use existing parsing functions to get known parameters
+    // Check for common algorithm parameters in typical order
+    
+    // Check for beginWord, endWord, wordList (word ladder pattern)
+    string beginWord = parseStringValue(json, "beginWord");
+    if (!beginWord.empty()) {{
+        JsonParam param1;
+        param1.key = "beginWord";
+        param1.valueType = "string";
+        param1.stringVal = beginWord;
+        params.push_back(param1);
+        
+        string endWord = parseStringValue(json, "endWord");
+        if (!endWord.empty()) {{
+            JsonParam param2;
+            param2.key = "endWord";
+            param2.valueType = "string";
+            param2.stringVal = endWord;
+            params.push_back(param2);
+            
+            vector<string> wordList = parseStringArrayValue(json, "wordList");
+            if (!wordList.empty()) {{
+                JsonParam param3;
+                param3.key = "wordList";
+                param3.valueType = "array_string";
+                param3.stringArrayVal = wordList;
+                params.push_back(param3);
+            }}
+        }}
+        return params;
+    }}
+    
+    // Check for nums, target (two sum pattern)
+    vector<int> nums = parseArrayValue(json, "nums");
+    if (!nums.empty()) {{
+        JsonParam param1;
+        param1.key = "nums";
+        param1.valueType = "array_int";
+        param1.intArrayVal = nums;
+        params.push_back(param1);
+        
+        int target = parseIntValue(json, "target");
+        if (target != 0 || json.find(string(1, 34) + "target" + string(1, 34) + ":0") != string::npos) {{
+            JsonParam param2;
+            param2.key = "target";
+            param2.valueType = "int";
+            param2.intVal = target;
+            params.push_back(param2);
+        }}
+        return params;
+    }}
+    
+    // Check for single string parameter (valid parentheses pattern)
+    string s = parseStringValue(json, "s");
+    if (!s.empty()) {{
+        JsonParam param;
+        param.key = "s";
+        param.valueType = "string";
+        param.stringVal = s;
+        params.push_back(param);
+        return params;
+    }}
+    
+    return params;
+}}
+
 // User code starts here
 {code}
 // User code ends here
 
+
 int main(int argc, char* argv[]) {{
     if (argc < 3) {{
-        cout << "{{\\"result\\": \\"Missing arguments: expected method name and input data\\", \\"execution_time\\": 0}}" << endl;
+        cout << string(1, 123) << string(1, 34) << "result" << string(1, 34) << ": " << string(1, 34) << "Missing arguments" << string(1, 34) << ", " << string(1, 34) << "execution_time" << string(1, 34) << ": 0" << string(1, 125) << endl;
         return 1;
     }}
     
@@ -332,57 +375,66 @@ int main(int argc, char* argv[]) {{
     auto start = chrono::high_resolution_clock::now();
     
     try {{
-        JSONParser parser(inputJson);
-        auto inputData = parser.parseObject();
-        
         Solution sol;
         
-        // Special handling for first-bad-version problem
-        if (methodName == "firstBadVersion") {{
-            vector<int> nVec = inputData["n"];
-            vector<int> badVec = inputData["bad"];
-            int n = nVec.empty() ? 0 : nVec[0];
-            int bad = badVec.empty() ? 0 : badVec[0];
-            
-            // Set up isBadVersion API
-            globalBadVersion = bad;
-            
-            // Call firstBadVersion with only n parameter
-            int result = sol.firstBadVersion(n);
-            
-            auto end = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-            double executionTime = duration.count() / 1000.0;
-            
-            cout << "{{\\"result\\": " << result << ", \\"execution_time\\": " << executionTime << "}}" << endl;
-        }} else {{
-            // Generic method invocation for other problems
-            vector<int> result;
-            
-            if (methodName == "solution") {{
-                // Call solution function with standard two parameters
-                vector<int> nums = inputData["nums"];
-                vector<int> targetVec = inputData["target"];
-                int target = targetVec.empty() ? 0 : targetVec[0];
-                
-                result = sol.solution(nums, target);
-                
-                auto end = chrono::high_resolution_clock::now();
-                auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-                double executionTime = duration.count() / 1000.0;
-                
-                cout << "{{\\"result\\": " << vectorToString(result) << ", \\"execution_time\\": " << executionTime << "}}" << endl;
+        // Extract parameters dynamically from JSON (like Java does)
+        vector<JsonParam> params = extractParametersInOrder(inputJson);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        // Dynamic method dispatch - only call the method specified by methodName
+        string result;
+        
+        if (methodName == "twoSum") {{
+            if (params.size() >= 2 && params[0].valueType == "array_int" && params[1].valueType == "int") {{
+                vector<int> nums = params[0].intArrayVal;
+                int target = params[1].intVal;
+                vector<int> methodResult = sol.twoSum(nums, target);
+                result = vectorToString(methodResult);
             }} else {{
-                throw runtime_error("Unsupported method: " + methodName + ". Only 'solution' and 'firstBadVersion' are supported.");
+                result = string(1, 34) + "Invalid parameters for twoSum" + string(1, 34);
             }}
+        }} else if (methodName == "ladderLength") {{
+            if (params.size() >= 3 && params[0].valueType == "string" && params[1].valueType == "string" && params[2].valueType == "array_string") {{
+                string beginWord = params[0].stringVal;
+                string endWord = params[1].stringVal;
+                vector<string> wordList = params[2].stringArrayVal;
+                int methodResult = sol.ladderLength(beginWord, endWord, wordList);
+                result = to_string(methodResult);
+            }} else {{
+                result = string(1, 34) + "Invalid parameters for ladderLength" + string(1, 34);
+            }}
+        }} else if (methodName == "missingNumber") {{
+            if (params.size() >= 1 && params[0].valueType == "array_int") {{
+                vector<int> nums = params[0].intArrayVal;
+                int methodResult = sol.missingNumber(nums);
+                result = to_string(methodResult);
+            }} else {{
+                result = string(1, 34) + "Invalid parameters for missingNumber" + string(1, 34);
+            }}
+        }} else if (methodName == "isValid") {{
+            if (params.size() >= 1 && params[0].valueType == "string") {{
+                string s = params[0].stringVal;
+                bool methodResult = sol.isValid(s);
+                result = methodResult ? "true" : "false";
+            }} else {{
+                result = string(1, 34) + "Invalid parameters for isValid" + string(1, 34);
+            }}
+        }} else {{
+            result = string(1, 34) + "Method " + methodName + " not supported" + string(1, 34);
         }}
+        
+        // Output result in JSON format
+        cout << string(1, 123) << string(1, 34) << "result" << string(1, 34) << ": " << result << ", " << string(1, 34) << "execution_time" << string(1, 34) << ": " << executionTime << string(1, 125) << endl;
         
     }} catch (const exception& e) {{
         auto end = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
         double executionTime = duration.count() / 1000.0;
         
-        cout << "{{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}}" << endl;
+        cout << string(1, 123) << string(1, 34) << "result" << string(1, 34) << ": " << string(1, 34) << e.what() << string(1, 34) << ", " << string(1, 34) << "execution_time" << string(1, 34) << ": " << executionTime << string(1, 125) << endl;
     }}
     
     return 0;

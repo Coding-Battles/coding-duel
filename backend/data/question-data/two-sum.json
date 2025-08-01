@@ -3,7 +3,16 @@
   "title": "Two Sum",
   "methodName": "twoSum",
   "signature": {
-    "params": [{"name": "nums", "type": "int[]"}, {"name": "target", "type": "int"}],
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      },
+      {
+        "name": "target",
+        "type": "int"
+      }
+    ],
     "return_type": "int[]"
   },
   "difficulty": "Easy",
@@ -27,7 +36,7 @@
   ],
   "starter_code": {
     "python": "class Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        ",
-    "javascript": "class Solution {\n    twoSum(nums, target) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    twoSum(nums, target) {\n        // @return {number[]}\n        \n    }\n}",
     "java": "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        \n    }\n};"
   }

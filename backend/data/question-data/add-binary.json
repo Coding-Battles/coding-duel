@@ -3,14 +3,29 @@
   "title": "Add Binary",
   "methodName": "addBinary",
   "signature": {
-    "params": [{"name": "a", "type": "string"}, {"name": "b", "type": "string"}],
+    "params": [
+      {
+        "name": "a",
+        "type": "string"
+      },
+      {
+        "name": "b",
+        "type": "string"
+      }
+    ],
     "return_type": "string"
   },
   "difficulty": "Easy",
   "problemDescription": "Given two binary strings a and b, return their sum as a binary string.",
   "examples": [
-    { "input": "a = \"11\", b = \"1\"", "output": "\"100\"" },
-    { "input": "a = \"1010\", b = \"1011\"", "output": "\"10101\"" }
+    {
+      "input": "a = \"11\", b = \"1\"",
+      "output": "\"100\""
+    },
+    {
+      "input": "a = \"1010\", b = \"1011\"",
+      "output": "\"10101\""
+    }
   ],
   "constraints": [
     "a and b consist only of '0' or '1' characters",
@@ -18,7 +33,7 @@
   ],
   "starter_code": {
     "python": "class Solution:\n    def addBinary(self, a: str, b: str) -> str:\n        ",
-    "javascript": "class Solution {\n    addBinary(a, b) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    addBinary(a, b) {\n        // @return {string}\n        \n    }\n}",
     "java": "class Solution {\n    public String addBinary(String a, String b) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    string addBinary(string a, string b) {\n        \n    }\n};"
   }

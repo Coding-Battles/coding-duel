@@ -3,21 +3,32 @@
   "title": "Remove Duplicates from Sorted Array",
   "methodName": "removeDuplicates",
   "signature": {
-    "params": [{"name": "nums", "type": "int[]"}],
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
     "return_type": "int"
   },
   "difficulty": "Easy",
   "problemDescription": "Given an integer array nums sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same. Then return the number of unique elements in nums.",
   "examples": [
-    { "input": "nums = [1,1,2]", "output": "2" },
-    { "input": "nums = [0,0,1,1,1,2,2,3,3,4]", "output": "5" }
+    {
+      "input": "nums = [1,1,2]",
+      "output": "2"
+    },
+    {
+      "input": "nums = [0,0,1,1,1,2,2,3,3,4]",
+      "output": "5"
+    }
   ],
   "constraints": [
     "nums is sorted in non-decreasing order"
   ],
   "starter_code": {
     "python": "class Solution:\n    def removeDuplicates(self, nums: list[int]) -> int:\n        ",
-    "javascript": "class Solution {\n    removeDuplicates(nums) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    removeDuplicates(nums) {\n        // @return {number}\n        \n    }\n}",
     "java": "class Solution {\n    public int removeDuplicates(int[] nums) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    int removeDuplicates(vector<int>& nums) {\n        \n    }\n};"
   }

@@ -3,22 +3,36 @@
   "title": "Group Anagrams",
   "methodName": "groupAnagrams",
   "signature": {
-    "params": [{"name": "strs", "type": "string[]"}],
+    "params": [
+      {
+        "name": "strs",
+        "type": "string[]"
+      }
+    ],
     "return_type": "string[][]"
   },
   "difficulty": "Medium",
   "problemDescription": "Given an array of strings strs, group the anagrams together. You can return the answer in any order. An Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.",
   "examples": [
-    {"input": "strs = [\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]", "output": "[[\"bat\"],[\"nat\",\"tan\"],[\"ate\",\"eat\",\"tea\"]]"},
-    {"input": "strs = [\"\"]", "output": "[[\"\"]]"},
-    {"input": "strs = [\"a\"]", "output": "[[\"a\"]]"}
+    {
+      "input": "strs = [\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]",
+      "output": "[[\"bat\"],[\"nat\",\"tan\"],[\"ate\",\"eat\",\"tea\"]]"
+    },
+    {
+      "input": "strs = [\"\"]",
+      "output": "[[\"\"]]"
+    },
+    {
+      "input": "strs = [\"a\"]",
+      "output": "[[\"a\"]]"
+    }
   ],
   "constraints": [
     "strs[i] consists of lowercase English letters only"
   ],
   "starter_code": {
     "python": "class Solution:\n    def groupAnagrams(self, strs: list[str]) -> list[list[str]]:\n        ",
-    "javascript": "class Solution {\n    groupAnagrams(strs) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    groupAnagrams(strs) {\n        // @return {string[][]}\n        \n    }\n}",
     "java": "class Solution {\n    public List<List<String>> groupAnagrams(String[] strs) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    vector<vector<string>> groupAnagrams(vector<string>& strs) {\n        \n    }\n};"
   }
