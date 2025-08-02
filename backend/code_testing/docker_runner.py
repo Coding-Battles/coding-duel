@@ -9,8 +9,8 @@ from backend.models.questions import DockerRunRequest
 from backend.code_testing.language_config import LANGUAGE_CONFIG
 
 
-def generate_cpp_method_specific_wrapper(code: str, function_name: str) -> str:
-    """Generate method-specific C++ wrapper to avoid compilation errors from non-existent methods"""
+# Removed generate_cpp_method_specific_wrapper - now using universal C++ wrapper from language_config.py
+def removed_generate_cpp_method_specific_wrapper_DEPRECATED():
     
     # Comprehensive headers for all algorithm problems
     cpp_headers = '''#include <iostream>
@@ -522,15 +522,11 @@ def run_code_in_docker(
                 ).replace("  {", " {")
                 print(f"🐛 [DOCKER DEBUG] Cleaned Java code for firstBadVersion")
 
-            # For C++, generate method-specific wrapper to avoid compilation errors
-            if request.language == "cpp":
-                print(f"🐛 [DOCKER DEBUG] Using method-specific C++ wrapper for function: {request.function_name}")
-                wrapped_code = generate_cpp_method_specific_wrapper(processed_code, request.function_name)
-            else:
-                wrapped_code = config["wrapper_template"].format(
-                    code=processed_code,
-                    function_name=request.function_name,
-                )
+            # All languages now use their universal wrapper templates
+            wrapped_code = config["wrapper_template"].format(
+                code=processed_code,
+                function_name=request.function_name,
+            )
             print(f"🐛 [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
         except Exception as e:
             print(f"🐛 [DOCKER DEBUG] Exception formatting wrapper: {e}")
