@@ -145,7 +145,11 @@ const functionName = process.argv[2];
 const inputData = JSON.parse(process.argv[3]);
 const startTime = process.hrtime.bigint();
 
-// Helper functions for ListNode conversion (definitions removed to avoid conflicts)
+// ListNode definition for wrapper functionality
+function ListNode(val, next) {
+    this.val = (val===undefined ? 0 : val);
+    this.next = (next===undefined ? null : next);
+}
 
 // Helper functions for ListNode conversion
 function listToListNode(arr) {
