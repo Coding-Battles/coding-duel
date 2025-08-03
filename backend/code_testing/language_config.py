@@ -258,6 +258,7 @@ console.log(JSON.stringify({
         "wrapper_template": """
 import java.util.*;
 import java.lang.reflect.*;
+{user_imports}
 
 // ListNode and TreeNode definitions for algorithm problems
 class ListNode {

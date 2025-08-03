@@ -357,6 +357,36 @@ def compile_cpp_with_cache(container, source_code, function_name):
         return None
 
 
+def extract_java_imports(user_code):
+    """
+    Extract import statements from Java user code and return cleaned code + imports.
+    Returns: (cleaned_code, imports_list)
+    """
+    import re
+    
+    # Find all import statements
+    import_pattern = r'^import\s+[^;]+;'
+    imports = []
+    
+    lines = user_code.split('\n')
+    cleaned_lines = []
+    
+    for line in lines:
+        stripped_line = line.strip()
+        if re.match(import_pattern, stripped_line):
+            imports.append(stripped_line)
+            print(f"🔧 [JAVA IMPORTS] Extracted: {stripped_line}")
+        else:
+            cleaned_lines.append(line)
+    
+    cleaned_code = '\n'.join(cleaned_lines)
+    
+    # Remove empty lines at the beginning that were left by removed imports
+    cleaned_code = re.sub(r'^\n+', '', cleaned_code)
+    
+    return cleaned_code, imports
+
+
 def generate_cpp_wrapper(method_name, user_code):
     """
     Generate method-specific C++ wrapper code.
@@ -539,6 +569,16 @@ string vectorToString(const vector<int>& vec) {
     return result;
 }
 
+string vector2DToString(const vector<vector<int>>& vec2d) {
+    string result = "[";
+    for (size_t i = 0; i < vec2d.size(); i++) {
+        result += vectorToString(vec2d[i]);
+        if (i < vec2d.size() - 1) result += ",";
+    }
+    result += "]";
+    return result;
+}
+
 // User code starts here
 ''' + user_code + '''
 // User code ends here
@@ -706,7 +746,360 @@ string vectorToString(const vector<int>& vec) {
     
     return 0;
 }'''
-
+    elif method_name == "containsDuplicate":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for containsDuplicate
+        vector<int> nums = parseArrayValue(inputJson, "nums");
+        
+        // Call method
+        bool resultValue = sol.containsDuplicate(nums);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << (resultValue ? "true" : "false") << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+    elif method_name == "isValid":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for isValid - extract string value
+        string s;
+        size_t start_pos = inputJson.find("\\"s\\":");
+        if (start_pos != string::npos) {
+            start_pos = inputJson.find("\\"", start_pos + 4);
+            if (start_pos != string::npos) {
+                start_pos++; // Skip opening quote
+                size_t end_pos = inputJson.find("\\"", start_pos);
+                if (end_pos != string::npos) {
+                    s = inputJson.substr(start_pos, end_pos - start_pos);
+                }
+            }
+        }
+        
+        // Call method
+        bool resultValue = sol.isValid(s);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << (resultValue ? "true" : "false") << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+    elif method_name == "validAnagram":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for validAnagram - extract two string values
+        string s, t;
+        size_t s_pos = inputJson.find("\\"s\\":");
+        if (s_pos != string::npos) {
+            s_pos = inputJson.find("\\"", s_pos + 4);
+            if (s_pos != string::npos) {
+                s_pos++; // Skip opening quote
+                size_t s_end = inputJson.find("\\"", s_pos);
+                if (s_end != string::npos) {
+                    s = inputJson.substr(s_pos, s_end - s_pos);
+                }
+            }
+        }
+        
+        size_t t_pos = inputJson.find("\\"t\\":");
+        if (t_pos != string::npos) {
+            t_pos = inputJson.find("\\"", t_pos + 4);
+            if (t_pos != string::npos) {
+                t_pos++; // Skip opening quote
+                size_t t_end = inputJson.find("\\"", t_pos);
+                if (t_end != string::npos) {
+                    t = inputJson.substr(t_pos, t_end - t_pos);
+                }
+            }
+        }
+        
+        // Call method
+        bool resultValue = sol.validAnagram(s, t);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << (resultValue ? "true" : "false") << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+    elif method_name == "isPalindrome":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for isPalindrome
+        int x = parseIntValue(inputJson, "x");
+        
+        // Call method
+        bool resultValue = sol.isPalindrome(x);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << (resultValue ? "true" : "false") << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+    elif method_name == "singleNumber":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for singleNumber
+        vector<int> nums = parseArrayValue(inputJson, "nums");
+        
+        // Call method
+        int resultValue = sol.singleNumber(nums);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << resultValue << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+    elif method_name == "majorityElement":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for majorityElement
+        vector<int> nums = parseArrayValue(inputJson, "nums");
+        
+        // Call method
+        int resultValue = sol.majorityElement(nums);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << resultValue << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+    elif method_name == "maxDepth":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for maxDepth - TreeNode from array representation
+        vector<int> nodes = parseArrayValue(inputJson, "root");
+        
+        // For simplicity, assume null nodes are represented as -1000 (large negative number)
+        // Convert array to TreeNode (level-order traversal)
+        TreeNode* root = nullptr;
+        if (!nodes.empty() && nodes[0] != -1000) {
+            root = new TreeNode(nodes[0]);
+            queue<TreeNode*> q;
+            q.push(root);
+            int i = 1;
+            
+            while (!q.empty() && i < nodes.size()) {
+                TreeNode* curr = q.front();
+                q.pop();
+                
+                // Left child
+                if (i < nodes.size() && nodes[i] != -1000) {
+                    curr->left = new TreeNode(nodes[i]);
+                    q.push(curr->left);
+                }
+                i++;
+                
+                // Right child
+                if (i < nodes.size() && nodes[i] != -1000) {
+                    curr->right = new TreeNode(nodes[i]);
+                    q.push(curr->right);
+                }
+                i++;
+            }
+        }
+        
+        // Call method
+        int resultValue = sol.maxDepth(root);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << resultValue << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+    elif method_name == "threeSum":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for threeSum
+        vector<int> nums = parseArrayValue(inputJson, "nums");
+        
+        // Call method
+        vector<vector<int>> resultValue = sol.threeSum(nums);
+        
+        // Convert result to string
+        string result = vector2DToString(resultValue);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << result << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
     else:
         # Fallback for unsupported methods
         main_code = f'''int main(int argc, char* argv[]) {{
@@ -936,6 +1329,14 @@ def run_code_in_docker(
                 # Use dynamic wrapper generation for C++
                 wrapped_code = generate_cpp_wrapper(request.function_name, processed_code)
                 print(f"🔧 [CPP WRAPPER] Generated dynamic wrapper for {request.function_name}")
+            elif request.language == "java":
+                # Handle Java import extraction
+                cleaned_code, user_imports = extract_java_imports(processed_code)
+                user_imports_str = '\n'.join(user_imports) if user_imports else ''
+                
+                # Use string replacement to insert both cleaned code and imports
+                wrapped_code = config["wrapper_template"].replace("{code}", cleaned_code).replace("{function_name}", request.function_name).replace("{user_imports}", user_imports_str)
+                print(f"🔧 [JAVA IMPORTS] Processed {len(user_imports)} imports for Java wrapper")
             else:
                 # All other languages use their universal wrapper templates
                 # Use string replacement instead of .format() to avoid issues with ! characters
