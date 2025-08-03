@@ -312,6 +312,411 @@ exec 3>&-
         return None
 
 
+def compile_cpp_with_cache(container, source_code, function_name):
+    """
+    Compile C++ code with smart caching for fast subsequent executions.
+    Returns the compiled binary path, or None if compilation failed.
+    """
+    try:
+        import hashlib
+        import time
+        
+        cache_start = time.time()
+        
+        # Generate cache key from source content
+        source_hash = hashlib.md5(source_code.encode()).hexdigest()[:16]  # Use first 16 chars
+        binary_name = f"cached_{function_name}_{source_hash}"
+        binary_path = f"/tmp/{binary_name}"
+        
+        # Check if binary already exists (cache hit)
+        check_cache = container.exec_run(f"test -f {binary_path}", workdir="/tmp")
+        if check_cache.exit_code == 0:
+            cache_time = (time.time() - cache_start) * 1000
+            print(f"🚀 [CPP CACHE] Cache hit! Using cached binary: {binary_name} ({cache_time:.1f}ms)")
+            return binary_path
+        
+        # Cache miss - need to compile
+        print(f"🔧 [CPP CACHE] Cache miss, compiling {function_name}...")
+        compile_start = time.time()
+        
+        # Compile with optimized flags for faster compilation and execution
+        compile_cmd = f"g++ -std=c++17 -O2 -pipe -o {binary_path} solution.cpp"
+        compile_result = container.exec_run(compile_cmd, workdir="/tmp")
+        
+        compile_time = (time.time() - compile_start) * 1000
+        
+        if compile_result.exit_code == 0:
+            print(f"✅ [CPP CACHE] Compiled and cached binary: {binary_name} ({compile_time:.1f}ms)")
+            return binary_path
+        else:
+            print(f"❌ [CPP CACHE] Compilation failed: {compile_result.output.decode()}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ [CPP CACHE] Caching failed: {e}")
+        return None
+
+
+def generate_cpp_wrapper(method_name, user_code):
+    """
+    Generate method-specific C++ wrapper code.
+    This avoids compilation issues by only including code for the specific method being called.
+    """
+    
+    # Strip out struct definitions from user code to prevent redefinition errors
+    import re
+    
+    def remove_struct_definition(code, struct_name):
+        """Remove complete struct definition with proper brace matching"""
+        pattern = rf'struct\s+{struct_name}\s*\{{'
+        
+        pos = 0
+        while True:
+            match = re.search(pattern, code[pos:])
+            if not match:
+                break
+                
+            start_pos = pos + match.start()
+            brace_pos = pos + match.end() - 1  # Position of opening brace
+            
+            # Find matching closing brace
+            brace_count = 1
+            i = brace_pos + 1
+            while i < len(code) and brace_count > 0:
+                if code[i] == '{':
+                    brace_count += 1
+                elif code[i] == '}':
+                    brace_count -= 1
+                i += 1
+            
+            if brace_count == 0:
+                # Found complete struct, remove it including optional semicolon
+                end_pos = i
+                if end_pos < len(code) and code[end_pos] == ';':
+                    end_pos += 1
+                
+                # Replace with comment
+                comment = f'// {struct_name} structure is provided by the wrapper'
+                code = code[:start_pos] + comment + code[end_pos:]
+                print(f"🔧 [CPP WRAPPER] Removed {struct_name} definition from user code")
+                
+                # Continue searching from after the comment
+                pos = start_pos + len(comment)
+            else:
+                # Malformed struct, skip
+                pos += match.end()
+        
+        return code
+    
+    # Remove struct definitions
+    user_code = remove_struct_definition(user_code, 'ListNode')
+    user_code = remove_struct_definition(user_code, 'TreeNode')
+    
+    # Remove any LeetCode-style comments about definitions
+    user_code = re.sub(r'//\s*Definition for.*?\.', '', user_code)
+    
+    # Clean up extra whitespace
+    user_code = re.sub(r'\n\s*\n\s*\n', '\n\n', user_code)
+    
+    # Common C++ headers and utilities
+    cpp_base = '''#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
+#include <chrono>
+#include <sstream>
+#include <climits>
+#include <cmath>
+#include <queue>
+#include <stack>
+#include <deque>
+#include <list>
+#include <functional>
+using namespace std;
+
+// ListNode and TreeNode definitions for algorithm problems
+struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode() : val(0), next(nullptr) {}
+    ListNode(int x) : val(x), next(nullptr) {}
+    ListNode(int x, ListNode *next) : val(x), next(next) {}
+};
+
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode() : val(0), left(nullptr), right(nullptr) {}
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+};
+
+// Global isBadVersion API for first-bad-version problem
+int globalBadVersion = 0;
+bool isBadVersion(int version) {
+    return version >= globalBadVersion;
+}
+
+// Simple JSON parsing helpers
+int parseIntValue(const string& json, const string& key) {
+    string searchKey = string(1, 34) + key + string(1, 34) + string(1, 58); // "key":
+    size_t pos = json.find(searchKey);
+    if (pos == string::npos) return 0;
+    
+    pos = json.find(":", pos) + 1;
+    while (pos < json.length() && isspace(json[pos])) pos++;
+    
+    string numStr;
+    while (pos < json.length() && (isdigit(json[pos]) || json[pos] == '-')) {
+        numStr += json[pos++];
+    }
+    return numStr.empty() ? 0 : stoi(numStr);
+}
+
+vector<int> parseArrayValue(const string& json, const string& key) {
+    string searchKey = string(1, 34) + key + string(1, 34) + string(1, 58); // "key":
+    size_t keyPos = json.find(searchKey);
+    if (keyPos == string::npos) return {};
+    
+    size_t start = json.find("[", keyPos);
+    if (start == string::npos) return {};
+    
+    start++; // Skip the [
+    size_t end = json.find("]", start);
+    string arrayStr = json.substr(start, end - start);
+    
+    vector<int> result;
+    if (arrayStr.empty()) return result;
+    
+    // Simple parsing: split by comma and convert to int
+    stringstream ss(arrayStr);
+    string item;
+    while (getline(ss, item, ',')) {
+        // Remove whitespace
+        item.erase(0, item.find_first_not_of(" \\\\t"));
+        item.erase(item.find_last_not_of(" \\\\t") + 1);
+        if (!item.empty()) {
+            result.push_back(stoi(item));
+        }
+    }
+    return result;
+}
+
+// Helper functions for ListNode conversion
+ListNode* vectorToListNode(const vector<int>& arr) {
+    if (arr.empty()) return nullptr;
+    
+    ListNode* head = new ListNode(arr[0]);
+    ListNode* current = head;
+    for (size_t i = 1; i < arr.size(); i++) {
+        current->next = new ListNode(arr[i]);
+        current = current->next;
+    }
+    return head;
+}
+
+vector<int> listNodeToVector(ListNode* head) {
+    vector<int> result;
+    while (head) {
+        result.push_back(head->val);
+        head = head->next;
+    }
+    return result;
+}
+
+string vectorToString(const vector<int>& vec) {
+    string result = "[";
+    for (size_t i = 0; i < vec.size(); i++) {
+        result += to_string(vec[i]);
+        if (i < vec.size() - 1) result += ",";
+    }
+    result += "]";
+    return result;
+}
+
+// User code starts here
+''' + user_code + '''
+// User code ends here
+
+'''
+
+    # Method-specific main function
+    if method_name == "addTwoNumbers":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for addTwoNumbers
+        vector<int> l1Array = parseArrayValue(inputJson, "l1");
+        vector<int> l2Array = parseArrayValue(inputJson, "l2");
+        ListNode* l1 = vectorToListNode(l1Array);
+        ListNode* l2 = vectorToListNode(l2Array);
+        
+        // Call method
+        ListNode* resultNode = sol.addTwoNumbers(l1, l2);
+        
+        // Convert result
+        vector<int> resultArray = listNodeToVector(resultNode);
+        string result = vectorToString(resultArray);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << result << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+
+    elif method_name == "twoSum":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for twoSum
+        vector<int> nums = parseArrayValue(inputJson, "nums");
+        int target = parseIntValue(inputJson, "target");
+        
+        // Call method
+        vector<int> resultArray = sol.twoSum(nums, target);
+        
+        // Convert result
+        string result = vectorToString(resultArray);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << result << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+
+    elif method_name == "missingNumber":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for missingNumber
+        vector<int> nums = parseArrayValue(inputJson, "nums");
+        
+        // Call method
+        int resultValue = sol.missingNumber(nums);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << resultValue << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+
+    elif method_name == "firstBadVersion":
+        main_code = '''int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        cout << "{\\"result\\": \\"Missing arguments\\", \\"execution_time\\": 0}" << endl;
+        return 1;
+    }
+    
+    string methodName = argv[1];
+    string inputJson = argv[2];
+    auto start = chrono::high_resolution_clock::now();
+    
+    try {
+        Solution sol;
+        
+        // Parse input for firstBadVersion
+        int n = parseIntValue(inputJson, "n");
+        int bad = parseIntValue(inputJson, "bad");
+        globalBadVersion = bad;  // Set global for isBadVersion API
+        
+        // Call method
+        int resultValue = sol.firstBadVersion(n);
+        
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": " << resultValue << ", \\"execution_time\\": " << executionTime << "}" << endl;
+        
+    } catch (const exception& e) {
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+        double executionTime = duration.count() / 1000.0;
+        
+        cout << "{\\"result\\": \\"" << e.what() << "\\", \\"execution_time\\": " << executionTime << "}" << endl;
+    }
+    
+    return 0;
+}'''
+
+    else:
+        # Fallback for unsupported methods
+        main_code = f'''int main(int argc, char* argv[]) {{
+    cout << "{{\\"result\\": \\"Method {method_name} not yet supported in C++ wrapper\\", \\"execution_time\\": 0}}" << endl;
+    return 1;
+}}'''
+
+    return cpp_base + main_code
+
+
 def get_persistent_container(language: str):
     """Get or create a persistent container for the given language."""
     global _persistent_containers
@@ -477,6 +882,7 @@ def get_persistent_container(language: str):
             except Exception as e:
                 print(f"❌ [DOCKER DEBUG] Error setting up Java compilation server: {e}")
         
+        
         _persistent_containers[container_name] = container
         return container
 
@@ -487,6 +893,9 @@ def run_code_in_docker(
     """Run code using persistent containers for fast execution."""
     import time
 
+    # Initialize run_command to avoid UnboundLocalError
+    run_command = None
+    
     start_time = time.time()
     print(f"🐛 [DOCKER DEBUG] Starting {request.language} execution")
     print(f"🐛 [DOCKER DEBUG] Function name: {request.function_name}")
@@ -522,11 +931,15 @@ def run_code_in_docker(
                 ).replace("  {", " {")
                 print(f"🐛 [DOCKER DEBUG] Cleaned Java code for firstBadVersion")
 
-            # All languages now use their universal wrapper templates
-            wrapped_code = config["wrapper_template"].format(
-                code=processed_code,
-                function_name=request.function_name,
-            )
+            # Generate code based on language
+            if request.language == "cpp":
+                # Use dynamic wrapper generation for C++
+                wrapped_code = generate_cpp_wrapper(request.function_name, processed_code)
+                print(f"🔧 [CPP WRAPPER] Generated dynamic wrapper for {request.function_name}")
+            else:
+                # All other languages use their universal wrapper templates
+                # Use string replacement instead of .format() to avoid issues with ! characters
+                wrapped_code = config["wrapper_template"].replace("{code}", processed_code).replace("{function_name}", request.function_name)
             print(f"🐛 [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
         except Exception as e:
             print(f"🐛 [DOCKER DEBUG] Exception formatting wrapper: {e}")
@@ -580,8 +993,22 @@ def run_code_in_docker(
                     compile_cmd = config["compile_command"].format(filename=filename)
                     commands.append(compile_cmd)
                     compilation_dir = "/tmp"  # Use default directory for fallback
+            elif request.language == "cpp":
+                # Use smart caching for C++ compilation
+                binary_path = compile_cpp_with_cache(container, wrapped_code, request.function_name)
+                if binary_path:
+                    # Override run command to use the cached binary
+                    run_command = binary_path
+                else:
+                    # Fallback to traditional g++ compilation
+                    print(f"⚠️ [CPP CACHE] Caching failed, falling back to traditional g++")
+                    compile_cmd = config["compile_command"].format(filename=filename)  
+                    commands.append(compile_cmd)
+                    print(f"🐛 [DOCKER DEBUG] Added C++ compile command: {compile_cmd}")
+                    # Initialize run_command for fallback case
+                    run_command = None
             else:
-                # Non-Java languages: compile normally
+                # Other languages: compile normally
                 compile_cmd = config["compile_command"].format(filename=filename)  
                 commands.append(compile_cmd)
                 print(f"🐛 [DOCKER DEBUG] Added compile command: {compile_cmd}")
@@ -590,9 +1017,13 @@ def run_code_in_docker(
         if request.language == "java" and "compile_command" in config:
             # For Java with compilation server, run from compilation directory
             run_command = f"cd {compilation_dir}; " + config["run_command"].format(filename=filename) if "{filename}" in config["run_command"] else f"cd {compilation_dir}; " + config["run_command"]
+        elif request.language == "cpp" and run_command:
+            # For C++ with cached binary, run_command is already set to binary path
+            pass  # run_command already set by caching logic
         else:
-            # Normal run command
-            run_command = config["run_command"].format(filename=filename) if "{filename}" in config["run_command"] else config["run_command"]
+            # Normal run command for other languages or C++ fallback
+            if not run_command:  # Only set if not already set
+                run_command = config["run_command"].format(filename=filename) if "{filename}" in config["run_command"] else config["run_command"]
 
         print(f"🐛 [DOCKER DEBUG] Base run command: {run_command}")
 
