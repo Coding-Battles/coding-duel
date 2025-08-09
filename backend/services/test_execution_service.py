@@ -57,6 +57,29 @@ class TestExecutionService:
             return question_name  # Fallback to question_name
 
     @staticmethod
+    def load_question_signature(question_name: str) -> Dict[str, Any]:
+        """Load signature metadata from question data file."""
+        question_file_path = f"backend/data/question-data/{question_name}.json"
+        logger.info(f"🐛 [DEBUG] Looking for signature in question file: {question_file_path}")
+
+        try:
+            with open(question_file_path, "r") as f:
+                question_data = json.load(f)
+            signature = question_data.get("signature")
+            if signature:
+                logger.info(f"🐛 [DEBUG] Signature loaded: {signature}")
+                return signature
+            else:
+                logger.warning(f"🐛 [DEBUG] No signature found in question file: {question_file_path}")
+                return None
+        except FileNotFoundError:
+            logger.warning(f"🐛 [DEBUG] Question file not found: {question_file_path}")
+            return None
+        except Exception as e:
+            logger.warning(f"🐛 [DEBUG] Error loading signature: {str(e)}")
+            return None
+
+    @staticmethod
     def normalize_answer(answer: Any) -> Any:
         """Normalize answer to handle different formats (list vs string)."""
         if isinstance(answer, str):
@@ -74,11 +97,14 @@ class TestExecutionService:
         actual_normalized = TestExecutionService.normalize_answer(actual)
 
         # If expected is a single answer (old format), convert to list
-        if not isinstance(expected_list[0], list):
+        if not isinstance(expected_list, list):
+            expected_list = [expected_list]
+        elif len(expected_list) > 0 and not isinstance(expected_list[0], list):
             expected_list = [expected_list]
 
         for expected in expected_list:
-            if actual_normalized == expected:
+            expected_normalized = TestExecutionService.normalize_answer(expected)
+            if actual_normalized == expected_normalized:
                 return True
 
         return False
@@ -123,7 +149,7 @@ class TestExecutionService:
 
     @staticmethod
     def run_individual_test_cases(
-        code: str, language: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str = "solution"
+        code: str, language: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str = "solution", signature: Dict[str, Any] = None
     ) -> Tuple[List[TestCaseResult], int, int]:
         """Run test cases individually (for non-batch languages or fallback)."""
         test_results = []
@@ -141,6 +167,7 @@ class TestExecutionService:
                         test_input=test_case["input"],
                         timeout=timeout,
                         function_name=function_name,
+                        signature=signature,
                     )
                 )
                 docker_time = (time.time() - docker_start_time) * 1000
@@ -192,49 +219,14 @@ class TestExecutionService:
 
     @staticmethod
     def run_java_batch_execution(
-        code: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str
+        code: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str, question_name: str = None
     ) -> Tuple[List[TestCaseResult], int, int]:
         """Execute Java code using batch runner."""
-        try:
-            batch_start_time = time.time()
-            logger.info(f"🐛 [DEBUG] Using batch execution for Java")
+        # Bypass old batch runner - force fallback to individual execution using simplified approach
+        logger.info(f"🐛 [DEBUG] Bypassing Java batch runner, using simplified individual execution")
+        raise Exception("Bypassing Java batch runner to use simplified approach")
 
-            from backend.code_testing.java_batch_runner import run_java_batch
-
-            batch_results = run_java_batch(code, test_cases, timeout, function_name)
-            batch_time = (time.time() - batch_start_time) * 1000
-            logger.info(
-                f"🐛 [DEBUG] Java batch execution took {batch_time:.0f}ms for {len(test_cases)} test cases"
-            )
-
-            return TestExecutionService.process_batch_results(test_cases, batch_results)
-
-        except Exception as e:
-            logger.error(f"🐛 [DEBUG] Java batch execution failed: {str(e)}")
-            raise
-
-    @staticmethod
-    def run_cpp_batch_execution(
-        code: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str
-    ) -> Tuple[List[TestCaseResult], int, int]:
-        """Execute C++ code using batch runner."""
-        try:
-            batch_start_time = time.time()
-            logger.info(f"🐛 [DEBUG] Using batch execution for C++")
-
-            from backend.code_testing.cpp_batch_runner import run_cpp_batch
-
-            batch_results = run_cpp_batch(code, test_cases, timeout, function_name)
-            batch_time = (time.time() - batch_start_time) * 1000
-            logger.info(
-                f"🐛 [DEBUG] C++ batch execution took {batch_time:.0f}ms for {len(test_cases)} test cases"
-            )
-
-            return TestExecutionService.process_batch_results(test_cases, batch_results)
-
-        except Exception as e:
-            logger.error(f"🐛 [DEBUG] C++ batch execution failed: {str(e)}")
-            raise
+    # C++ batch processing removed - now uses standard docker_runner execution like Java
 
     @staticmethod
     def validate_language(language: str) -> None:
@@ -272,6 +264,14 @@ class TestExecutionService:
                 f"🐛 [DEBUG] Method name loading took {(time.time() - step_time)*1000:.0f}ms"
             )
 
+            # Load signature metadata from question data
+            step_time = time.time()
+            signature = TestExecutionService.load_question_signature(request.question_name)
+            logger.info(
+                f"🐛 [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
+            )
+            logger.info(f"🐛 [DEBUG] Signature: {signature}")
+
             logger.info(
                 f"🐛 [DEBUG] Starting execution of {len(test_cases)} test cases"
             )
@@ -281,7 +281,7 @@ class TestExecutionService:
                 try:
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_java_batch_execution(
-                            request.code, test_cases, request.timeout, method_name
+                            request.code, test_cases, request.timeout, method_name, request.question_name
                         )
                     )
                 except Exception:
@@ -290,24 +290,16 @@ class TestExecutionService:
                     )
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name
+                            request.code, request.language, test_cases, request.timeout, method_name, signature
                         )
                     )
             elif request.language == "cpp":
-                try:
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_cpp_batch_execution(
-                            request.code, test_cases, request.timeout, method_name
-                        )
+                # C++ now uses standard individual execution like Java (no batch processing)
+                logger.info(f"🐛 [DEBUG] Using standard individual execution for C++")
+                test_results, total_passed, total_failed = (
+                    TestExecutionService.run_individual_test_cases(
+                        request.code, request.language, test_cases, request.timeout, method_name, signature
                     )
-                except Exception:
-                    logger.info(
-                        f"🐛 [DEBUG] Falling back to individual test case execution"
-                    )
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name
-                        )
                     )
             else:
                 # For other languages, use individual execution
@@ -372,6 +364,14 @@ class TestExecutionService:
             logger.info(
                 f"🐛 [DEBUG] Method name loading took {(time.time() - step_time)*1000:.0f}ms"
             )
+
+            # Load signature metadata from question data
+            step_time = time.time()
+            signature = TestExecutionService.load_question_signature(request.question_name)
+            logger.info(
+                f"🐛 [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
+            )
+            logger.info(f"🐛 [DEBUG] Signature: {signature}")
             
             logger.info(
                 f"🐛 [DEBUG] Running SAMPLE execution with {len(test_cases)} test cases (out of {len(all_test_cases)} total)"
@@ -382,7 +382,7 @@ class TestExecutionService:
                 try:
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_java_batch_execution(
-                            request.code, test_cases, request.timeout, method_name
+                            request.code, test_cases, request.timeout, method_name, request.question_name
                         )
                     )
                 except Exception:
@@ -391,24 +391,16 @@ class TestExecutionService:
                     )
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name
+                            request.code, request.language, test_cases, request.timeout, method_name, signature
                         )
                     )
             elif request.language == "cpp":
-                try:
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_cpp_batch_execution(
-                            request.code, test_cases, request.timeout, method_name
-                        )
+                # C++ now uses standard individual execution like Java (no batch processing)
+                logger.info(f"🐛 [DEBUG] Using standard individual execution for C++ sample tests")
+                test_results, total_passed, total_failed = (
+                    TestExecutionService.run_individual_test_cases(
+                        request.code, request.language, test_cases, request.timeout, method_name, signature
                     )
-                except Exception:
-                    logger.info(
-                        f"🐛 [DEBUG] Falling back to individual test case execution for sample tests"
-                    )
-                    test_results, total_passed, total_failed = (
-                        TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name
-                        )
                     )
             else:
                 # For other languages, use individual execution

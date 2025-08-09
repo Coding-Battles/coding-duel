@@ -1,0 +1,40 @@
+{
+  "id": "11",
+  "title": "Missing Number",
+  "methodName": "missingNumber",
+  "signature": {
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "return_type": "int"
+  },
+  "difficulty": "Easy",
+  "problemDescription": "Given an array nums containing n distinct numbers in the range [0, n], return the only number in the range that is missing from the array.",
+  "examples": [
+    {
+      "input": "nums = [3,0,1]",
+      "output": "2"
+    },
+    {
+      "input": "nums = [0,1]",
+      "output": "2"
+    },
+    {
+      "input": "nums = [9,6,4,2,3,5,7,0,1]",
+      "output": "8"
+    }
+  ],
+  "constraints": [
+    "0 <= nums[i] <= nums.length",
+    "All the numbers of nums are unique"
+  ],
+  "starter_code": {
+    "python": "class Solution:\n    def missingNumber(self, nums: list[int]) -> int:\n        ",
+    "javascript": "class Solution {\n    missingNumber(nums) {\n        // @return {number}\n        \n    }\n}",
+    "java": "class Solution {\n    public int missingNumber(int[] nums) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    int missingNumber(vector<int>& nums) {\n        \n    }\n};"
+  }
+}

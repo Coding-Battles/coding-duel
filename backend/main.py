@@ -157,7 +157,9 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 questions_router.set_database(database)
 
 # Set dependencies for socket events BEFORE creating socket app
-logger.info(f"🔧 [SYNC DEBUG] Setting dependencies with game_states id: {id(game_states)}")
+logger.info(
+    f"🔧 [SYNC DEBUG] Setting dependencies with game_states id: {id(game_states)}"
+)
 matchmaking.set_dependencies(game_states)
 connection.set_dependencies(game_states)
 socket_game_events.set_dependencies(game_states)

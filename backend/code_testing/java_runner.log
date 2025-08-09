@@ -1,0 +1,48 @@
+PersistentJavaRunner started - listening on port 8899
+⚡ [JIT WARMUP] Starting JIT pre-warming...
+📋 [TEST CASES] Parsing test cases from: [{"input":{"nums":[1,2,3]}}]
+📋 [TEST CASES] Array content: {"input":{"nums":[1,2,3]}}...
+🐍 [SIMPLE PARSE] Parsing input: {"nums":[1,2,3]}
+🐍 [SIMPLE PARSE] Result: {nums=[1, 2, 3]}
+📋 [TEST CASES] Parsed 1 test cases
+📋 [TEST CASES] Parsing test cases from: [{"input":{"nums":[1,2,3]}}]
+📋 [TEST CASES] Array content: {"input":{"nums":[1,2,3]}}...
+🐍 [SIMPLE PARSE] Parsing input: {"nums":[1,2,3]}
+🐍 [SIMPLE PARSE] Result: {nums=[1, 2, 3]}
+📋 [TEST CASES] Parsed 1 test cases
+📋 [TEST CASES] Parsing test cases from: [{"input":{"nums":[1,2,3]}}]
+📋 [TEST CASES] Array content: {"input":{"nums":[1,2,3]}}...
+🐍 [SIMPLE PARSE] Parsing input: {"nums":[1,2,3]}
+🐍 [SIMPLE PARSE] Result: {nums=[1, 2, 3]}
+📋 [TEST CASES] Parsed 1 test cases
+📋 [TEST CASES] Parsing test cases from: [{"input":{"nums":[1,2,3]}}]
+📋 [TEST CASES] Array content: {"input":{"nums":[1,2,3]}}...
+🐍 [SIMPLE PARSE] Parsing input: {"nums":[1,2,3]}
+🐍 [SIMPLE PARSE] Result: {nums=[1, 2, 3]}
+📋 [TEST CASES] Parsed 1 test cases
+📋 [TEST CASES] Parsing test cases from: [{"input":{"nums":[1,2,3]}}]
+📋 [TEST CASES] Array content: {"input":{"nums":[1,2,3]}}...
+🐍 [SIMPLE PARSE] Parsing input: {"nums":[1,2,3]}
+🐍 [SIMPLE PARSE] Result: {nums=[1, 2, 3]}
+📋 [TEST CASES] Parsed 1 test cases
+❄️ [CACHE MISS] Compiling new class for hash: 1626271040
+🔥 [COMPILE] Starting optimized in-memory compilation for Solution
+🔥 [COMPILE] Optimized compilation completed in 303ms
+✅ [CACHED] Stored compiled class for hash: 1626271040
+📊 [CACHE STATS] Size: 1 classes cached
+⚡ [JIT WARMUP] Pre-compiled pattern: class Solution { public int mi...
+❄️ [CACHE MISS] Compiling new class for hash: 1289993290
+🔥 [COMPILE] Starting optimized in-memory compilation for Solution
+🔥 [COMPILE] Optimized compilation completed in 32ms
+✅ [CACHED] Stored compiled class for hash: 1289993290
+📊 [CACHE STATS] Size: 2 classes cached
+⚡ [JIT WARMUP] Pre-compiled pattern: class Solution { public int[] ...
+❄️ [CACHE MISS] Compiling new class for hash: -1091768399
+🔥 [COMPILE] Starting optimized in-memory compilation for Solution
+🔥 [COMPILE] Optimized compilation completed in 31ms
+✅ [CACHED] Stored compiled class for hash: -1091768399
+📊 [CACHE STATS] Size: 3 classes cached
+⚡ [JIT WARMUP] Pre-compiled pattern: class Solution { public boolea...
+⚡ [JIT WARMUP] Basic operations and compilation cache warmed up
+⚡ [JIT WARMUP] JIT pre-warming completed
+Socket server listening on port 8899

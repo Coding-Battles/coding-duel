@@ -2,11 +2,41 @@
   "id": "1",
   "title": "Two Sum",
   "methodName": "twoSum",
+  "signature": {
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      },
+      {
+        "name": "target",
+        "type": "int"
+      }
+    ],
+    "return_type": "int[]"
+  },
   "difficulty": "Easy",
-  "description_html": "<p>Given an array of integers <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">nums</code> and an integer <code class=\"bg-gray-100 px-1 py-0.5 rounded text-sm\">target</code>, return <em>indices of the two numbers such that they add up to target</em>.</p><p>You may assume that each input would have <strong>exactly one solution</strong>, and you may not use the same element twice.</p><p>You can return the answer in any order.</p><div class=\"space-y-4\"><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 1:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [2,7,11,15], target = 9</div><div><strong>Output:</strong> [0,1]</div><div><strong>Explanation:</strong> Because nums[0] + nums[1] == 9, we return [0, 1].</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 2:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [3,2,4], target = 6</div><div><strong>Output:</strong> [1,2]</div></div></div><div class=\"bg-gray-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2\">Example 3:</h4><div class=\"font-mono text-sm\"><div><strong>Input:</strong> nums = [3,3], target = 6</div><div><strong>Output:</strong> [0,1]</div></div></div></div><div class=\"bg-blue-50 p-4 rounded-lg\"><h4 class=\"font-semibold mb-2 text-blue-800\">Constraints:</h4><ul class=\"list-disc list-inside space-y-1 text-sm\"><li><code class=\"bg-white px-1 py-0.5 rounded\">2 <= nums.length <= 10<sup>4</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-10<sup>9</sup> <= nums[i] <= 10<sup>9</sup></code></li><li><code class=\"bg-white px-1 py-0.5 rounded\">-10<sup>9</sup> <= target <= 10<sup>9</sup></code></li></ul></div>",
+  "problemDescription": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order.",
+  "examples": [
+    {
+      "input": "nums = [2,7,11,15], target = 9",
+      "output": "[0,1]"
+    },
+    {
+      "input": "nums = [3,2,4], target = 6",
+      "output": "[1,2]"
+    },
+    {
+      "input": "nums = [3,3], target = 6",
+      "output": "[0,1]"
+    }
+  ],
+  "constraints": [
+    "2 <= nums.length <= 10^4"
+  ],
   "starter_code": {
     "python": "class Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        ",
-    "javascript": "class Solution {\n    twoSum(nums, target) {\n        \n    }\n}",
+    "javascript": "class Solution {\n    twoSum(nums, target) {\n        // @return {number[]}\n        \n    }\n}",
     "java": "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        \n    }\n}",
     "cpp": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        \n    }\n};"
   }

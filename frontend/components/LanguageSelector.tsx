@@ -13,12 +13,14 @@ interface LanguageSelectorProps {
   selectedLanguage: Language;
   onLanguageChange: (language: Language) => void;
   className?: string;
+  "data-testid"?: string;
 }
 
 export default function LanguageSelector({
   selectedLanguage,
   onLanguageChange,
   className = "",
+  "data-testid": testId,
 }: LanguageSelectorProps) {
   const languages = Object.keys(SUPPORTED_LANGUAGES) as Language[];
 
@@ -27,6 +29,7 @@ export default function LanguageSelector({
       <SelectTrigger
         className={`${className} text-foreground border-foreground/20 hover:bg-foreground/10 bg-background [&_svg]:text-foreground cursor-pointer`}
         size="sm"
+        data-testid={testId}
       >
         <SelectValue />
       </SelectTrigger>
@@ -38,6 +41,7 @@ export default function LanguageSelector({
             key={language}
             value={language}
             className="text-foreground hover:bg-foreground/5 focus:bg-foreground/5 focus:text-foreground cursor-pointer [&_svg]:text-foreground"
+            data-testid={`language-option-${language}`}
           >
             {SUPPORTED_LANGUAGES[language].displayName}
           </SelectItem>

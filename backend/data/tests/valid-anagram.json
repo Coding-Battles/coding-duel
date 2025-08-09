@@ -1,0 +1,37 @@
+[
+  {
+    "input": {
+      "s": "anagram",
+      "t": "nagaram"
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "s": "rat",
+      "t": "car"
+    },
+    "expected": false
+  },
+  {
+    "input": {
+      "s": "listen",
+      "t": "silent"
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "s": "evil",
+      "t": "vile"
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "s": "hello",
+      "t": "bello"
+    },
+    "expected": false
+  }
+]

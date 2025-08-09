@@ -1,0 +1,32 @@
+[
+  {
+    "input": {
+      "words": ["wrt", "wrf", "er", "ett", "rftt"]
+    },
+    "expected": "wertf"
+  },
+  {
+    "input": {
+      "words": ["z", "x"]
+    },
+    "expected": "zx"
+  },
+  {
+    "input": {
+      "words": ["z", "x", "z"]
+    },
+    "expected": ""
+  },
+  {
+    "input": {
+      "words": ["abc", "ab"]
+    },
+    "expected": ""
+  },
+  {
+    "input": {
+      "words": ["z", "z"]
+    },
+    "expected": "z"
+  }
+]

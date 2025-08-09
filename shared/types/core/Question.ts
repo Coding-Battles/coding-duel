@@ -23,43 +23,42 @@ export interface TestCase {
 
 export interface QuestionData {
   id: string;
-  name: string;
   title: string;
-  description: string;
-  examples: any[];
+  problemDescription: string;
+  examples: Array<{ input: string; output: string }>;
   constraints: string[];
   starter_code: Record<string, string>; // {language: code}
   test_cases?: TestCase[];
-  difficulty: DifficultyLevel;
+  difficulty: DifficultyLevel | string;
   category?: string;
 }
 
 // Enums
 export enum DifficultyLevel {
   EASY = "easy",
-  MEDIUM = "medium", 
-  HARD = "hard"
+  MEDIUM = "medium",
+  HARD = "hard",
 }
 
 export enum ProgrammingLanguage {
   PYTHON = "python",
-  JAVASCRIPT = "javascript", 
+  JAVASCRIPT = "javascript",
   JAVA = "java",
   CPP = "cpp",
   CSHARP = "csharp",
   GO = "go",
   RUST = "rust",
-  TYPESCRIPT = "typescript"
+  TYPESCRIPT = "typescript",
 }
 
 // Helper type for language display names
 export const LanguageDisplayNames: Record<ProgrammingLanguage, string> = {
   [ProgrammingLanguage.PYTHON]: "Python",
   [ProgrammingLanguage.JAVASCRIPT]: "JavaScript",
-  [ProgrammingLanguage.JAVA]: "Java", 
+  [ProgrammingLanguage.JAVA]: "Java",
   [ProgrammingLanguage.CPP]: "C++",
   [ProgrammingLanguage.CSHARP]: "C#",
   [ProgrammingLanguage.GO]: "Go",
   [ProgrammingLanguage.RUST]: "Rust",
-  [ProgrammingLanguage.TYPESCRIPT]: "TypeScript"
+  [ProgrammingLanguage.TYPESCRIPT]: "TypeScript",
 };

@@ -1,0 +1,41 @@
+{
+  "id": "6",
+  "title": "Palindrome Number",
+  "methodName": "isPalindrome",
+  "signature": {
+    "params": [
+      {
+        "name": "x",
+        "type": "int"
+      }
+    ],
+    "return_type": "boolean"
+  },
+  "difficulty": "Easy",
+  "problemDescription": "Given an integer x, return true if x reads the same backward as forward, and false otherwise. For example, 121 reads the same backward as forward, but -121 does not (because of the negative sign).",
+  "examples": [
+    {
+      "input": "x = 121",
+      "output": "true"
+    },
+    {
+      "input": "x = -121",
+      "output": "false"
+    },
+    {
+      "input": "x = 10",
+      "output": "false"
+    },
+    {
+      "input": "x = 1221",
+      "output": "true"
+    }
+  ],
+  "constraints": [],
+  "starter_code": {
+    "python": "class Solution:\n    def isPalindrome(self, x: int) -> bool:\n        ",
+    "javascript": "class Solution {\n    isPalindrome(x) {\n        // @return {boolean}\n        \n    }\n}",
+    "java": "class Solution {\n    public boolean isPalindrome(int x) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    bool isPalindrome(int x) {\n        \n    }\n};"
+  }
+}

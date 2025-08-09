@@ -1,0 +1,36 @@
+{
+  "id": "31",
+  "title": "Product of Array Except Self",
+  "methodName": "productExceptSelf",
+  "signature": {
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "return_type": "int[]"
+  },
+  "difficulty": "Medium",
+  "problemDescription": "Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i]. The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer.",
+  "examples": [
+    {
+      "input": "nums = [1,2,3,4]",
+      "output": "[24,12,8,6]"
+    },
+    {
+      "input": "nums = [-1,1,0,-3,3]",
+      "output": "[0,0,9,0,0]"
+    }
+  ],
+  "constraints": [
+    "2 <= nums.length <= 10⁵",
+    "The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer"
+  ],
+  "starter_code": {
+    "python": "class Solution:\n    def productExceptSelf(self, nums: list[int]) -> list[int]:\n        ",
+    "javascript": "class Solution {\n    productExceptSelf(nums) {\n        // @return {number[]}\n        \n    }\n}",
+    "java": "class Solution {\n    public int[] productExceptSelf(int[] nums) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        \n    }\n};"
+  }
+}

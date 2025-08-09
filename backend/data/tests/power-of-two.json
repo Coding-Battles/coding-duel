@@ -1,0 +1,32 @@
+[
+  {
+    "input": {
+      "n": 1
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "n": 16
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "n": 3
+    },
+    "expected": false
+  },
+  {
+    "input": {
+      "n": 4
+    },
+    "expected": true
+  },
+  {
+    "input": {
+      "n": 5
+    },
+    "expected": false
+  }
+]

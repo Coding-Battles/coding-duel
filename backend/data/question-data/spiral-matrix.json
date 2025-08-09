@@ -1,0 +1,33 @@
+{
+  "id": "34",
+  "title": "Spiral Matrix",
+  "methodName": "spiralOrder",
+  "signature": {
+    "params": [
+      {
+        "name": "matrix",
+        "type": "int[][]"
+      }
+    ],
+    "return_type": "int[]"
+  },
+  "difficulty": "Medium",
+  "problemDescription": "Given an m x n matrix, return all elements of the matrix in spiral order.",
+  "examples": [
+    {
+      "input": "matrix = [[1,2,3],[4,5,6],[7,8,9]]",
+      "output": "[1,2,3,6,9,8,7,4,5]"
+    },
+    {
+      "input": "matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]",
+      "output": "[1,2,3,4,8,12,11,10,9,5,6,7]"
+    }
+  ],
+  "constraints": [],
+  "starter_code": {
+    "python": "class Solution:\n    def spiralOrder(self, matrix: list[list[int]]) -> list[int]:\n        ",
+    "javascript": "class Solution {\n    spiralOrder(matrix) {\n        // @return {number[]}\n        \n    }\n}",
+    "java": "class Solution {\n    public List<Integer> spiralOrder(int[][] matrix) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    vector<int> spiralOrder(vector<vector<int>>& matrix) {\n        \n    }\n};"
+  }
+}

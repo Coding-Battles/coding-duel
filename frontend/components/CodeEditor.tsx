@@ -1,6 +1,7 @@
 "use client";
 
 import { Editor } from "@monaco-editor/react";
+import type { editor } from "monaco-editor";
 
 interface CodeEditorProps {
   value?: string;
@@ -35,14 +36,14 @@ export default function CodeEditor({
         options={{
           scrollBeyondLastLine: false,
           scrollbar: {
-            vertical: 'auto',
-            horizontal: 'auto',
+            vertical: "auto",
+            horizontal: "auto",
           },
           automaticLayout: true,
           minimap: { enabled: false },
-          wordWrap: 'on',
+          wordWrap: "on",
           fontSize: 14,
-          lineNumbers: 'on',
+          lineNumbers: "on",
           glyphMargin: false,
           folding: true,
           lineDecorationsWidth: 0,
@@ -53,12 +54,49 @@ export default function CodeEditor({
           parameterHints: { enabled: !disableCopyPaste },
           wordBasedSuggestions: "off",
         }}
-        onMount={(editor, monaco) => {
+        onMount={(editorInstance, monaco) => {
+          // Expose editor to window for Cypress testing
+          if (typeof window !== "undefined") {
+            (
+              window as typeof window & {
+                __monacoEditor?: editor.IStandaloneCodeEditor;
+                __monacoMountTime?: number;
+                __monacoMountCount?: number;
+              }
+            ).__monacoEditor = editorInstance;
+
+            // Add mount tracking for debugging
+            (window as any).__monacoMountTime = Date.now();
+            (window as any).__monacoMountCount =
+              ((window as any).__monacoMountCount || 0) + 1;
+          }
+
+          console.log("🔧 Monaco Editor onMount called");
+          console.log("Monaco window object:", window);
+          console.log("Monaco editor exposed:", (window as any).__monacoEditor);
+          console.log("Monaco editor instance methods:", {
+            setValue: typeof editorInstance.setValue,
+            getValue: typeof editorInstance.getValue,
+          });
+          console.log("Mount count:", (window as any).__monacoMountCount);
+
           if (disableCopyPaste) {
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, () => {});
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => {});
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, () => {});
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyA, () => {});
+            editorInstance.addCommand(
+              monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC,
+              () => {}
+            );
+            editorInstance.addCommand(
+              monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
+              () => {}
+            );
+            editorInstance.addCommand(
+              monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX,
+              () => {}
+            );
+            editorInstance.addCommand(
+              monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyA,
+              () => {}
+            );
           }
         }}
       />

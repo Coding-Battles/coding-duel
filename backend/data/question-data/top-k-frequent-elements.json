@@ -1,0 +1,40 @@
+{
+  "id": "32",
+  "title": "Top K Frequent Elements",
+  "methodName": "topKFrequent",
+  "signature": {
+    "params": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      },
+      {
+        "name": "k",
+        "type": "int"
+      }
+    ],
+    "return_type": "int[]"
+  },
+  "difficulty": "Medium",
+  "problemDescription": "Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.",
+  "examples": [
+    {
+      "input": "nums = [1,1,1,2,2,3], k = 2",
+      "output": "[1,2]"
+    },
+    {
+      "input": "nums = [1], k = 1",
+      "output": "[1]"
+    }
+  ],
+  "constraints": [
+    "k is in the range [1, the number of unique elements in the array]",
+    "It is guaranteed that the answer is unique"
+  ],
+  "starter_code": {
+    "python": "class Solution:\n    def topKFrequent(self, nums: list[int], k: int) -> list[int]:\n        ",
+    "javascript": "class Solution {\n    topKFrequent(nums, k) {\n        // @return {number[]}\n        \n    }\n}",
+    "java": "class Solution {\n    public int[] topKFrequent(int[] nums, int k) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    vector<int> topKFrequent(vector<int>& nums, int k) {\n        \n    }\n};"
+  }
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "input": {
+      "strs": ["eat", "tea", "tan", "ate", "nat", "bat"]
+    },
+    "expected": [[["bat"], ["nat", "tan"], ["ate", "eat", "tea"]]]
+  },
+  {
+    "input": {
+      "strs": [""]
+    },
+    "expected": [[[""]]]
+  },
+  {
+    "input": {
+      "strs": ["a"]
+    },
+    "expected": [[["a"]]]
+  },
+  {
+    "input": {
+      "strs": ["abc", "bca", "cab", "xyz", "zyx", "yxz"]
+    },
+    "expected": [[["abc", "bca", "cab"], ["xyz", "zyx", "yxz"]]]
+  },
+  {
+    "input": {
+      "strs": ["abbbbbbbbbbb", "aabbbbbbbbbc"]
+    },
+    "expected": [[["abbbbbbbbbbb"], ["aabbbbbbbbbc"]]]
+  }
+]
