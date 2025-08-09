@@ -23,13 +23,11 @@
       "output": "[\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\"]"
     },
     {
-      "input": "n = 15",
-      "output": "[\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\",\"Fizz\",\"7\",\"8\",\"Fizz\",\"Buzz\",\"11\",\"Fizz\",\"13\",\"14\",\"FizzBuzz\"]"
+      "input": "n = 9",
+      "output": "[\"1\",\"2\",\"Fizz\",\"4\",\"Buzz\",\"Fizz\",\"7\",\"8\",\n               \"Fizz\",\"Buzz\",\"11\",\"Fizz\",\"13\",\"14\",\"FizzBuzz\"]"
     }
   ],
-  "constraints": [
-    "1 <= n"
-  ],
+  "constraints": ["1 <= n"],
   "starter_code": {
     "python": "class Solution:\n    def fizzBuzz(self, n: int) -> list[str]:\n        ",
     "javascript": "class Solution {\n    fizzBuzz(n) {\n        // @return {string[]}\n        \n    }\n}",

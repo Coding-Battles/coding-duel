@@ -12,7 +12,7 @@
     "return_type": "int[]"
   },
   "difficulty": "Easy",
-  "problemDescription": "Given an integer array nums, move all 0's to the end of it while maintaining the relative order of the non-zero elements.",
+  "problemDescription": "Given an integer array nums, move all 0's to the end of it while maintaining the relative order of the non-zero elements. Return the modified array.",
   "examples": [
     {
       "input": "nums = [0,1,0,3,12]",
@@ -25,9 +25,9 @@
   ],
   "constraints": [],
   "starter_code": {
-    "python": "class Solution:\n    def moveZeroes(self, nums: list[int]) -> None:\n        ",
+    "python": "class Solution:\n    def moveZeroes(self, nums: list[int]) -> list[int]:\n        ",
     "javascript": "class Solution {\n    moveZeroes(nums) {\n        // @return {number[]}\n        \n    }\n}",
-    "java": "class Solution {\n    public void moveZeroes(int[] nums) {\n        \n    }\n}",
-    "cpp": "class Solution {\npublic:\n    void moveZeroes(vector<int>& nums) {\n        \n    }\n};"
+    "java": "class Solution {\n    public int[] moveZeroes(int[] nums) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    vector<int> moveZeroes(vector<int>& nums) {\n        \n    }\n};"
   }
 }

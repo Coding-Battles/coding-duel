@@ -43,9 +43,19 @@ export default function QuestionColumn({
                   <span className="text-secondary">$ </span>
                   <span className="text-accent">The Problem</span>
                 </div>
-                <p className="text-white leading-relaxed mb-4">
-                  {questionData.problemDescription}
-                </p>
+                <div 
+                  className="text-white leading-relaxed mb-4"
+                  dangerouslySetInnerHTML={{
+                    __html: questionData.problemDescription
+                      .replace(/<=|>=|<|>/g, (match) => 
+                        `<span class="text-secondary">${match}</span>`
+                      )
+                      .replace(
+                        /(\d+)\s*\^\s*(\d+)/g,
+                        (match, base, exp) => `${base}<sup>${exp}</sup>`
+                      )
+                  }}
+                />
               </div>
 
               {/* Sample Runs section */}
@@ -57,34 +67,42 @@ export default function QuestionColumn({
                 <div className="space-y-2">
                   {questionData.examples.map((example, index) => (
                     <div key={index} className="text-white">
-                      {example.input}{" "}
-                      <span className="text-secondary">→</span> {example.output}
+                      {example.input} <span className="text-secondary">→</span>{" "}
+                      {example.output}
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Bounds section */}
-              <div>
-                <div className="mb-3 text-lg">
-                  <span className="text-secondary">$ </span>
-                  <span className="text-accent">Bounds</span>
-                </div>
-                <div className="space-y-2 text-white leading-relaxed">
-                  {questionData.constraints.map((constraint, index) => (
-                    <div 
-                      key={index}
-                      dangerouslySetInnerHTML={{
-                        __html: constraint
-                          .replace(/<=|>=|<|>/g, (match) => 
-                            `<span class="text-secondary">${match}</span>`
-                          )
-                          .replace(/(\d+)\^(\d+)/g, '$1<sup>$2</sup>')
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
+              {/* Bounds section - only show if constraints exist */}
+              {questionData.constraints &&
+                questionData.constraints.length > 0 && (
+                  <div>
+                    <div className="mb-3 text-lg">
+                      <span className="text-secondary">$ </span>
+                      <span className="text-accent">Bounds</span>
+                    </div>
+                    <div className="space-y-2 text-white leading-relaxed">
+                      {questionData.constraints.map((constraint, index) => (
+                        <div
+                          key={index}
+                          dangerouslySetInnerHTML={{
+                            __html: constraint
+                              .replace(
+                                /<=|>=|<|>/g,
+                                (match) =>
+                                  `<span class="text-secondary">${match}</span>`
+                              )
+                              .replace(
+                                /(\d+)\s*\^\s*(\d+)/g,
+                                (match, base, exp) => `${base}<sup>${exp}</sup>`
+                              ),
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
             </div>
           </div>
         ) : (

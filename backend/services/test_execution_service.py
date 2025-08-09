@@ -103,7 +103,8 @@ class TestExecutionService:
             expected_list = [expected_list]
 
         for expected in expected_list:
-            if actual_normalized == expected:
+            expected_normalized = TestExecutionService.normalize_answer(expected)
+            if actual_normalized == expected_normalized:
                 return True
 
         return False

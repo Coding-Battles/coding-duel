@@ -1,7 +1,0 @@
-{
-    "code": "class Solution {\n    public int ladderLength(String beginWord, String endWord, List<String> wordList) {\n        Set<String> words = new HashSet<>(wordList);\n        if (!words.contains(endWord)) return 0;\n        \n        Queue<String> queue = new LinkedList<>();\n        queue.offer(beginWord);\n        Set<String> visited = new HashSet<>();\n        visited.add(beginWord);\n        int level = 1;\n        \n        while (!queue.isEmpty()) {\n            int size = queue.size();\n            for (int i = 0; i < size; i++) {\n                String current = queue.poll();\n                if (current.equals(endWord)) {\n                    return level;\n                }\n                \n                for (int j = 0; j < current.length(); j++) {\n                    char[] chars = current.toCharArray();\n                    for (char c = 'a'; c <= 'z'; c++) {\n                        chars[j] = c;\n                        String newWord = new String(chars);\n                        if (words.contains(newWord) && !visited.contains(newWord)) {\n                            queue.offer(newWord);\n                            visited.add(newWord);\n                        }\n                    }\n                }\n            }\n            level++;\n        }\n        return 0;\n    }\n}",
-    "player_id": "test_player",
-    "language": "java",
-    "question_name": "word-ladder",
-    "timer": 300
-}

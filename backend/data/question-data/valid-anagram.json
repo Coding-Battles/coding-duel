@@ -16,7 +16,7 @@
     "return_type": "boolean"
   },
   "difficulty": "Easy",
-  "problemDescription": "Given two strings s and t, return true if t is an anagram of s, and false otherwise.",
+  "problemDescription": "Given two strings s and t, return true if they contain exactly the same characters with the same frequencies, and false otherwise.",
   "examples": [
     {
       "input": "s = \"anagram\", t = \"nagaram\"",

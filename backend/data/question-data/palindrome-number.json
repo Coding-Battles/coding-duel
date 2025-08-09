@@ -12,7 +12,7 @@
     "return_type": "boolean"
   },
   "difficulty": "Easy",
-  "problemDescription": "Given an integer x, return true if x is a palindrome, and false otherwise.",
+  "problemDescription": "Given an integer x, return true if x reads the same backward as forward, and false otherwise. For example, 121 reads the same backward as forward, but -121 does not (because of the negative sign).",
   "examples": [
     {
       "input": "x = 121",
@@ -25,6 +25,10 @@
     {
       "input": "x = 10",
       "output": "false"
+    },
+    {
+      "input": "x = 1221",
+      "output": "true"
     }
   ],
   "constraints": [],

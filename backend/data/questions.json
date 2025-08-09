@@ -56,21 +56,9 @@
         "difficulty": "Easy"
       },
       {
-        "slug": "happy-number",
-        "id": 12,
-        "title": "Happy Number",
-        "difficulty": "Easy"
-      },
-      {
         "slug": "power-of-two",
         "id": 13,
         "title": "Power of Two",
-        "difficulty": "Easy"
-      },
-      {
-        "slug": "ugly-number",
-        "id": 14,
-        "title": "Ugly Number",
         "difficulty": "Easy"
       },
       {

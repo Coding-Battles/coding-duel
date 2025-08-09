@@ -28,14 +28,14 @@ export default function PracticePage() {
   >(undefined);
   const [alerts, setAlerts] = React.useState<AlertType[]>([]);
   const [leftWidth, setLeftWidth] = useState(33.33);
-  const [rightWidth, setRightWidth] = useState(25);
+  // Removed right column, so no rightWidth
   const [isRunning, setIsRunning] = React.useState(false);
   const [hasResults, setHasResults] = React.useState(false);
 
   // All useRef hooks
   const timeRef = useRef<number>(0);
   const isDraggingLeft = useRef(false);
-  const isDraggingRight = useRef(false);
+  // Removed right column, so no isDraggingRight
   const containerRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
@@ -51,13 +51,7 @@ export default function PracticePage() {
     []
   );
 
-  const handleRightMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      isDraggingRight.current = true;
-      e.preventDefault();
-    },
-    []
-  );
+  // Removed right column, so no handleRightMouseDown
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!containerRef.current) return;
@@ -70,17 +64,13 @@ export default function PracticePage() {
     if (isDraggingLeft.current) {
       const newLeftWidth = Math.min(Math.max(percentage, 20), 60);
       setLeftWidth(newLeftWidth);
-    } else if (isDraggingRight.current) {
-      const rightPercentage =
-        ((containerWidth - mouseX) / containerWidth) * 100;
-      const newRightWidth = Math.min(Math.max(rightPercentage, 15), 40);
-      setRightWidth(newRightWidth);
     }
+    // No right column logic
   }, []);
 
   const handleMouseUp = useCallback(() => {
     isDraggingLeft.current = false;
-    isDraggingRight.current = false;
+    // No right column
   }, []);
 
   // All useEffect hooks
@@ -366,12 +356,13 @@ export default function PracticePage() {
     setHasResults(false);
   };
 
-  const middleWidth = 100 - leftWidth - rightWidth;
+  const middleWidth = 100 - leftWidth;
 
   return (
     <div
       ref={containerRef}
       className="flex items-center justify-center w-screen h-screen"
+      data-testid="practice-page"
     >
       <StackableAlerts alerts={alerts} setAlerts={setAlerts} />
 
@@ -399,7 +390,7 @@ export default function PracticePage() {
           />
         </div>
 
-        {/* Middle Column - Editor */}
+        {/* Middle Column - Editor (now takes all remaining space) */}
         <div className="h-full" style={{ width: `${middleWidth}%` }}>
           <EditorWithTerminal
             code={userCode}
@@ -419,78 +410,6 @@ export default function PracticePage() {
             hasResults={hasResults}
             onCloseResults={handleCloseResults}
           />
-        </div>
-
-        {/* Right Resizer */}
-        <div
-          className="relative w-1 transition-colors duration-200 cursor-col-resize group"
-          style={{ backgroundColor: "var(--border)" }}
-          onMouseDown={handleRightMouseDown}
-        >
-          <div className="absolute inset-0 w-3 -ml-1" />
-          <div
-            className="absolute w-1 h-8 transition-colors duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded top-1/2 left-1/2"
-            style={{
-              backgroundColor: "var(--border)",
-              opacity: "0.8",
-            }}
-          />
-        </div>
-
-        {/* Right Column - Practice Info */}
-        <div
-          className="relative overflow-y-auto border-l"
-          style={{ width: `${rightWidth}%` }}
-        >
-          <div className="p-4">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Practice Mode</h3>
-
-              <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                  How to Practice:
-                </h4>
-                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                  <li>• Write your solution in the editor</li>
-                  <li>• Click "Run" to test with sample cases</li>
-                  <li>• Click "Submit" to run all test cases</li>
-                  <li>• No time pressure - practice at your own pace!</li>
-                </ul>
-              </div>
-
-              {testResults && (
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Last Test Results:</h4>
-                  <div className="text-sm space-y-1">
-                    <div>
-                      Status: {testResults.success ? "✅ Passed" : "❌ Failed"}
-                    </div>
-                    <div>
-                      Tests Passed: {testResults.total_passed}/
-                      {testResults.total_passed + testResults.total_failed}
-                    </div>
-                    {testResults.error && (
-                      <div className="text-red-600 dark:text-red-400 mt-2">
-                        Error: {testResults.error}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                  Tips:
-                </h4>
-                <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
-                  <li>• Start with sample tests first</li>
-                  <li>• Read error messages carefully</li>
-                  <li>• Try different test cases manually</li>
-                  <li>• Consider edge cases</li>
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

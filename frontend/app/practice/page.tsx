@@ -20,22 +20,26 @@ export default function PracticePage() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/questions`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/questions`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch questions");
         }
         const data = await response.json();
-        
+
         // Flatten questions from all difficulty levels
         const allQuestions: Question[] = [
           ...data.questions.easy,
           ...data.questions.medium,
           ...data.questions.hard,
         ];
-        
+
         setQuestions(allQuestions);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load questions");
+        setError(
+          err instanceof Error ? err.message : "Failed to load questions"
+        );
       } finally {
         setLoading(false);
       }
@@ -84,13 +88,17 @@ export default function PracticePage() {
             </Link>
           </div>
           <p className="text-muted-foreground">
-            Practice coding problems at your own pace. No opponents, no time pressure!
+            Practice coding problems at your own pace. No opponents, no time
+            pressure!
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {questions.map((question) => (
-            <Card key={question.id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={question.id}
+              className="hover:shadow-lg transition-shadow"
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{question.title}</CardTitle>
@@ -105,38 +113,12 @@ export default function PracticePage() {
                     Question #{question.id}
                   </span>
                   <Link href={`/practice/${question.slug}`}>
-                    <Button size="sm">
-                      Practice →
-                    </Button>
+                    <Button size="sm">Practice →</Button>
                   </Link>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <h2 className="text-xl font-semibold mb-3 text-blue-900 dark:text-blue-100">
-            How Practice Mode Works
-          </h2>
-          <div className="grid md:grid-cols-2 gap-4 text-blue-800 dark:text-blue-200">
-            <div>
-              <h3 className="font-medium mb-2">🎯 Choose Your Challenge</h3>
-              <p className="text-sm">Select any question from easy to hard difficulty levels.</p>
-            </div>
-            <div>
-              <h3 className="font-medium mb-2">⚡ Test Your Code</h3>
-              <p className="text-sm">Run sample tests first, then submit for full test suite.</p>
-            </div>
-            <div>
-              <h3 className="font-medium mb-2">🔄 Learn & Iterate</h3>
-              <p className="text-sm">No time limits - debug, refactor, and improve your solution.</p>
-            </div>
-            <div>
-              <h3 className="font-medium mb-2">🚀 Build Confidence</h3>
-              <p className="text-sm">Master problems before jumping into competitive duels!</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
