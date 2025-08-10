@@ -4,7 +4,8 @@ import { Session } from 'better-auth';
 import { CheckCircle, Circle, Clock, Loader, XCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import ExpandedGameResults from './ExpandedGameResults';
-import { GameHistoryItem } from '@/shared/schemas';
+import { CustomUser, GameHistoryItem } from '@/shared/schemas';
+import { set } from 'lodash';
 
 interface UserStatsAndHistoryProps {
   userStats: {
@@ -57,6 +58,12 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
   const [mediumGames, setMediumGames] = useState(0);
   const [hardGames, setHardGames] = useState(0);
 
+  const [easyLp, setEasyLp] = useState(0);
+  const [mediumLp, setMediumLp] = useState(0);
+  const [hardLp, setHardLp] = useState(0);
+
+  const {data: session} = useSession();
+
   console.log("User Game History:", userGameHistory);
 
   const [expandedGames, setExpandedGame] = useState<boolean[]>(
@@ -94,6 +101,12 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
 
   useEffect(() => {
     if(userGameHistory.length > 0) getDifficultyGames()
+    if(session?.user)
+    {
+      setEasyLp((session.user as CustomUser).easylp || 0);
+      setMediumLp((session.user as CustomUser).mediumlp || 0);
+      setHardLp((session.user as CustomUser).hardlp || 0);
+    }
   }, [userGameHistory])
 
   return (
@@ -120,15 +133,15 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
       {/* Difficulty Breakdown */}
       <div className="mb-6 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="font-medium text-success">Easy</span>
+          <span className="flex items-center gap-2 font-medium text-success">Easy: <span className='text-xs font-semibold text-center'>LP: {easyLp ? easyLp : "?"} </span></span>
           <span className="font-semibold">{easyGames}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="font-medium text-medium">Medium</span>
+          <span className="flex items-center gap-2 font-medium text-medium">Medium: <span className='text-xs font-semibold text-center'>LP: {mediumLp ? mediumLp : "?"} </span></span>
           <span className="font-semibold">{mediumGames}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="font-medium text-error">Hard</span>
+          <span className="flex items-center gap-2 font-medium text-error">Hard: <span className='text-xs font-semibold text-center'>LP: {hardLp ? hardLp : "?"} </span> </span>
           <span className="font-semibold">{hardGames}</span>
         </div>
       </div>
