@@ -21,6 +21,9 @@ class Player(BaseModel):
     anonymous: bool = True  # Whether the player is anonymous or not
     sid: str  # Socket connection ID
     joined_at: float  # Timestamp when joined queue
+    easyLp: Optional[int] = 0  # LP for easy games
+    mediumLp: Optional[int] = 0  # LP for medium games
+    hardLp: Optional[int] = 0  # LP for hard games
 
 
 class MatchFoundResponse(BaseModel):
@@ -28,6 +31,8 @@ class MatchFoundResponse(BaseModel):
     opponent_Name: str
     opponentImageURL: str | None = None
     question_name: str
+    opponent_lp: Optional[int] = None  # LP of the opponent player
+    difficulty: str | None = None  # Difficulty level of the match
 
 
 class QueueStatusResponse(BaseModel):
@@ -103,7 +108,10 @@ class MatchmakingService:
             
             player1 = selected_queue.pop(0)
             player2 = selected_queue.pop(0)
-            
+
+            player1_lp = player1.easyLp if difficulty_name == "easy" else player1.mediumLp if difficulty_name == "medium" else player1.hardLp
+            player2_lp = player2.easyLp if difficulty_name == "easy" else player2.mediumLp if difficulty_name == "medium" else player2.hardLp
+
             # Remove players from all other queues they might be in
             for queue_list in [self.waiting_players_easy, self.waiting_players_medium, self.waiting_players_hard]:
                 queue_list[:] = [p for p in queue_list if p.sid not in [player1.sid, player2.sid]]
@@ -129,8 +137,8 @@ class MatchmakingService:
             game_state = game.GameState(
                 game_id=game_id,
                 players={
-                    player1.id: game.PlayerInfo(id=player1.id, name=player1.name, sid=player1.sid, anonymous=player1.anonymous),
-                    player2.id: game.PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid, anonymous=player2.anonymous)
+                    player1.id: game.PlayerInfo(id=player1.id, name=player1.name, sid=player1.sid, anonymous=player1.anonymous, player1Lp=player1_lp),
+                    player2.id: game.PlayerInfo(id=player2.id, name=player2.name, sid=player2.sid, anonymous=player2.anonymous, player2Lp=player2_lp)
                 },
                 question_name=question_slug,
                 difficulty=difficulty_name,
@@ -145,7 +153,7 @@ class MatchmakingService:
 
             logger.info(f"Match created: {player1.name} vs {player2.name} in game {game_id} with question {question_slug} game_states={self.game_states}")
 
-            return player1, player2, game_id, difficulty_name, question_slug
+            return player1, player2, game_id, difficulty_name, question_slug, player1_lp, player2_lp
         return None
     
     def get_queue_status(self) -> QueueStatusResponse:

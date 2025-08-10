@@ -12,6 +12,8 @@ interface AvatarCardProps {
   player?: "player1" | "player2";
   onClick?: () => void;
   clickable?: boolean;
+  opponentLp?: number; // Used for displaying opponent's LP
+  isOpponent?: boolean; // Flag to indicate if this is the opponent's avatar
 }
 
 const sizeVariants = {
@@ -40,6 +42,8 @@ export default function AvatarCard({
   showName = true,
   className = "",
   player = "player2",
+  opponentLp = 0,
+  isOpponent = false,
   onClick,
   clickable = false,
 }: AvatarCardProps) {
@@ -72,7 +76,7 @@ export default function AvatarCard({
             alt={alt}
             width={160}
             height={160}
-            className="w-full h-full rounded-lg object-cover bg-muted"
+            className="object-cover w-full h-full rounded-lg bg-muted"
           />
         </div>
 
@@ -85,6 +89,12 @@ export default function AvatarCard({
           >
             {name}
           </h3>
+        )}
+
+        {isOpponent && (
+          <p className="mt-1 text-sm text-foreground/70">
+            LP: {opponentLp > 0 ? opponentLp : "?"}
+          </p>
         )}
       </div>
     </div>

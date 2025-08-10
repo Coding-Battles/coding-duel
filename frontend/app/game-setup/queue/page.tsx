@@ -166,6 +166,9 @@ export default function QueueLayout() {
           <h1 className="text-2xl font-bold">
             {opponent.name ? opponent.name : "Finding"}
           </h1>
+          <p className="text-sm text-foreground/60">
+            {opponent.playerLp ? `LP: ${opponent.playerLp}` : "LP: ?"}
+          </p>
         </div>
       </div>
     </div>

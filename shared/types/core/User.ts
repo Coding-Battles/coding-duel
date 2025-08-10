@@ -15,6 +15,9 @@ export interface CustomUser extends BaseUser {
   selectedPfp?: number;
   anonymous?: boolean;
   game_ids?: number[];
+  easylp?: number; // LP for easy games
+  mediumlp?: number; // LP for medium games
+  hardlp?: number; // LP for hard games
 }
 
 export interface PlayerInfo {
@@ -44,6 +47,7 @@ export interface OpponentData {
   status?: string;
   timesRan?: number;
   timeElapsed?: string;
+  playerLp?: number;
   wins?: number;
 }
 

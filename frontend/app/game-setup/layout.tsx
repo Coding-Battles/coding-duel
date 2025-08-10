@@ -10,6 +10,8 @@ import { CustomUser, OpponentData, GameContextType, MatchFoundResponse, QueueSta
 
 const GameContext = createContext<GameContextType | null>(null);
 
+const debugPage = true;
+
 export default function QueueLayout({
   children,
 }: Readonly<{
@@ -17,9 +19,11 @@ export default function QueueLayout({
 }>) {
   const socketRef = useRef<Socket | null>(null);
 
+
   const [loadingState, setLoadingState] = useState<boolean>(true);
 
   const { data: session } = useSession();
+  const sessionRef = useRef(session);
   const router = useRouter();
   const pathname = usePathname();
   const [opponentData, setOpponentData] = useState<OpponentData>(() => {
@@ -39,6 +43,8 @@ export default function QueueLayout({
   });
   const [anonymousId, setAnonymousId] = useState<string>("");
   const [isAnonymous, setIsAnonymous] = useState<boolean>(true); // Default to anonymous until session is loaded
+  const [gameDifficulty, setGameDifficulty] = useState<string>("easy"); // match found difficulty'
+  const [playerLp, setPlayerLp] = useState<number>(0); // Player LP for the current game
   
   const [selectedDifficulties, setSelectedDifficulties] =
     useState<DifficultyState>({
@@ -50,6 +56,7 @@ export default function QueueLayout({
   // Custom setters that persist to sessionStorage
   const setOpponentDataPersistent = (data: OpponentData) => {
     setOpponentData(data);
+    console.log("Setting opponent data:", data);
     if (typeof window !== "undefined") {
       sessionStorage.setItem("game_opponent_data", JSON.stringify(data));
     }
@@ -133,19 +140,47 @@ export default function QueueLayout({
       console.log("Queue status:", data);
     });
 
-    socket.on("match_found", (data: MatchFoundData) => {
+    socket.on("match_found", (data: MatchFoundResponse) => {
       console.log("Match found!", data);
       
       // Set opponent data immediately so users can see the opponent avatar
       setOpponentDataPersistent({
-        name: (data as any).opponent_Name || data.opponentName,
-        image_url: (data as any).opponentImageURL || data.opponentImageURL || "",
+        name: (data as any).opponent_Name || data.opponent_name,
+        image_url: (data as any).opponentImageURL || data.opponent_image_url || "",
+        playerLp: (data as any).opponent_lp || 0,
       });
+
       setGameIdPersistent(data.game_id);
+
+      setGameDifficulty(data.difficulty || "easy"); // Set match difficulty
+
+      console.log("match found session: ", session);
+
+      console.log("session.user: ", session?.user);
+
+      switch (data.difficulty) {
+        case "easy":
+          setPlayerLp((sessionRef.current?.user as CustomUser).easylp || 0);
+          console.log("Setting player LP for easy difficulty:", (sessionRef.current?.user as CustomUser).easylp || 0);
+          break;
+        case "medium":
+          setPlayerLp((sessionRef.current?.user as CustomUser).mediumlp || 0);
+          console.log("Setting player LP for medium difficulty:", (sessionRef.current?.user as CustomUser).mediumlp || 0);
+          break;
+        case "hard":
+          setPlayerLp((sessionRef.current?.user as CustomUser).hardlp || 0);
+          console.log("Setting player LP for hard difficulty:", (sessionRef.current?.user as CustomUser).hardlp || 0);
+          break;
+        default:
+          setPlayerLp(0);
+      }
+
       
       // Keep original 5-second delay for synchronized navigation
       setTimeout(() => {
-        router.push("/game-setup/queue/" + data.question_name);
+        if(!debugPage) {
+          router.push("/game-setup/queue/" + data.question_name);
+        }
       }, 5000);
     });
 
@@ -167,6 +202,7 @@ export default function QueueLayout({
     console.log("Session:", session);
     
     const currentlyAnonymous = !session?.user?.id;
+    console.log("user: ", session?.user, "isAnonymous:", currentlyAnonymous);
     setIsAnonymous(currentlyAnonymous);
     
     if (currentlyAnonymous) {
@@ -178,6 +214,8 @@ export default function QueueLayout({
       console.log("✅ User authenticated:", session?.user?.name);
       setAnonymousId(""); // Clear anonymous ID when user is authenticated
     }
+
+    sessionRef.current = session;
   }, [session]); // Only depend on session 
   
   const handleFindGame = () => {
@@ -231,6 +269,9 @@ export default function QueueLayout({
           hard: selectedDifficulties.hard,
           imageURL: `/avatars/${guestProfile.selectedAvatar}.png`,
           anonymous: true,
+          easyLp: 0,
+          mediumLp: 0,
+          hardLp: 0,
         });
       } else if (session?.user) {
         // Authenticated user - emit with session data
@@ -242,6 +283,9 @@ export default function QueueLayout({
           hard: selectedDifficulties.hard,
           imageURL: getAvatarUrl(session.user as CustomUser),
           anonymous: false,
+          easyLp: (session.user as CustomUser).easylp || 0,
+          mediumLp: (session.user as CustomUser).mediumlp || 0,
+          hardLp: (session.user as CustomUser).hardlp || 0,
         });
       }
 
@@ -291,6 +335,7 @@ export default function QueueLayout({
         setSelectedDifficulties: setSelectedDifficulties,
         handleFindGame: handleFindGame,
         clearGameData: clearGameData,
+        playerLp: playerLp,
       }}
     >
       <div className="flex h-[100%] w-[100%] items-center justify-center">

@@ -36,6 +36,21 @@ export const auth = betterAuth({
         required: false,
         defaultValue: 0,
       },
+      easylp: {
+        type: "number",
+        required: false,
+        defaultValue: 0,
+      },
+      mediumlp: {
+        type: "number",
+        required: false,
+        defaultValue: 0,
+      },
+      hardlp: {
+        type: "number",
+        required: false,
+        defaultValue: 0,
+      },
     },
   },
 

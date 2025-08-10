@@ -28,6 +28,9 @@ class CustomUser(BaseUser):
     selectedPfp: Optional[int] = None
     anonymous: Optional[bool] = None
     game_ids: Optional[List[int]] = None
+    easylp: Optional[int] = None
+    mediumlp: Optional[int] = None
+    hardlp: Optional[int] = None
 
 
 class TestCase(BaseModel):
@@ -61,6 +64,7 @@ class PlayerInfo(BaseModel):
     anonymous: bool = True
     image_url: Optional[str] = None
     game_stats: Optional[TestResultsData] = None
+    playerLp: Optional[int] = 0  # Player's LP (League Points)
 
 
 class Player(BaseModel):

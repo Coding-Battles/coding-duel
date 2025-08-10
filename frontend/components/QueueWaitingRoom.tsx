@@ -195,20 +195,20 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
   return (
     <div className="flex h-[100%] w-[100%] flex-col border border-border rounded-lg overflow-hidden">
       {/* Header with Status and Cancel */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-foreground/10 gap-3 sm:gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+      <div className="flex flex-col items-start justify-between gap-3 p-4 border-b sm:flex-row sm:items-center border-foreground/10 sm:gap-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-error" />
             <div className="w-3 h-3 rounded-full bg-accent" />
             <div className="w-3 h-3 rounded-full bg-success" />
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm">
+          <div className="flex flex-col items-start gap-2 text-sm sm:flex-row sm:items-center sm:gap-4">
             {!playerFound ? (
               <div className="flex items-center">
                 <div className="bg-background border border-border border-b-0 rounded-t-md px-3 py-1.5 text-xs font-medium text-accent flex items-center gap-2 relative">
                   <div className="w-2 h-2 rounded-full bg-accent" />
                   <span>finding_queue</span>
-                  <div className="absolute -bottom-px left-0 right-0 h-px bg-background" />
+                  <div className="absolute left-0 right-0 h-px -bottom-px bg-background" />
                 </div>
               </div>
             ) : (
@@ -216,7 +216,7 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
                 <div className="bg-background border border-border border-b-0 rounded-t-md px-3 py-1.5 text-xs font-medium text-success flex items-center gap-2 relative">
                   <div className="w-2 h-2 rounded-full bg-success" />
                   <span>match.found</span>
-                  <div className="absolute -bottom-px left-0 right-0 h-px bg-background" />
+                  <div className="absolute left-0 right-0 h-px -bottom-px bg-background" />
                 </div>
               </div>
             )}
@@ -322,8 +322,8 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
       </div>
 
       {/* Main Battle Area */}
-      <div className="flex-1 flex items-center justify-center p-4 pb-10">
-        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12 lg:gap-20 xl:gap-32 w-full max-w-6xl px-2">
+      <div className="flex items-center justify-center flex-1 p-4 pb-10">
+        <div className="flex flex-col items-center w-full max-w-6xl gap-6 px-2 md:flex-row md:gap-12 lg:gap-20 xl:gap-32">
           {/* User Avatar */}
           <div className="flex-shrink-0">
             <AvatarCard
@@ -348,9 +348,9 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
           </div>
 
           {/* VS Section */}
-          <div className="flex flex-col items-center gap-4 flex-shrink-0">
+          <div className="flex flex-col items-center flex-shrink-0 gap-4">
             <h1
-              className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl uppercase text-gradient font-bold tracking-wide gaming-title"
+              className="text-4xl font-bold tracking-wide uppercase sm:text-6xl lg:text-7xl xl:text-8xl text-gradient gaming-title"
               data-text="VS"
             >
               VS
@@ -366,6 +366,8 @@ export default function QueueWaitingRoom({ onCancel }: QueueWaitingRoomProps) {
                 name={opponent.name}
                 size="lg"
                 player="player2"
+                opponentLp ={opponent.playerLp}
+                isOpponent={true}
               />
             ) : (
               <OpponentPlaceholder size="lg" />
