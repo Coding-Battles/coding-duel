@@ -55,6 +55,7 @@ export default function EditorWithTerminal({
               selectedLanguage={selectedLanguage}
               onLanguageChange={onLanguageChange}
               className="text-sm"
+              data-testid="language-selector"
             />
           )}
         </div>
@@ -66,6 +67,7 @@ export default function EditorWithTerminal({
               variant="outline"
               className="text-foreground border-foreground/20 bg-background hover:bg-foreground/5"
               disabled={isRunning}
+              data-testid="run-button"
             >
               {isRunning ? (
                 <Loader2 size={14} className="mr-1 animate-spin" />
@@ -82,6 +84,7 @@ export default function EditorWithTerminal({
               variant="default"
               className="border-0 bg-success hover:bg-success/80 text-background"
               disabled={isRunning}
+              data-testid="submit-button"
             >
               {isRunning ? (
                 <Loader2 size={14} className="mr-1 animate-spin" />
@@ -107,7 +110,7 @@ export default function EditorWithTerminal({
           />
         </div>
         {hasResults && (
-          <div className="flex-shrink-0 border-t border-slate-600/30 max-h-[40%]">
+          <div className="flex-shrink-0 border-t border-slate-600/30 max-h-[40%]" data-testid="test-results">
             <TestResults
               testResults={testResults}
               isRunning={isRunning}

@@ -1,0 +1,37 @@
+[
+  {
+    "input": {
+      "s": "abab",
+      "p": "ab"
+    },
+    "expected": [[0, 2]]
+  },
+  {
+    "input": {
+      "s": "abcdefg",
+      "p": "cba"
+    },
+    "expected": [[0]]
+  },
+  {
+    "input": {
+      "s": "cbaebabacd",
+      "p": "abc"
+    },
+    "expected": [[1, 6]]
+  },
+  {
+    "input": {
+      "s": "abacabad",
+      "p": "abab"
+    },
+    "expected": [[0, 2]]
+  },
+  {
+    "input": {
+      "s": "aaaa",
+      "p": "aa"
+    },
+    "expected": [[0, 1, 2]]
+  }
+]

@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, Body, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import List, Optional, Dict, Any
-from contextlib import asynccontextmanager
 import socketio
 from groq import Groq
 import os
@@ -78,7 +77,6 @@ else:
 from backend.code_testing.ai_complexity_analyzer import analyze_time_complexity_ai
 from backend.code_testing.docker_runner import (
     run_code_in_docker,
-    cleanup_persistent_containers,
 )
 from backend.models.questions import (
     TimeComplexity,
@@ -161,12 +159,10 @@ except docker.errors.DockerException as e:
 
 executor = ThreadPoolExecutor(max_workers=5)
 
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    # Startup
-    logger.info("🚀 Starting application...")
+async def startup_event():
+    # Startup - database connection only (containers managed by main.py)
+    logger.info("🚀 Starting questions app...")
     
-    # Connect to database first
     try:
         logger.info("📊 Connecting to database...")
         await database.connect()
@@ -175,29 +171,20 @@ async def lifespan(_app: FastAPI):
         logger.error(f"❌ Failed to connect to database: {e}")
         raise
 
-    logger.info("🚀 Initializing persistent containers for fast code execution...")
+async def shutdown_event():
+    # Shutdown - database disconnection only (containers managed by main.py)
     try:
-        from backend.code_testing.startup import pull_all_images, warm_up_containers
-        loop = asyncio.get_event_loop()
-        logger.info("📦 Pre-pulling Docker images...")
-        await loop.run_in_executor(executor, pull_all_images)
-        logger.info("🔥 Warming up persistent containers...")
-        await loop.run_in_executor(executor, warm_up_containers)
-        logger.info("✅ Persistent containers ready! Code execution will now be sub-second.")
+        logger.info("📊 Disconnecting from database...")
+        await database.disconnect()
+        logger.info("✅ Database disconnected successfully")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize persistent containers: {e}")
-        logger.warning("⚠️ Falling back to traditional Docker execution (slower)")
+        logger.error(f"❌ Error during database disconnect: {e}")
 
-    yield
+app = FastAPI()
 
-    logger.info("🧹 Cleaning up persistent containers...")
-    try:
-        cleanup_persistent_containers()
-        logger.info("✅ Containers cleaned up successfully")
-    except Exception as e:
-        logger.error(f"❌ Error during container cleanup: {e}")
-
-app = FastAPI(lifespan=lifespan)
+# Add startup and shutdown events
+app.add_event_handler("startup", startup_event)
+app.add_event_handler("shutdown", shutdown_event)
 
 #-------------#SOCKET SETUP#-------------#
 DATABASE_URL = os.getenv("DATABASE_URL")

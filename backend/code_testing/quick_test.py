@@ -19,7 +19,7 @@ def test_java_speed():
 
     java_code = """
 class Solution {
-    public int[] solution(int[] nums, int target) {
+    public int[] twoSum(int[] nums, int target) {
         for (int i = 0; i < nums.length; i++) {
             for (int j = i + 1; j < nums.length; j++) {
                 if (nums[i] + nums[j] == target) {
@@ -37,6 +37,7 @@ class Solution {
         language="java",
         test_input={"nums": [2, 7, 11, 15], "target": 9},
         timeout=10,
+        function_name="twoSum"
     )
 
     print("🧪 Testing Java execution speed...")

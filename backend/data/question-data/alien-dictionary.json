@@ -1,0 +1,39 @@
+{
+  "id": "47",
+  "title": "Alien Dictionary",
+  "methodName": "alienOrder",
+  "signature": {
+    "params": [
+      {
+        "name": "words",
+        "type": "string[]"
+      }
+    ],
+    "return_type": "string"
+  },
+  "difficulty": "Hard",
+  "problemDescription": "There is a new alien language that uses the English alphabet. However, the order among the letters is unknown to you. You are given a list of strings words from the alien language's dictionary, where the strings in words are sorted lexicographically by the rules of this new language. Return a string of the unique letters in the new alien language sorted in lexicographically increasing order by the new language's rules. If there is no solution, return \"\". If there are multiple solutions, return any of them.",
+  "examples": [
+    {
+      "input": "words = [\"wrt\",\"wrf\",\"er\",\"ett\",\"rftt\"]",
+      "output": "\"wertf\""
+    },
+    {
+      "input": "words = [\"z\",\"x\"]",
+      "output": "\"zx\""
+    },
+    {
+      "input": "words = [\"z\",\"x\",\"z\"]",
+      "output": "\"\""
+    }
+  ],
+  "constraints": [
+    "words[i] consists of only lowercase English letters"
+  ],
+  "starter_code": {
+    "python": "class Solution:\n    def alienOrder(self, words: list[str]) -> str:\n        ",
+    "javascript": "class Solution {\n    alienOrder(words) {\n        // @return {string}\n        \n    }\n}",
+    "java": "class Solution {\n    public String alienOrder(String[] words) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    string alienOrder(vector<string>& words) {\n        \n    }\n};"
+  }
+}

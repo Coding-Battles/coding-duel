@@ -70,7 +70,7 @@ export default function TestResults({
     <div className={`bg-background border-t border-foreground/20 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/20">
-        <span className="text-foreground">
+        <span className="text-foreground" data-testid="tests-passed">
           {total_passed}/{test_results?.length || 0} tests passed
         </span>
         {onCloseResults && (
@@ -103,7 +103,7 @@ export default function TestResults({
                   test.passed 
                     ? "bg-success/10 text-success" 
                     : "bg-error/10 text-error"
-                }`}>
+                }`} data-testid="test-status">
                   {test.passed ? "✓" : "✗"}
                 </span>
 

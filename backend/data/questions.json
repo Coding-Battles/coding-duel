@@ -6,6 +6,132 @@
         "id": 1,
         "title": "Two Sum",
         "difficulty": "Easy"
+      },
+      {
+        "slug": "fizzbuzz",
+        "id": 4,
+        "title": "FizzBuzz",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "valid-parentheses",
+        "id": 5,
+        "title": "Valid Parentheses",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "palindrome-number",
+        "id": 6,
+        "title": "Palindrome Number",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "reverse-integer",
+        "id": 7,
+        "title": "Reverse Integer",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "remove-duplicates-from-sorted-array",
+        "id": 8,
+        "title": "Remove Duplicates from Sorted Array",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "move-zeroes",
+        "id": 9,
+        "title": "Move Zeroes",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "single-number",
+        "id": 10,
+        "title": "Single Number",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "missing-number",
+        "id": 11,
+        "title": "Missing Number",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "power-of-two",
+        "id": 13,
+        "title": "Power of Two",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "contains-duplicate",
+        "id": 15,
+        "title": "Contains Duplicate",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "valid-anagram",
+        "id": 16,
+        "title": "Valid Anagram",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "first-bad-version",
+        "id": 17,
+        "title": "First Bad Version",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "climbing-stairs",
+        "id": 18,
+        "title": "Climbing Stairs",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "maximum-depth-of-binary-tree",
+        "id": 19,
+        "title": "Maximum Depth of Binary Tree",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "same-tree",
+        "id": 20,
+        "title": "Same Tree",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "invert-binary-tree",
+        "id": 21,
+        "title": "Invert Binary Tree",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "merge-two-sorted-lists",
+        "id": 22,
+        "title": "Merge Two Sorted Lists",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "linked-list-cycle",
+        "id": 23,
+        "title": "Linked List Cycle",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "intersection-of-two-arrays",
+        "id": 24,
+        "title": "Intersection of Two Arrays",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "majority-element",
+        "id": 25,
+        "title": "Majority Element",
+        "difficulty": "Easy"
+      },
+      {
+        "slug": "add-binary",
+        "id": 26,
+        "title": "Add Binary",
+        "difficulty": "Easy"
       }
     ],
     "medium": [
@@ -14,6 +140,84 @@
         "id": 2,
         "title": "Add Two Numbers",
         "difficulty": "Medium"
+      },
+      {
+        "slug": "container-with-most-water",
+        "id": 27,
+        "title": "Container With Most Water",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "3sum",
+        "id": 28,
+        "title": "3Sum",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "group-anagrams",
+        "id": 29,
+        "title": "Group Anagrams",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "best-time-to-buy-and-sell-stock",
+        "id": 30,
+        "title": "Best Time to Buy and Sell Stock",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "product-of-array-except-self",
+        "id": 31,
+        "title": "Product of Array Except Self",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "top-k-frequent-elements",
+        "id": 32,
+        "title": "Top K Frequent Elements",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "merge-intervals",
+        "id": 33,
+        "title": "Merge Intervals",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "spiral-matrix",
+        "id": 34,
+        "title": "Spiral Matrix",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "rotate-image",
+        "id": 35,
+        "title": "Rotate Image",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "subarray-sum-equals-k",
+        "id": 36,
+        "title": "Subarray Sum Equals K",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "find-all-anagrams-in-a-string",
+        "id": 37,
+        "title": "Find All Anagrams in a String",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "house-robber",
+        "id": 38,
+        "title": "House Robber",
+        "difficulty": "Medium"
+      },
+      {
+        "slug": "coin-change",
+        "id": 39,
+        "title": "Coin Change",
+        "difficulty": "Medium"
       }
     ],
     "hard": [
@@ -21,6 +225,66 @@
         "slug": "longest-substring-without-repeating-characters",
         "id": 3,
         "title": "Longest Substring Without Repeating Characters",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "median-of-two-sorted-arrays",
+        "id": 40,
+        "title": "Median of Two Sorted Arrays",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "regular-expression-matching",
+        "id": 41,
+        "title": "Regular Expression Matching",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "trapping-rain-water",
+        "id": 42,
+        "title": "Trapping Rain Water",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "edit-distance",
+        "id": 43,
+        "title": "Edit Distance",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "word-ladder",
+        "id": 44,
+        "title": "Word Ladder",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "serialize-and-deserialize-binary-tree",
+        "id": 45,
+        "title": "Serialize and Deserialize Binary Tree",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "alien-dictionary",
+        "id": 46,
+        "title": "Alien Dictionary",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "palindrome-partitioning-ii",
+        "id": 47,
+        "title": "Palindrome Partitioning II",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "burst-balloons",
+        "id": 48,
+        "title": "Burst Balloons",
+        "difficulty": "Hard"
+      },
+      {
+        "slug": "word-break-ii",
+        "id": 49,
+        "title": "Word Break II",
         "difficulty": "Hard"
       }
     ]

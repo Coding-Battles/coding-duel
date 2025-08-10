@@ -1,0 +1,37 @@
+{
+  "id": "13",
+  "title": "Power of Two",
+  "methodName": "isPowerOfTwo",
+  "signature": {
+    "params": [
+      {
+        "name": "n",
+        "type": "int"
+      }
+    ],
+    "return_type": "boolean"
+  },
+  "difficulty": "Easy",
+  "problemDescription": "Given an integer n, return true if it is a power of two. Otherwise, return false. An integer n is a power of two, if there exists an integer x such that n == 2^x.",
+  "examples": [
+    {
+      "input": "n = 1",
+      "output": "true"
+    },
+    {
+      "input": "n = 16",
+      "output": "true"
+    },
+    {
+      "input": "n = 3",
+      "output": "false"
+    }
+  ],
+  "constraints": [],
+  "starter_code": {
+    "python": "class Solution:\n    def isPowerOfTwo(self, n: int) -> bool:\n        ",
+    "javascript": "class Solution {\n    isPowerOfTwo(n) {\n        // @return {boolean}\n        \n    }\n}",
+    "java": "class Solution {\n    public boolean isPowerOfTwo(int n) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    bool isPowerOfTwo(int n) {\n        \n    }\n};"
+  }
+}

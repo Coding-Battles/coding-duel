@@ -3,90 +3,90 @@
     "input": {
       "s": "abcabcbb"
     },
-    "expected": [3]
+    "expected": 3
   },
   {
     "input": {
       "s": "bbbbb"
     },
-    "expected": [1]
+    "expected": 1
   },
   {
     "input": {
       "s": "pwwkew"
     },
-    "expected": [3]
+    "expected": 3
   },
   {
     "input": {
       "s": ""
     },
-    "expected": [0]
+    "expected": 0
   },
   {
     "input": {
       "s": "au"
     },
-    "expected": [2]
+    "expected": 2
   },
   {
     "input": {
       "s": "dvdf"
     },
-    "expected": [3]
+    "expected": 3
   },
   {
     "input": {
       "s": "anviaj"
     },
-    "expected": [5]
+    "expected": 5
   },
   {
     "input": {
       "s": "abcdef"
     },
-    "expected": [6]
+    "expected": 6
   },
   {
     "input": {
       "s": "a"
     },
-    "expected": [1]
+    "expected": 1
   },
   {
     "input": {
       "s": "aab"
     },
-    "expected": [2]
+    "expected": 2
   },
   {
     "input": {
       "s": "ckilbkd"
     },
-    "expected": [5]
+    "expected": 5
   },
   {
     "input": {
       "s": "ohvhjdml"
     },
-    "expected": [6]
+    "expected": 6
   },
   {
     "input": {
       "s": "tmmzuxt"
     },
-    "expected": [5]
+    "expected": 5
   },
   {
     "input": {
       "s": "abba"
     },
-    "expected": [2]
+    "expected": 2
   },
   {
     "input": {
       "s": "nfinhxluh"
     },
-    "expected": [5]
+    "expected": 5
   }
 ]
