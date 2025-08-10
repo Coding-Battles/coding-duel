@@ -10,7 +10,7 @@ import { CustomUser, OpponentData, GameContextType, MatchFoundResponse, QueueSta
 
 const GameContext = createContext<GameContextType | null>(null);
 
-const debugPage = true;
+const debugPage = false; //set to true to disable it from going to in game page after match_found
 
 export default function QueueLayout({
   children,
