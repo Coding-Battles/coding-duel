@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List
 import logging
 import asyncio
+from backend.global_variables import games
 
 from backend.models.core import (
     RunTestCasesRequest, 
@@ -22,9 +23,7 @@ logger = logging.getLogger(__name__)
 database = None
 sio = None
 
-#Global variables
-loser_lp_loss = 19
-winner_lp_gain = 21
+
 
 
 # Note: GameState now comes from centralized models
@@ -106,6 +105,7 @@ async def save_game_to_history(players: List[PlayerInfo], difficulty: str, quest
         for player in players:
             logger.info(f"Saving stats for player {player.name} in game {db_game_id}")
             player_stats = player.game_stats
+            logger.info(f"Player stats: {player_stats}")
             if player_stats:
                 values = {
                     "game_id": db_game_id,
@@ -116,12 +116,32 @@ async def save_game_to_history(players: List[PlayerInfo], difficulty: str, quest
                     "final_time": player_stats.final_time,
                     "user_id": player.id
                 }
+                logger.info(f"Executing game participants query with values: {values}")
+                await database.execute(query=participant_query, values=values)
+            else: #in the case the game finished by time or disconnection player.game_stats will be empty
+                time = 0
+                if(player.id == winner_id):
+                    time = -100
+                else:
+                    time = 100
+                values = {
+                    "game_id": db_game_id,
+                    "player_name": player.name,
+                    "player_code": "N/A",
+                    "implement_time": 0,
+                    "time_complexity": "N/A",
+                    "final_time": time,
+                    "user_id": player.id
+                }
+                logger.info(f"Executing game participants query with empty values: {values}")
                 await database.execute(query=participant_query, values=values)
             if not player.anonymous:
                 logger.info(f"Storing game ID {db_game_id} for player {player.id}")
                 try:
                     values = {"game_id": db_game_id, "user_id": player.id}
                     await database.execute(query=store_game_id_query, values=values)
+
+                    (winner_lp_gain, loser_lp_loss) = games.get_lp_changes()
 
                     lp_gain = 0
                     if player.id == winner_id:
@@ -175,6 +195,8 @@ def set_game_end_timer(game_id: str):
                 winner_name = game_state.get_player_name(game_state.winner_id)
                 loser_id = opponent_id
                 loser_name = game_state.get_player_name(loser_id) if loser_id else "error"
+
+                (winner_lp_gain, loser_lp_loss) = games.get_lp_changes()
 
                 game_end_data = {
                 "message": f"{winner_name} won the game!",
@@ -433,7 +455,9 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             print(f"🏆 [GAME END DEBUG] Game {game_id} ended - Winner: {winner_name} ({game_state.winner_id})")
             
             await save_game_to_history(list(game_state.players.values()), difficulty, question_name, game_state.winner_id)
-            
+
+            (winner_lp_gain, loser_lp_loss) = games.get_lp_changes()
+
             # Send comprehensive game end event with winner info
             game_end_data = {
                 "message": f"{winner_name} won the game!",

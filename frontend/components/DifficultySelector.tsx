@@ -75,7 +75,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   };
 
   return (
-    <div className={`bg-card rounded-3xl p-8 shadow-2xl relative ${className}`}>
+    <div className={`bg-card rounded-3xl p-8 relative ${className}`}>
       {/* Step 3: Pick Your Poison */}
       <div className="mb-8">
         {/* Header: Title + Avatar */}
