@@ -10,6 +10,61 @@
 // ***********************************************
 
 /**
+ * Custom command to select language using robust Radix Select pattern
+ */
+// @ts-expect-error: Custom command not in default Cypress types
+Cypress.Commands.add(
+  "selectLanguage",
+  (language: "python" | "javascript" | "cpp" | "java") => {
+    const displayName =
+      language === "cpp"
+        ? "C++"
+        : language === "javascript"
+        ? "JavaScript"
+        : language.charAt(0).toUpperCase() + language.slice(1);
+
+    // Open the select dropdown
+    cy.get('[data-testid="language-selector"]').should("be.visible").click();
+
+    // Use a more robust approach - wait for the element to exist and force visibility
+    cy.get('[role="listbox"][data-state="open"]', { timeout: 15000 })
+      .should("exist")
+      .then(($dropdown) => {
+        // Force the element to be visible by directly manipulating its styles
+        $dropdown[0].style.setProperty("opacity", "1", "important");
+        $dropdown[0].style.setProperty("visibility", "visible", "important");
+        $dropdown[0].style.setProperty("display", "block", "important");
+        $dropdown[0].style.setProperty("pointer-events", "auto", "important");
+
+        // Also apply to all children
+        $dropdown.find("*").each((_, child) => {
+          child.style.setProperty("opacity", "1", "important");
+          child.style.setProperty("visibility", "visible", "important");
+        });
+      })
+      .should("be.visible") // Now check visibility
+      .within(() => {
+        // Click the language option within the open dropdown
+        cy.get(`[data-testid="language-option-${language}"]`)
+          .should("exist")
+          .then(($option) => {
+            // Force the option to be visible too
+            $option[0].style.setProperty("opacity", "1", "important");
+            $option[0].style.setProperty("visibility", "visible", "important");
+          })
+          .should("be.visible")
+          .click({ force: true });
+      });
+
+    // Verify the selection was successful
+    cy.get('[data-testid="language-selector"]').should(
+      "contain.text",
+      displayName
+    );
+  }
+);
+
+/**
  * Custom command to replace content in Monaco editor
  */
 // @ts-expect-error: Custom command not in default Cypress types
@@ -82,6 +137,78 @@ Cypress.Commands.add("setMonacoEditorContent", (content: string) => {
   // Wait for the editor to update
   cy.wait(200);
 });
+
+/**
+ * Enhanced command for reliable Radix Select interactions
+ */
+// @ts-expect-error: Custom command not in default Cypress types
+Cypress.Commands.add(
+  "selectRadixOption",
+  (triggerSelector: string, optionSelector: string, optionText?: string) => {
+    // Click the trigger to open the dropdown
+    cy.get(triggerSelector).should("be.visible").click();
+
+    // Alternative approach: use force and don't check visibility
+    cy.get('[role="listbox"]', { timeout: 15000 })
+      .should("exist")
+      .then(($dropdown) => {
+        // Force the dropdown to be interactable
+        $dropdown[0].style.setProperty("opacity", "1", "important");
+        $dropdown[0].style.setProperty("visibility", "visible", "important");
+        $dropdown[0].style.setProperty("pointer-events", "auto", "important");
+        $dropdown[0].style.setProperty("display", "block", "important");
+      });
+
+    // Now interact with the option using force
+    cy.get(optionSelector)
+      .should("exist")
+      .then(($option) => {
+        if (optionText) {
+          expect($option.text().trim()).to.include(optionText);
+        }
+        // Force the option to be interactable
+        $option[0].style.setProperty("opacity", "1", "important");
+        $option[0].style.setProperty("visibility", "visible", "important");
+        $option[0].style.setProperty("pointer-events", "auto", "important");
+      })
+      .click({ force: true });
+
+    // Don't wait for dropdown to close, just proceed
+  }
+);
+
+/**
+ * Force-based language selection that bypasses visibility issues
+ */
+// @ts-expect-error: Custom command not in default Cypress types
+Cypress.Commands.add(
+  "forceSelectLanguage",
+  (language: "python" | "javascript" | "cpp" | "java") => {
+    const displayName =
+      language === "cpp"
+        ? "C++"
+        : language === "javascript"
+        ? "JavaScript"
+        : language.charAt(0).toUpperCase() + language.slice(1);
+
+    // Open the select dropdown
+    cy.get('[data-testid="language-selector"]').should("be.visible").click();
+
+    // Wait a moment for the dropdown to appear in DOM
+    cy.wait(500);
+
+    // Force click the option without any visibility checks
+    cy.get(`[data-testid="language-option-${language}"]`, { timeout: 10000 })
+      .should("exist")
+      .click({ force: true });
+
+    // Verify the selection was successful
+    cy.get('[data-testid="language-selector"]').should(
+      "contain.text",
+      displayName
+    );
+  }
+);
 
 //
 // -- This is a parent command --

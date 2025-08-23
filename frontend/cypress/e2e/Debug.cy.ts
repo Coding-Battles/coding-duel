@@ -22,16 +22,22 @@ describe("Debug Monaco Editor and Test Results", () => {
       "be.visible"
     );
 
-    // Ensure Python is selected
+    // Ensure Python is selected using robust pattern
     cy.get('[data-testid="language-selector"]')
       .should("be.visible")
       .then(($selector) => {
         const current = $selector.text().trim().toLowerCase();
         if (!current.includes("python")) {
           cy.wrap($selector).click();
-          cy.get('[data-testid="language-option-python"]')
+
+          // Wait for dropdown to be open and stable
+          cy.get('[role="listbox"][data-state="open"]', { timeout: 10000 })
             .should("be.visible")
-            .click();
+            .within(() => {
+              cy.get('[data-testid="language-option-python"]')
+                .should("be.visible")
+                .click();
+            });
         }
       });
 

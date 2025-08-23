@@ -1,0 +1,74 @@
+[
+  {
+    "input": {
+      "s": "aab"
+    },
+    "expected": 1
+  },
+  {
+    "input": {
+      "s": "racecar"
+    },
+    "expected": 0
+  },
+  {
+    "input": {
+      "s": "abcde"
+    },
+    "expected": 4
+  },
+  {
+    "input": {
+      "s": "a"
+    },
+    "expected": 0
+  },
+  {
+    "input": {
+      "s": "aa"
+    },
+    "expected": 0
+  },
+  {
+    "input": {
+      "s": "aba"
+    },
+    "expected": 0
+  },
+  {
+    "input": {
+      "s": "abccba"
+    },
+    "expected": 0
+  },
+  {
+    "input": {
+      "s": "abcba"
+    },
+    "expected": 0
+  },
+  {
+    "input": {
+      "s": "ababa"
+    },
+    "expected": 2
+  },
+  {
+    "input": {
+      "s": "racecar"
+    },
+    "expected": 0
+  },
+  {
+    "input": {
+      "s": "abcdef"
+    },
+    "expected": 5
+  },
+  {
+    "input": {
+      "s": "abababa"
+    },
+    "expected": 3
+  }
+]

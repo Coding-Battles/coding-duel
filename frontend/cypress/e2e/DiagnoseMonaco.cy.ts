@@ -80,10 +80,18 @@ describe("Diagnose Monaco Editor Issue", () => {
       });
     });
 
-    // Step 7: Trigger language change and see what happens
+    // Step 7: Trigger language change and see what happens using robust pattern
     cy.log("=== TESTING LANGUAGE CHANGE ===");
     cy.get('[data-testid="language-selector"]').should("be.visible").click();
-    cy.get('[data-testid="language-option-java"]').should("be.visible").click();
+
+    // Wait for dropdown to be open and stable
+    cy.get('[role="listbox"][data-state="open"]', { timeout: 10000 })
+      .should("be.visible")
+      .within(() => {
+        cy.get('[data-testid="language-option-java"]')
+          .should("be.visible")
+          .click();
+      });
 
     // Wait for language change
     cy.wait(2000);

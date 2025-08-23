@@ -38,12 +38,6 @@
         "difficulty": "Easy"
       },
       {
-        "slug": "move-zeroes",
-        "id": 9,
-        "title": "Move Zeroes",
-        "difficulty": "Easy"
-      },
-      {
         "slug": "single-number",
         "id": 10,
         "title": "Single Number",
@@ -65,12 +59,6 @@
         "slug": "contains-duplicate",
         "id": 15,
         "title": "Contains Duplicate",
-        "difficulty": "Easy"
-      },
-      {
-        "slug": "valid-anagram",
-        "id": 16,
-        "title": "Valid Anagram",
         "difficulty": "Easy"
       },
       {
@@ -107,12 +95,6 @@
         "slug": "merge-two-sorted-lists",
         "id": 22,
         "title": "Merge Two Sorted Lists",
-        "difficulty": "Easy"
-      },
-      {
-        "slug": "linked-list-cycle",
-        "id": 23,
-        "title": "Linked List Cycle",
         "difficulty": "Easy"
       },
       {
@@ -234,12 +216,6 @@
         "difficulty": "Hard"
       },
       {
-        "slug": "regular-expression-matching",
-        "id": 41,
-        "title": "Regular Expression Matching",
-        "difficulty": "Hard"
-      },
-      {
         "slug": "trapping-rain-water",
         "id": 42,
         "title": "Trapping Rain Water",
@@ -255,12 +231,6 @@
         "slug": "word-ladder",
         "id": 44,
         "title": "Word Ladder",
-        "difficulty": "Hard"
-      },
-      {
-        "slug": "serialize-and-deserialize-binary-tree",
-        "id": 45,
-        "title": "Serialize and Deserialize Binary Tree",
         "difficulty": "Hard"
       },
       {

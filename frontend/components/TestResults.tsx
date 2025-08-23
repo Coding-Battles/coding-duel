@@ -43,7 +43,9 @@ export default function TestResults({
   // Show loading state when tests are running
   if (isRunning) {
     return (
-      <div className={`bg-background border-t border-foreground/20 ${className}`}>
+      <div
+        className={`bg-background border-t border-foreground/20 ${className}`}
+      >
         <div className="flex items-center gap-3 px-4 py-3">
           <Loader2 size={16} className="animate-spin text-foreground/60" />
           <span className="text-foreground/60">Running tests...</span>
@@ -54,7 +56,9 @@ export default function TestResults({
 
   if (!testResults) {
     return (
-      <div className={`bg-background border-t border-foreground/20 ${className}`}>
+      <div
+        className={`bg-background border-t border-foreground/20 ${className}`}
+      >
         <div className="px-4 py-3">
           <span className="text-foreground/50">
             Run your code to see results
@@ -96,14 +100,20 @@ export default function TestResults({
         {/* Test Results - Minimal Layout */}
         {test_results && test_results.length > 0 ? (
           test_results.map((test, i) => (
-            <div key={i} className="py-2 border-b border-foreground/10 last:border-b-0">
+            <div
+              key={i}
+              className="py-2 border-b border-foreground/10 last:border-b-0"
+            >
               <div className="flex items-center gap-4">
                 {/* Pass/Fail Indicator */}
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium ${
-                  test.passed 
-                    ? "bg-success/10 text-success" 
-                    : "bg-error/10 text-error"
-                }`} data-testid="test-status">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium ${
+                    test.passed
+                      ? "bg-success/10 text-success"
+                      : "bg-error/10 text-error"
+                  }`}
+                  data-testid="test-status"
+                >
                   {test.passed ? "✓" : "✗"}
                 </span>
 
@@ -122,22 +132,19 @@ export default function TestResults({
                     </code>
                     {!test.passed && (
                       <>
-                        <span className="text-xs text-foreground/40">expected</span>
+                        <span className="text-xs text-foreground/40">
+                          expected
+                        </span>
                         <code className="font-mono text-xs text-foreground/60">
-                          {Array.isArray(test.expected_output) 
-                            ? JSON.stringify(test.expected_output[0] || test.expected_output)
-                            : JSON.stringify(test.expected_output)
-                          }
+                          {JSON.stringify(test.expected_output)}
                         </code>
                       </>
                     )}
                   </div>
-                  
+
                   {/* Error (if any) */}
                   {test.error && (
-                    <div className="mt-1 text-xs text-error">
-                      {test.error}
-                    </div>
+                    <div className="mt-1 text-xs text-error">{test.error}</div>
                   )}
                 </div>
               </div>

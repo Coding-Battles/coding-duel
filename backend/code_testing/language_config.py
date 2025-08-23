@@ -51,6 +51,54 @@ def listnode_to_list(head):
         current = current.next
     return result
 
+# Helper functions for TreeNode conversion
+def array_to_treenode(arr):
+    if not arr or arr[0] is None:
+        return None
+    
+    root = TreeNode(arr[0])
+    queue = deque([root])
+    i = 1
+    
+    while queue and i < len(arr):
+        current = queue.popleft()
+        
+        # Left child
+        if i < len(arr) and arr[i] is not None:
+            current.left = TreeNode(arr[i])
+            queue.append(current.left)
+        i += 1
+        
+        # Right child
+        if i < len(arr) and arr[i] is not None:
+            current.right = TreeNode(arr[i])
+            queue.append(current.right)
+        i += 1
+    
+    return root
+
+def treenode_to_array(root):
+    if not root:
+        return []
+    
+    result = []
+    queue = deque([root])
+    
+    while queue:
+        node = queue.popleft()
+        if node:
+            result.append(node.val)
+            queue.append(node.left)
+            queue.append(node.right)
+        else:
+            result.append(None)
+    
+    # Remove trailing None values
+    while result and result[-1] is None:
+        result.pop()
+    
+    return result
+
 # User code starts here
 {code}
 # User code ends here
@@ -99,6 +147,53 @@ if __name__ == "__main__":
                 
                 # Convert result back to array format
                 result = listnode_to_list(result_node)
+            elif function_name == 'mergeTwoLists':
+                # Convert input arrays to ListNode objects
+                list1_node = list_to_listnode(input_data.get('list1', []))
+                list2_node = list_to_listnode(input_data.get('list2', []))
+                
+                # Call method with ListNode arguments
+                result_node = solution_method(list1_node, list2_node)
+                
+                # Convert result back to array format
+                result = listnode_to_list(result_node)
+            # Special handling for TreeNode methods
+            elif function_name == 'invertTree':
+                # Convert input array to TreeNode object
+                root_node = array_to_treenode(input_data.get('root', []))
+                
+                # Call method with TreeNode argument and convert result back
+                result_node = solution_method(root_node)
+                
+                # Convert result TreeNode back to array format
+                if result_node is None:
+                    result = []
+                else:
+                    # Convert TreeNode to level-order array
+                    result = treenode_to_array(result_node)
+            elif function_name == 'isSameTree':
+                # Convert input arrays to TreeNode objects
+                p_node = array_to_treenode(input_data.get('p', []))
+                q_node = array_to_treenode(input_data.get('q', []))
+                
+                # Call method with TreeNode arguments
+                result = solution_method(p_node, q_node)
+            elif function_name == 'maxDepth' or 'root' in input_data:
+                # Convert input array to TreeNode object
+                root_node = array_to_treenode(input_data.get('root', []))
+                
+                # Call method with TreeNode argument
+                result = solution_method(root_node)
+            # Special handling for rotate method which modifies matrix in place
+            elif function_name == 'rotate':
+                # Extract matrix from input data
+                matrix = input_data.get('matrix', [])
+                
+                # Call rotate method (modifies matrix in place)
+                solution_method(matrix)
+                
+                # Return the modified matrix
+                result = matrix
             else:
                 # Call the method with the input data as arguments
                 # Try both ways: as keyword arguments and as positional arguments
@@ -151,6 +246,13 @@ function ListNode(val, next) {
     this.next = (next===undefined ? null : next);
 }
 
+// TreeNode definition for binary tree problems
+function TreeNode(val, left, right) {
+    this.val = (val===undefined ? 0 : val);
+    this.left = (left===undefined ? null : left);
+    this.right = (right===undefined ? null : right);
+}
+
 // Helper functions for ListNode conversion
 function listToListNode(arr) {
     if (!arr || arr.length === 0) return null;
@@ -173,6 +275,35 @@ function listNodeToList(head) {
         current = current.next;
     }
     return result;
+}
+
+// Helper functions for TreeNode conversion
+function arrayToTreeNode(arr) {
+    if (!arr || arr.length === 0 || arr[0] === null) return null;
+    
+    const root = new TreeNode(arr[0]);
+    const queue = [root];
+    let i = 1;
+    
+    while (queue.length > 0 && i < arr.length) {
+        const current = queue.shift();
+        
+        // Left child
+        if (i < arr.length && arr[i] !== null) {
+            current.left = new TreeNode(arr[i]);
+            queue.push(current.left);
+        }
+        i++;
+        
+        // Right child
+        if (i < arr.length && arr[i] !== null) {
+            current.right = new TreeNode(arr[i]);
+            queue.push(current.right);
+        }
+        i++;
+    }
+    
+    return root;
 }
 
 // User code starts here
@@ -220,6 +351,21 @@ try {
             
             // Convert result back to array format
             result = listNodeToList(resultNode);
+        } else if (functionName === 'maxDepth' || inputData.root !== undefined) {
+            // Special handling for TreeNode methods
+            const rootNode = arrayToTreeNode(inputData.root || []);
+            
+            // Call method with TreeNode argument
+            result = solutionInstance[functionName](rootNode);
+        } else if (functionName === 'rotate') {
+            // Special handling for rotate method which modifies matrix in place
+            const matrix = inputData.matrix || [];
+            
+            // Call rotate method (modifies matrix in place)
+            solutionInstance[functionName](matrix);
+            
+            // Return the modified matrix
+            result = matrix;
         } else {
             result = solutionInstance[functionName](...Object.values(inputData));
         }
@@ -254,7 +400,7 @@ console.log(JSON.stringify({
     },
     "java": {
         "image": "openjdk:11-jdk-slim",
-        "file_extension": ".java", 
+        "file_extension": ".java",
         "compile_command": "javac -Xlint:none Solution.java",
         "run_command": "java -Xms8m -Xmx64m -XX:+UseSerialGC Solution",
         "mem_limit": "512m",

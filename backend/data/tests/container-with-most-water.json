@@ -3,30 +3,30 @@
     "input": {
       "height": [1, 8, 6, 2, 5, 4, 8, 3, 7]
     },
-    "expected": [49]
+    "expected": 49
   },
   {
     "input": {
       "height": [1, 1]
     },
-    "expected": [1]
+    "expected": 1
   },
   {
     "input": {
       "height": [4, 3, 2, 1, 4]
     },
-    "expected": [16]
+    "expected": 16
   },
   {
     "input": {
       "height": [1, 2, 1]
     },
-    "expected": [2]
+    "expected": 2
   },
   {
     "input": {
       "height": [2, 1, 2]
     },
-    "expected": [4]
+    "expected": 4
   }
 ]

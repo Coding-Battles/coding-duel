@@ -3,30 +3,30 @@
     "input": {
       "prices": [7, 1, 5, 3, 6, 4]
     },
-    "expected": [5]
+    "expected": 5
   },
   {
     "input": {
       "prices": [7, 6, 4, 3, 1]
     },
-    "expected": [0]
+    "expected": 0
   },
   {
     "input": {
       "prices": [1, 2, 3, 4, 5]
     },
-    "expected": [4]
+    "expected": 4
   },
   {
     "input": {
       "prices": [2, 4, 1]
     },
-    "expected": [2]
+    "expected": 2
   },
   {
     "input": {
       "prices": [3, 3, 5, 0, 0, 3, 1, 4]
     },
-    "expected": [4]
+    "expected": 4
   }
 ]

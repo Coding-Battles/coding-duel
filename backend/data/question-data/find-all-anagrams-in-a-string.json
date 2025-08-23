@@ -20,16 +20,14 @@
   "examples": [
     {
       "input": "s = \"abab\", p = \"ab\"",
-      "output": "[0,2]"
+      "output": "[0,1,2]"
     },
     {
       "input": "s = \"abcdefg\", p = \"cba\"",
       "output": "[0]"
     }
   ],
-  "constraints": [
-    "s and p consist of lowercase English letters only"
-  ],
+  "constraints": ["s and p consist of lowercase English letters only"],
   "starter_code": {
     "python": "class Solution:\n    def findAnagrams(self, s: str, p: str) -> list[int]:\n        ",
     "javascript": "class Solution {\n    findAnagrams(s, p) {\n        // @return {number[]}\n        \n    }\n}",

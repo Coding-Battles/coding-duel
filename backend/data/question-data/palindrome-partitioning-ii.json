@@ -1,0 +1,40 @@
+{
+  "id": "51",
+  "title": "Palindrome Partitioning II",
+  "difficulty": "hard",
+  "problemDescription": "Given a string s, partition s such that every substring of the partition is a palindrome. Return the minimum cuts needed for a palindrome partitioning of s.",
+  "examples": [
+    {
+      "input": "s = \"aab\"",
+      "output": "1"
+    },
+    {
+      "input": "s = \"racecar\"",
+      "output": "0"
+    },
+    {
+      "input": "s = \"abcde\"",
+      "output": "4"
+    }
+  ],
+  "constraints": [
+    "1 <= s.length <= 2000",
+    "s consists of lowercase English letters only."
+  ],
+  "methodName": "minCut",
+  "signature": {
+    "parameters": [
+      {
+        "name": "s",
+        "type": "string"
+      }
+    ],
+    "returnType": "int"
+  },
+  "starter_code": {
+    "python": "class Solution:\n    def minCut(self, s: str) -> int:\n        # @return {int}\n        \n        pass",
+    "javascript": "class Solution {\n    minCut(s) {\n        // @return {number}\n        \n    }\n}",
+    "java": "class Solution {\n    public int minCut(String s) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    int minCut(string s) {\n        \n    }\n};"
+  }
+}

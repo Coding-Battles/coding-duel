@@ -46,21 +46,29 @@ class TestExecutionService:
         try:
             with open(question_file_path, "r") as f:
                 question_data = json.load(f)
-            method_name = question_data.get("methodName", question_name)  # Fallback to question_name
+            method_name = question_data.get(
+                "methodName", question_name
+            )  # Fallback to question_name
             logger.info(f"🐛 [DEBUG] Method name loaded: {method_name}")
             return method_name
         except FileNotFoundError:
-            logger.warning(f"🐛 [DEBUG] Question file not found: {question_file_path}, using question_name as method_name")
+            logger.warning(
+                f"🐛 [DEBUG] Question file not found: {question_file_path}, using question_name as method_name"
+            )
             return question_name  # Fallback to question_name
         except Exception as e:
-            logger.warning(f"🐛 [DEBUG] Error loading method name: {str(e)}, using question_name as fallback")
+            logger.warning(
+                f"🐛 [DEBUG] Error loading method name: {str(e)}, using question_name as fallback"
+            )
             return question_name  # Fallback to question_name
 
     @staticmethod
     def load_question_signature(question_name: str) -> Dict[str, Any]:
         """Load signature metadata from question data file."""
         question_file_path = f"backend/data/question-data/{question_name}.json"
-        logger.info(f"🐛 [DEBUG] Looking for signature in question file: {question_file_path}")
+        logger.info(
+            f"🐛 [DEBUG] Looking for signature in question file: {question_file_path}"
+        )
 
         try:
             with open(question_file_path, "r") as f:
@@ -70,7 +78,9 @@ class TestExecutionService:
                 logger.info(f"🐛 [DEBUG] Signature loaded: {signature}")
                 return signature
             else:
-                logger.warning(f"🐛 [DEBUG] No signature found in question file: {question_file_path}")
+                logger.warning(
+                    f"🐛 [DEBUG] No signature found in question file: {question_file_path}"
+                )
                 return None
         except FileNotFoundError:
             logger.warning(f"🐛 [DEBUG] Question file not found: {question_file_path}")
@@ -92,22 +102,73 @@ class TestExecutionService:
         return answer
 
     @staticmethod
-    def check_answer_in_expected(actual: Any, expected_list: List[Any]) -> bool:
-        """Check if the actual answer matches any of the expected answers."""
+    def check_answer_in_expected(actual: Any, expected: Any) -> bool:
+        """Check if the actual answer matches the expected answer."""
         actual_normalized = TestExecutionService.normalize_answer(actual)
+        expected_normalized = TestExecutionService.normalize_answer(expected)
 
-        # If expected is a single answer (old format), convert to list
-        if not isinstance(expected_list, list):
-            expected_list = [expected_list]
-        elif len(expected_list) > 0 and not isinstance(expected_list[0], list):
-            expected_list = [expected_list]
+        # Direct equality check first (covers most cases)
+        if actual_normalized == expected_normalized:
+            return True
 
-        for expected in expected_list:
-            expected_normalized = TestExecutionService.normalize_answer(expected)
-            if actual_normalized == expected_normalized:
-                return True
+        # Use enhanced comparison for complex structures
+        return TestExecutionService.compare_unordered_structures(
+            actual_normalized, expected_normalized
+        )
 
-        return False
+    @staticmethod
+    def compare_unordered_structures(actual: Any, expected: Any) -> bool:
+        """
+        Compare two structures where order might not matter.
+        Handles various scenarios using normalization approach.
+        """
+        # If types don't match, they're not equal
+        if type(actual) != type(expected):
+            return False
+
+        # Handle non-list types directly
+        if not isinstance(actual, list):
+            return actual == expected
+
+        # Both are lists - check length first
+        if len(actual) != len(expected):
+            return False
+
+        # Empty lists are equal
+        if len(actual) == 0:
+            return True
+
+        # Check if this looks like a list of lists (nested structure)
+        if (
+            len(actual) > 0
+            and isinstance(actual[0], list)
+            and len(expected) > 0
+            and isinstance(expected[0], list)
+        ):
+            # Approach 3: Sort inner lists, then sort outer list
+            try:
+
+                def normalize_list_of_lists(lst):
+                    # Sort each inner list, then sort the outer list
+                    return sorted([sorted(inner) for inner in lst])
+
+                return normalize_list_of_lists(actual) == normalize_list_of_lists(
+                    expected
+                )
+            except (TypeError, AttributeError):
+                # Fallback if sorting fails
+                return actual == expected
+
+        # Regular flat list - just sort and compare
+        try:
+            return sorted(actual) == sorted(expected)
+        except TypeError:
+            # If elements can't be sorted, try set comparison
+            try:
+                return set(actual) == set(expected)
+            except TypeError:
+                # If elements aren't hashable, exact comparison
+                return actual == expected
 
     @staticmethod
     def process_batch_results(
@@ -149,7 +210,12 @@ class TestExecutionService:
 
     @staticmethod
     def run_individual_test_cases(
-        code: str, language: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str = "solution", signature: Dict[str, Any] = None
+        code: str,
+        language: str,
+        test_cases: List[Dict[str, Any]],
+        timeout: int,
+        function_name: str = "solution",
+        signature: Dict[str, Any] = None,
     ) -> Tuple[List[TestCaseResult], int, int]:
         """Run test cases individually (for non-batch languages or fallback)."""
         test_results = []
@@ -219,11 +285,17 @@ class TestExecutionService:
 
     @staticmethod
     def run_java_batch_execution(
-        code: str, test_cases: List[Dict[str, Any]], timeout: int, function_name: str, question_name: str = None
+        code: str,
+        test_cases: List[Dict[str, Any]],
+        timeout: int,
+        function_name: str,
+        question_name: str = None,
     ) -> Tuple[List[TestCaseResult], int, int]:
         """Execute Java code using batch runner."""
         # Bypass old batch runner - force fallback to individual execution using simplified approach
-        logger.info(f"🐛 [DEBUG] Bypassing Java batch runner, using simplified individual execution")
+        logger.info(
+            f"🐛 [DEBUG] Bypassing Java batch runner, using simplified individual execution"
+        )
         raise Exception("Bypassing Java batch runner to use simplified approach")
 
     # C++ batch processing removed - now uses standard docker_runner execution like Java
@@ -266,7 +338,9 @@ class TestExecutionService:
 
             # Load signature metadata from question data
             step_time = time.time()
-            signature = TestExecutionService.load_question_signature(request.question_name)
+            signature = TestExecutionService.load_question_signature(
+                request.question_name
+            )
             logger.info(
                 f"🐛 [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
             )
@@ -281,7 +355,11 @@ class TestExecutionService:
                 try:
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_java_batch_execution(
-                            request.code, test_cases, request.timeout, method_name, request.question_name
+                            request.code,
+                            test_cases,
+                            request.timeout,
+                            method_name,
+                            request.question_name,
                         )
                     )
                 except Exception:
@@ -290,7 +368,12 @@ class TestExecutionService:
                     )
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name, signature
+                            request.code,
+                            request.language,
+                            test_cases,
+                            request.timeout,
+                            method_name,
+                            signature,
                         )
                     )
             elif request.language == "cpp":
@@ -298,14 +381,23 @@ class TestExecutionService:
                 logger.info(f"🐛 [DEBUG] Using standard individual execution for C++")
                 test_results, total_passed, total_failed = (
                     TestExecutionService.run_individual_test_cases(
-                        request.code, request.language, test_cases, request.timeout, method_name, signature
+                        request.code,
+                        request.language,
+                        test_cases,
+                        request.timeout,
+                        method_name,
+                        signature,
                     )
-                    )
+                )
             else:
                 # For other languages, use individual execution
                 test_results, total_passed, total_failed = (
                     TestExecutionService.run_individual_test_cases(
-                        request.code, request.language, test_cases, request.timeout, method_name
+                        request.code,
+                        request.language,
+                        test_cases,
+                        request.timeout,
+                        method_name,
                     )
                 )
 
@@ -367,12 +459,14 @@ class TestExecutionService:
 
             # Load signature metadata from question data
             step_time = time.time()
-            signature = TestExecutionService.load_question_signature(request.question_name)
+            signature = TestExecutionService.load_question_signature(
+                request.question_name
+            )
             logger.info(
                 f"🐛 [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
             )
             logger.info(f"🐛 [DEBUG] Signature: {signature}")
-            
+
             logger.info(
                 f"🐛 [DEBUG] Running SAMPLE execution with {len(test_cases)} test cases (out of {len(all_test_cases)} total)"
             )
@@ -382,7 +476,11 @@ class TestExecutionService:
                 try:
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_java_batch_execution(
-                            request.code, test_cases, request.timeout, method_name, request.question_name
+                            request.code,
+                            test_cases,
+                            request.timeout,
+                            method_name,
+                            request.question_name,
                         )
                     )
                 except Exception:
@@ -391,27 +489,45 @@ class TestExecutionService:
                     )
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_individual_test_cases(
-                            request.code, request.language, test_cases, request.timeout, method_name, signature
+                            request.code,
+                            request.language,
+                            test_cases,
+                            request.timeout,
+                            method_name,
+                            signature,
                         )
                     )
             elif request.language == "cpp":
                 # C++ now uses standard individual execution like Java (no batch processing)
-                logger.info(f"🐛 [DEBUG] Using standard individual execution for C++ sample tests")
+                logger.info(
+                    f"🐛 [DEBUG] Using standard individual execution for C++ sample tests"
+                )
                 test_results, total_passed, total_failed = (
                     TestExecutionService.run_individual_test_cases(
-                        request.code, request.language, test_cases, request.timeout, method_name, signature
+                        request.code,
+                        request.language,
+                        test_cases,
+                        request.timeout,
+                        method_name,
+                        signature,
                     )
-                    )
+                )
             else:
                 # For other languages, use individual execution
                 test_results, total_passed, total_failed = (
                     TestExecutionService.run_individual_test_cases(
-                        request.code, request.language, test_cases, request.timeout, method_name
+                        request.code,
+                        request.language,
+                        test_cases,
+                        request.timeout,
+                        method_name,
                     )
                 )
 
             total_time = (time.time() - start_time) * 1000
-            logger.info(f"🐛 [DEBUG] Total SAMPLE test execution time: {total_time:.0f}ms")
+            logger.info(
+                f"🐛 [DEBUG] Total SAMPLE test execution time: {total_time:.0f}ms"
+            )
 
             return RunTestCasesResponse(
                 success=total_failed == 0,

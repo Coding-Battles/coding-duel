@@ -1,0 +1,87 @@
+[
+  {
+    "input": {
+      "s": "catsanddog",
+      "wordDict": ["cat", "cats", "and", "sand", "dog"]
+    },
+    "expected": ["cats and dog", "cat sand dog"]
+  },
+  {
+    "input": {
+      "s": "pineapplepenapple",
+      "wordDict": ["apple", "pen", "applepen", "pine", "pineapple"]
+    },
+    "expected": [
+      "pine apple pen apple",
+      "pineapple pen apple",
+      "pine applepen apple"
+    ]
+  },
+  {
+    "input": {
+      "s": "catsandog",
+      "wordDict": ["cats", "dog", "sand", "and", "cat"]
+    },
+    "expected": []
+  },
+  {
+    "input": {
+      "s": "leetcode",
+      "wordDict": ["leet", "code"]
+    },
+    "expected": ["leet code"]
+  },
+  {
+    "input": {
+      "s": "applepenapple",
+      "wordDict": ["apple", "pen"]
+    },
+    "expected": ["apple pen apple"]
+  },
+  {
+    "input": {
+      "s": "cars",
+      "wordDict": ["car", "ca", "rs"]
+    },
+    "expected": ["ca rs"]
+  },
+  {
+    "input": {
+      "s": "aaaaaaa",
+      "wordDict": ["aaaa", "aa", "a"]
+    },
+    "expected": [
+      "a a a a a a a",
+      "aa a a a a a",
+      "a aa a a a a",
+      "a a aa a a a",
+      "aa aa a a a",
+      "aaaa a a a",
+      "a a a aa a a",
+      "aa a aa a a",
+      "a aa aa a a",
+      "a aaaa a a",
+      "a a a a aa a",
+      "aa a a aa a",
+      "a aa a aa a",
+      "a a aa aa a",
+      "aa aa aa a",
+      "aaaa aa a",
+      "a a aaaa a",
+      "aa aaaa a",
+      "a a a a a aa",
+      "aa a a a aa",
+      "a aa a a aa",
+      "a a aa a aa",
+      "aa aa a aa",
+      "aaaa a aa",
+      "a a a aa aa",
+      "aa a aa aa",
+      "a aa aa aa",
+      "a aaaa aa",
+      "a a a aaaa",
+      "aa a aaaa",
+      "a aa aaaa"
+    ]
+  }
+]

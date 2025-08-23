@@ -167,25 +167,33 @@ export const waitForComponentReady = (questionName = "two-sum") => {
 
 /**
  * Get language selector and select a specific language
+ * Uses robust Radix Select interaction pattern to avoid flaky tests
  */
 export const selectLanguage = (
   language: "python" | "javascript" | "cpp" | "java"
 ) => {
-  // Find the language selector dropdown
+  // Step 1: Open the select dropdown
   cy.get('[data-testid="language-selector"]').should("be.visible").click();
 
-  // Select the specific language option
-  cy.get(`[data-testid="language-option-${language}"]`)
+  // Step 2: Wait for the dropdown content to be fully open and stable
+  // Target the open listbox using role and state attributes (more stable than class names)
+  cy.get('[role="listbox"][data-state="open"]', { timeout: 10000 })
     .should("be.visible")
-    .click();
+    .within(() => {
+      // Step 3: Find and click the specific language option within the open dropdown
+      cy.get(`[data-testid="language-option-${language}"]`)
+        .should("be.visible")
+        .click();
+    });
 
-  // Wait for the language change to take effect (UI shows display name)
+  // Step 4: Verify the language selection was successful
   const display =
     language === "cpp"
       ? "C++"
       : language === "javascript"
       ? "JavaScript"
       : language.charAt(0).toUpperCase() + language.slice(1);
+
   cy.get('[data-testid="language-selector"]').should("contain.text", display);
 };
 

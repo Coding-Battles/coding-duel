@@ -1,0 +1,47 @@
+{
+  "id": "49",
+  "title": "Word Break II",
+  "difficulty": "hard",
+  "problemDescription": "Given a string s and a dictionary of strings wordDict, add spaces in s to construct a sentence where each word is a valid dictionary word. Return all such possible sentences in any order.\n\nNote that the same word in the dictionary may be reused multiple times in the segmentation.",
+  "examples": [
+    {
+      "input": "s = \"catsanddog\", wordDict = [\"cat\",\"cats\",\"and\",\"sand\",\"dog\"]",
+      "output": "[\"cats and dog\",\"cat sand dog\"]"
+    },
+    {
+      "input": "s = \"pineapplepenapple\", wordDict = [\"apple\",\"pen\",\"applepen\",\"pine\",\"pineapple\"]",
+      "output": "[\"pine apple pen apple\",\"pineapple pen apple\",\"pine applepen apple\"]"
+    },
+    {
+      "input": "s = \"catsandog\", wordDict = [\"cats\",\"dog\",\"sand\",\"and\",\"cat\"]",
+      "output": "[]"
+    }
+  ],
+  "constraints": [
+    "1 <= s.length <= 20",
+    "1 <= wordDict.length <= 1000",
+    "1 <= wordDict[i].length <= 10",
+    "s and wordDict[i] consist of only lowercase English letters.",
+    "All the strings of wordDict are unique."
+  ],
+  "methodName": "wordBreak",
+  "signature": {
+    "parameters": [
+      {
+        "name": "s",
+        "type": "string"
+      },
+      {
+        "name": "wordDict",
+        "type": "string[]"
+      }
+    ],
+    "returnType": "string[]"
+  },
+  "starter_code": {
+    "python": "class Solution:\n    def wordBreak(self, s: str, wordDict: List[str]) -> List[str]:\n        # @return {List[str]}\n        \n        pass",
+    "javascript": "class Solution {\n    wordBreak(s, wordDict) {\n        // @return {string[]}\n        \n    }\n}",
+    "java": "class Solution {\n    public List<String> wordBreak(String s, List<String> wordDict) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    vector<string> wordBreak(string s, vector<string>& wordDict) {\n        \n    }\n};"
+  }
+}

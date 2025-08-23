@@ -1,0 +1,33 @@
+{
+  "id": "50",
+  "title": "Burst Balloons",
+  "difficulty": "hard",
+  "problemDescription": "You are given n balloons, indexed from 0 to n - 1. Each balloon is painted with a number on it represented by an array nums. You are asked to burst all the balloons.\n\nIf you burst balloon i, you will get nums[i - 1] * nums[i] * nums[i + 1] coins. If i - 1 or i + 1 goes out of bounds of the array, then treat it as if there is a balloon with a 1 painted on it.\n\nReturn the maximum coins you can collect by bursting the balloons wisely.",
+  "examples": [
+    {
+      "input": "nums = [3,1,5,8]",
+      "output": "167"
+    },
+    {
+      "input": "nums = [1,5]",
+      "output": "10"
+    }
+  ],
+  "constraints": ["n == nums.length", "1 <= n <= 300", "0 <= nums[i] <= 100"],
+  "methodName": "maxCoins",
+  "signature": {
+    "parameters": [
+      {
+        "name": "nums",
+        "type": "int[]"
+      }
+    ],
+    "returnType": "int"
+  },
+  "starter_code": {
+    "python": "class Solution:\n    def maxCoins(self, nums: List[int]) -> int:\n        # @return {int}\n        \n        pass",
+    "javascript": "class Solution {\n    maxCoins(nums) {\n        // @return {number}\n        \n    }\n}",
+    "java": "class Solution {\n    public int maxCoins(int[] nums) {\n        \n    }\n}",
+    "cpp": "class Solution {\npublic:\n    int maxCoins(vector<int>& nums) {\n        \n    }\n};"
+  }
+}
