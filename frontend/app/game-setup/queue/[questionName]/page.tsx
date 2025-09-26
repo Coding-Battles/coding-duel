@@ -122,6 +122,9 @@ export default function InGamePage() {
   const questionDataRef = useRef<QuestionData | null>(null);
   const userCodeRef = useRef<string>("");
 
+  const userLpRef = useRef<number>(0);
+  const opponentLpRef = useRef<number>(0);
+
   // All useCallback hooks
   const handleLeftMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -495,6 +498,13 @@ export default function InGamePage() {
       };
     }
 
+    //save Lps
+    userLpRef.current = context?.playerLp || 0;
+    opponentLpRef.current = JSON.parse(sessionStorage.getItem("game_opponent_data") || "0").playerLp || 0;
+
+    console.log("saved user LP:", userLpRef.current);
+    console.log("saved opponent LP:", opponentLpRef.current);
+
     // Cleanup on unmount or dependencies change
     return () => {
       if (context?.socket) {
@@ -502,14 +512,7 @@ export default function InGamePage() {
         context.socket.off("game_start");
       }
     };
-  }, [
-    context?.socket,
-    context?.gameId,
-    context?.isAnonymous,
-    context?.anonymousId,
-    userSession?.user?.id,
-    selectedLanguage,
-  ]);
+  }, [context?.socket, context?.gameId, context?.isAnonymous, context?.anonymousId, userSession?.user?.id, selectedLanguage, context?.playerLp]);
 
   // NOW all conditional returns can happen AFTER all hooks are declared
   if (!context) {
@@ -803,20 +806,24 @@ export default function InGamePage() {
                 gameEndData={gameEndData}
                 userStats={testResults}
                 opponentStats={opponentTestStatsRef.current}
+                userLp={userLpRef.current}
+                opponentLp={opponentLpRef.current}
               />
             )
           )}
         </>
       )}
 
-      {debugFinishedPage && (
-        <FinishedPage
-          opponent={dummyUserWinsData.opponent}
-          user={dummyUserWinsData.user}
-          opponentStats={dummyUserWinsData.opponentStats}
-          userStats={dummyUserWinsData.userStats}
-        />
-      )}
+    {debugFinishedPage && 
+      <FinishedPage
+        opponent={dummyUserWinsData.opponent}
+        user={dummyUserWinsData.user}
+        opponentStats={dummyUserWinsData.opponentStats}
+        userStats={dummyUserWinsData.userStats}
+        userLp={23}
+        opponentLp={45}
+      />
+    }
     </div>
   );
 }

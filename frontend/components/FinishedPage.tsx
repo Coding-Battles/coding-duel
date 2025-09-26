@@ -6,6 +6,7 @@ import { CustomUser, OpponentData } from "@/app/game-setup/layout";
 import { useRouter } from "next/navigation";
 import { getAvatarUrl } from "@/lib/auth-client";
 import { Trophy, Clock, Zap, Target, Home, ArrowRight } from "lucide-react";
+import { useGameContext } from "@/app/game-setup/layout";
 
 interface FinishedPageProps {
   opponent: OpponentData,
@@ -13,29 +14,60 @@ interface FinishedPageProps {
   gameEndData: any, // Complete game end info from backend
   userStats?: TestResultsData, // May be undefined if user didn't complete
   opponentStats?: TestResultsData; // May be undefined if opponent didn't complete
+  userLp?: number; // Optional LP for user
+  opponentLp?: number; // Optional LP for opponent
 }
 
-const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats} : FinishedPageProps) => {
+const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats, userLp, opponentLp} : FinishedPageProps) => {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   
   // Determine winner based on gameEndData (first to solve wins)
   const userWon = gameEndData?.winner_id === user?.id;
+
+  const context = useGameContext();
+
+  console.log("UserLp in FinishedPage:", userLp);
+  console.log("OpponentLp in FinishedPage:", opponentLp);
   
   // Create winner and loser data from available information
   const winnerData = {
     id: gameEndData?.winner_id,
     name: gameEndData?.winner_name || (userWon ? user?.name : opponent?.name),
     image: userWon ? getAvatarUrl(user) : opponent.image_url,
-    stats: userWon ? userStats : (gameEndData?.winner_stats || opponentStats)
+    stats: userWon ? userStats : (gameEndData?.winner_stats || opponentStats),
+    lpGain: userWon ? gameEndData?.lp_gain : (gameEndData?.lp_loss || 0),
+    originalLp: userWon ? userLp || 0 : opponentLp || 0
   };
   
   const loserData = {
     id: gameEndData?.loser_id,
     name: gameEndData?.loser_name || (userWon ? opponent?.name : user?.name),
     image: userWon ? opponent.image_url : getAvatarUrl(user),
-    stats: userWon ? opponentStats : userStats
+    stats: userWon ? opponentStats : userStats,
+    lpLoss: userWon ? (gameEndData?.lp_loss || 0) : gameEndData?.lp_gain,
+    originalLp: userWon ? opponentLp || 0 : userLp || 0
   };
+
+    function animateNumber(startValue : number, difference: number, duration: number, elementId: string) {
+    const element = document.getElementById(elementId);
+    const finalValue = startValue + difference;
+    const start = performance.now();
+
+    function easeOutQuad(t: number) {
+        return t * (2 - t);
+    }
+
+    function update(now: number) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = easeOutQuad(progress);
+        const value = Math.floor(startValue + (finalValue - startValue) * eased);
+        element && (element.textContent = value.toString());
+        if (progress < 1) requestAnimationFrame(update);
+    }
+
+    requestAnimationFrame(update);
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -43,6 +75,14 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats} : 
     console.log("🏆 [FINISHED PAGE] Game end data:", gameEndData);
     console.log("🏆 [FINISHED PAGE] Winner data:", winnerData);
     console.log("🏆 [FINISHED PAGE] Loser data:", loserData);
+
+    // Animate LP changes
+
+    if(gameEndData && winnerData && loserData) {
+      animateNumber(0, gameEndData.lp_gain, 2000, "winner-lp-change");
+      animateNumber(0, -gameEndData.lp_loss, 2000, "loser-lp-change");
+    }
+
   }, [userWon, gameEndData, winnerData, loserData])
   
   return (
@@ -91,6 +131,9 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats} : 
                 <div>
                   <h2 className="text-2xl font-bold text-success">Winner</h2>
                   <p className="font-semibold text-foreground/80">{winnerData.name}</p>
+                  <h3 className="mt-1 text-sm font-medium text-foreground/60">
+                    LP: <span>{winnerData.originalLp} </span><span className="-mr-1 text-lg font-bold text-success">+</span> <span id="winner-lp-change" className="text-lg font-bold text-success">{winnerData.lpGain}</span>
+                  </h3>
                 </div>
               </div>
               
@@ -149,6 +192,9 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats} : 
                   {!loserData.stats && (
                     <p className="text-xs text-foreground/50">Didn't complete</p>
                   )}
+                  <h3 className="mt-1 text-lg font-medium text-foreground/60">
+                    LP: <span>{loserData.originalLp} </span><span id="loser-lp-change" className="text-lg font-bold text-error">{loserData.lpLoss ? `-${loserData.lpLoss}` : "0"}</span>
+                  </h3>
                 </div>
               </div>
               

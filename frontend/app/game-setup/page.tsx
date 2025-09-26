@@ -128,6 +128,9 @@ export default function GameSetupPage() {
                   ? context?.user?.username || context?.user?.name || "Guest"
                   : (session?.user as any)?.username || session?.user?.name || "Guest"
               }
+              easyLp={context?.user?.easylp || 0}
+              mediumLp={context?.user?.mediumlp || 0}
+              hardLp={context?.user?.hardlp || 0}
               isGuest={context?.isAnonymous}
             />
           )}

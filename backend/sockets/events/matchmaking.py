@@ -73,7 +73,7 @@ def register_events(sio):
             logger.info(f"game_states: {game_states}")
 
             if match_result:
-                player1, player2, game_id, difficulty, question_slug = match_result
+                player1, player2, game_id, difficulty, question_slug, player1_lp, player2_lp = match_result
 
                 # Send match found to both players
                 match_response1 = MatchFoundResponse(
@@ -81,6 +81,8 @@ def register_events(sio):
                     opponent_Name=player2.name,
                     opponentImageURL=player2.imageURL,
                     question_name=question_slug,
+                    opponent_lp=player2_lp,
+                    difficulty=difficulty,
                 )
                 await sio.emit(
                     "match_found", match_response1.model_dump(), room=player1.sid
@@ -90,7 +92,9 @@ def register_events(sio):
                     game_id=game_id, 
                     opponent_Name=player1.name, 
                     opponentImageURL=player1.imageURL,
-                    question_name=question_slug
+                    question_name=question_slug,
+                    opponent_lp=player1_lp,
+                    difficulty=difficulty,
                 )
                 await sio.emit(
                     "match_found", match_response2.model_dump(), room=player2.sid

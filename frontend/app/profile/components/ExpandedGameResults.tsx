@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GameHistoryItem } from '../page';
+import { GameHistoryItem } from '@/shared/schemas';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
@@ -11,8 +11,8 @@ export default function ExpandedGameResults({ game } : ExpandedGameResultsProps)
   const [selectedParticipant, setSelectedParticipant] = useState(game.participants[0]);
 
   return (
-    <div className='mt-4 flex flex-col'>
-      <div className='flex gap-4 items-center justify-start'>
+    <div className='flex flex-col mt-4'>
+      <div className='flex items-center justify-start gap-4'>
         {game.participants.map((participant) => (
           <button 
             key={participant.player_name}
@@ -28,8 +28,8 @@ export default function ExpandedGameResults({ game } : ExpandedGameResultsProps)
         ))}
       </div>
       
-      <div className='mt-4 p-4 border rounded-lg bg-gray-50'>
-        <h3 className='text-lg font-semibold mb-2'>
+      <div className='p-4 mt-4 border rounded-lg bg-background2'>
+        <h3 className='mb-2 text-lg font-semibold'>
           {selectedParticipant.player_name}'s Results
         </h3>
         

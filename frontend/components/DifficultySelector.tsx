@@ -18,6 +18,9 @@ interface DifficultySelectorProps {
   userName?: string;
   className?: string;
   isGuest?: boolean;
+  easyLp?: number;
+  mediumLp?: number;
+  hardLp?: number;
 }
 
 const DifficultySelector: React.FC<DifficultySelectorProps> = ({
@@ -29,6 +32,9 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   userName,
   className = "",
   isGuest = false,
+  easyLp = 0,
+  mediumLp = 0,
+  hardLp = 0,
 }) => {
   const router = useRouter();
   const difficulties = [
@@ -36,16 +42,19 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
       key: "easy" as const,
       label: "EASY",
       emoji: "😴",
+      lp: easyLp,
     },
     {
       key: "medium" as const,
       label: "MEDIUM",
       emoji: "🔥",
+      lp: mediumLp,
     },
     {
       key: "hard" as const,
       label: "HARD",
       emoji: "💀",
+      lp: hardLp,
     },
   ];
 
@@ -66,15 +75,15 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
   };
 
   return (
-    <div className={`bg-card rounded-3xl p-8 shadow-2xl relative ${className}`}>
+    <div className={`bg-card rounded-3xl p-8 relative ${className}`}>
       {/* Step 3: Pick Your Poison */}
       <div className="mb-8">
         {/* Header: Title + Avatar */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-12 gap-8">
+        <div className="flex flex-col gap-8 pb-12 lg:flex-row lg:items-center lg:justify-between">
           {/* Title */}
-          <div className="text-center lg:text-left flex-1">
+          <div className="flex-1 text-center lg:text-left">
             <h1
-              className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl uppercase text-gradient font-bold tracking-wide gaming-title"
+              className="text-4xl font-bold tracking-wide uppercase sm:text-6xl lg:text-7xl xl:text-8xl text-gradient gaming-title"
               data-text="Pick your poison"
             >
               Pick your poison
@@ -118,7 +127,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                         : "border-gradient hover:shadow-xl hover:shadow-slate-500/30"
                     }`}
                   >
-                    <div className="w-full h-full rounded-lg bg-background flex items-center justify-center relative overflow-hidden">
+                    <div className="relative flex flex-col items-center justify-center w-full h-full gap-2 overflow-hidden rounded-lg bg-background">
                       <span
                         className={`font-bold text-xl uppercase tracking-wider transition-colors duration-300 relative z-10 ${
                           selectedDifficulties[diff.key]
@@ -128,9 +137,12 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                       >
                         {diff.label}
                       </span>
+                      <span className="text-md text-foreground/70">
+                        {diff.lp > 0 ? `LP: ${diff.lp}` : "LP: ?"}
+                      </span>
                       {/* Shine effect for selected cards */}
                       {selectedDifficulties[diff.key] && (
-                        <div className="absolute inset-0 -top-2 -left-2 bg-gradient-to-r from-transparent via-white/20 to-transparent rotate-45 w-8 h-20 animate-pulse opacity-50"></div>
+                        <div className="absolute inset-0 w-8 h-20 rotate-45 opacity-50 -top-2 -left-2 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                       )}
                     </div>
                   </div>
@@ -142,7 +154,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
 
         {/* Find Game Button */}
         {true && (
-          <div className="text-center mt-20">
+          <div className="mt-20 text-center">
             <button
               onClick={onFindGame}
               disabled={!hasSelectedDifficulty}
@@ -158,7 +170,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
                     : "bg-gradient-to-r from-slate-500 via-slate-300 to-slate-500 hover:from-slate-400 hover:via-slate-200 hover:to-slate-400"
                 }`}
               >
-                <div className="w-full h-full rounded-md bg-background flex items-center justify-center">
+                <div className="flex items-center justify-center w-full h-full rounded-md bg-background">
                   <span
                     className={`relative z-10 transition-colors duration-300 ${
                       !hasSelectedDifficulty
@@ -173,7 +185,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
 
               {/* Shine effect when ready */}
               {hasSelectedDifficulty && (
-                <div className="absolute inset-0 -top-2 -left-2 bg-gradient-to-r from-transparent via-white/20 to-transparent rotate-45 w-8 h-20 animate-pulse opacity-50"></div>
+                <div className="absolute inset-0 w-8 h-20 rotate-45 opacity-50 -top-2 -left-2 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
               )}
             </button>
           </div>

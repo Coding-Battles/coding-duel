@@ -90,6 +90,7 @@ export interface MatchFoundResponse {
   opponent_name: string;
   opponent_image_url: string;
   question_name: string;
+  difficulty: string;
 }
 
 export interface QueueStatus {
@@ -120,6 +121,7 @@ export interface GameContextType {
   isAnonymous?: boolean;
   anonymousId?: string;
   selectedDifficulties?: DifficultyState;
+  playerLp?: number;
   setSelectedDifficulties?: React.Dispatch<React.SetStateAction<DifficultyState>>;
   handleFindGame?: () => void;
   clearGameData?: () => void;

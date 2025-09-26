@@ -95,6 +95,8 @@ export type QueueStatusResponse = z.infer<typeof QueueStatusResponseSchema>;
 // Game History Item Schema
 export const GameHistoryItemSchema = z.object({
   game_id: z.number(),
+  difficulty: z.string(),
+  question_name: z.string(),
   participants: z.array(GameParticipantSchema),
   user_won: z.boolean(),
   result: z.enum(['won', 'lost', 'tie']),

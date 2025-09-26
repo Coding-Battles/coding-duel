@@ -38,6 +38,9 @@ export const CustomUserSchema = BaseUserSchema.extend({
   selectedPfp: z.number().optional(),
   anonymous: z.boolean().optional(),
   game_ids: z.array(z.number()).optional(),
+  easylp: z.number().optional(), // LP for easy games
+  mediumlp: z.number().optional(), // LP for medium games
+  hardlp: z.number().optional(), // LP for hard games
 });
 export type CustomUser = z.infer<typeof CustomUserSchema>;
 
