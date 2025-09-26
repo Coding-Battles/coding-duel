@@ -7,6 +7,7 @@ node_modules/
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.claude
 
 # Build output
 .next/
@@ -33,6 +34,7 @@ pnpm-debug.log*
 __pycache__/
 *.py[cod]
 sqlite.db
+.pytest_cache/
 
 # OS / IDE
 .DS_Store
@@ -43,6 +45,8 @@ sqlite.db
 
 # Project-specific
 CLAUDE.md
+.claude/
+__tests__/
 .next/trace
 .next/cache/webpack/client-development/1.pack.gz
 .next/cache/webpack/client-development/5.pack.gz
