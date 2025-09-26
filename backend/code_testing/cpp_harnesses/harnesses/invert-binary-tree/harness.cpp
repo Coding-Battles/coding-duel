@@ -1,6 +1,49 @@
-#include "userfunc.h"
-#include <bits/stdc++.h>
+// Comprehensive standard library includes for portability
+#include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <unordered_set>
+#include <map>
+#include <set>
+#include <queue>
+#include <stack>
+#include <deque>
+#include <list>
+#include <algorithm>
+#include <numeric>
+#include <climits>
+#include <cmath>
+#include <sstream>
+#include <utility>
+#include <chrono>
+#include <functional>
+#include <iomanip>
+#include <bitset>
+#include <array>
+#include <memory>
+#include <iterator>
+#include <random>
 using namespace std;
+// Standard LeetCode data structures
+struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode() : val(0), next(nullptr) {}
+    ListNode(int x) : val(x), next(nullptr) {}
+    ListNode(int x, ListNode *next) : val(x), next(next) {}
+};
+
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode() : val(0), left(nullptr), right(nullptr) {}
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+};
+
+#include "userfunc.h"
 
 static inline int parseIntValue(const string& json, const string& key){
     string needle="\""+key+"\"";
@@ -125,8 +168,45 @@ static inline TreeNode* vecToTree(const vector<int>& v){
     }
     return nodes[0];
 }
+
+static inline vector<int> treeToVec(TreeNode* root){
+    if(!root) return {};
+    vector<int> result;
+    queue<TreeNode*> q;
+    q.push(root);
+    
+    while(!q.empty()){
+        TreeNode* node = q.front();
+        q.pop();
+        
+        if(node){
+            result.push_back(node->val);
+            q.push(node->left);
+            q.push(node->right);
+        } else {
+            result.push_back(INT_MIN); // Use INT_MIN for null
+        }
+    }
+    
+    // Remove trailing nulls
+    while(!result.empty() && result.back() == INT_MIN){
+        result.pop_back();
+    }
+    
+    return result;
+}
 static inline string vecToStr(const vector<int>& a){
-    string s="["; for(size_t i=0;i<a.size();++i){ s+=to_string(a[i]); if(i+1<a.size()) s+=','; } s+=']'; return s;
+    string s="["; 
+    for(size_t i=0;i<a.size();++i){ 
+        if(a[i] == INT_MIN) {
+            s += "null";
+        } else {
+            s += to_string(a[i]); 
+        }
+        if(i+1<a.size()) s+=','; 
+    } 
+    s+=']'; 
+    return s;
 }
 static inline string vec2DToStr(const vector<vector<int>>& a){
     string s="["; for(size_t i=0;i<a.size();++i){ s+=vecToStr(a[i]); if(i+1<a.size()) s+=','; } s+=']'; return s;
@@ -141,10 +221,11 @@ int main(int argc,char**argv){
     auto arr=parseIntArray(in,"root");
     Solution sol;
     auto node=sol.invertTree(vecToTree(arr));
-    // Flatten to vector (level order with INT_MIN for null) – simple version:
-    // We'll just output inorder-ish via BFS keeping nulls minimal.
-    // For simplicity, reuse vecToStr(list) style is not applicable; we skip serialization here.
-    // Instead, return presence as 1 if non-null.
-    cout<<"{\"result\": "<<(node?1:0)<<", \"execution_time\": 0}\n";
+    
+    // Convert the inverted tree back to array format
+    auto result = treeToVec(node);
+    string resultStr = vecToStr(result);
+    
+    cout<<"{\"result\": "<<resultStr<<", \"execution_time\": 0}\n";
     return 0;
 }

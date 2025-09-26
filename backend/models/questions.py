@@ -18,6 +18,7 @@ class TestCaseResult(BaseModel):
     error: Optional[str]
     execution_time: Optional[float]
 
+
 class CodeTestResult(BaseModel):
     message: str
     code: str
@@ -32,13 +33,13 @@ class CodeTestResult(BaseModel):
     implement_time: Optional[int]
     final_time: Optional[int]
 
+
 class PlayerFinalStats(BaseModel):
     player_name: str
     player_id: str
     implement_time: int
     time_complexity: str
     final_time: int
-
 
 
 class RunTestCasesRequest(BaseModel):
@@ -63,8 +64,15 @@ class DockerRunRequest(BaseModel):
     language: str
     test_input: dict
     timeout: int = 5
-    function_name: Optional[str] = "solution"  # Default to "solution" for backward compatibility
-    signature: Optional[Dict[str, Any]] = None  # Question signature metadata for dynamic parameter handling
+    function_name: Optional[str] = (
+        "solution"  # Default to "solution" for backward compatibility
+    )
+    question_name: Optional[str] = (
+        None  # Question name for harness file lookup (e.g. "best-time-to-buy-and-sell-stock")
+    )
+    signature: Optional[Dict[str, Any]] = (
+        None  # Question signature metadata for dynamic parameter handling
+    )
 
 
 class TestCase(BaseModel):
@@ -92,5 +100,3 @@ class QuestionMetadata(BaseModel):
     total_submissions: str
     created_at: str
     last_updated: str
-
-

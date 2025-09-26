@@ -10,8 +10,35 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
-#include "userfunc.h"
+// Comprehensive standard library includes for portability
+#include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <unordered_set>
+#include <map>
+#include <set>
+#include <queue>
+#include <stack>
+#include <deque>
+#include <list>
+#include <algorithm>
+#include <numeric>
+#include <climits>
+#include <cmath>
+#include <sstream>
+#include <utility>
+#include <chrono>
+#include <functional>
+#include <iomanip>
+#include <bitset>
+#include <array>
+#include <memory>
+#include <iterator>
+#include <random>
 using namespace std;
+
+#include "userfunc.h"
 
 // TreeNode definition for binary tree problems
 struct TreeNode {

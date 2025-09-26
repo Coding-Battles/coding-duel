@@ -1,0 +1,78 @@
+import java.util.*;
+import java.io.IOException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+class ListNode {
+    int val;
+    ListNode next;
+    ListNode() {}
+    ListNode(int val) { this.val = val; }
+    ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+}
+
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    TreeNode() {}
+    TreeNode(int val) { this.val = val; }
+    TreeNode(int val, TreeNode left, TreeNode right) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+}
+
+// USER_CODE_PLACEHOLDER
+
+class HarnessMain {
+    public static void main(String[] args) throws IOException {
+        if (args.length != 3) {
+            System.err.println("Usage: java HarnessMain <class_name> <function_name> <input_json>");
+            System.exit(1);
+        }
+        
+        String className = args[0];
+        String functionName = args[1];
+        String inputJson = args[2];
+        
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(inputJson);
+        
+        int[][] matrix = parseMatrix(rootNode.get("matrix"));
+        
+        Solution solution = new Solution();
+        solution.rotate(matrix);
+        
+        // Format matrix as JSON array
+        System.out.print("[");
+        for (int i = 0; i < matrix.length; i++) {
+            if (i > 0) System.out.print(",");
+            System.out.print("[");
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (j > 0) System.out.print(",");
+                System.out.print(matrix[i][j]);
+            }
+            System.out.print("]");
+        }
+        System.out.println("]");
+    }
+    
+    private static int[][] parseMatrix(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return new int[0][0];
+        }
+        
+        int rows = node.size();
+        int cols = rows > 0 ? node.get(0).size() : 0;
+        int[][] result = new int[rows][cols];
+        
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                result[i][j] = node.get(i).get(j).asInt();
+            }
+        }
+        return result;
+    }
+}

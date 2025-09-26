@@ -1,0 +1,57 @@
+import java.util.*;
+import java.io.IOException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+class ListNode {
+    int val;
+    ListNode next;
+    ListNode() {}
+    ListNode(int val) { this.val = val; }
+    ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+}
+
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    TreeNode() {}
+    TreeNode(int val) { this.val = val; }
+    TreeNode(int val, TreeNode left, TreeNode right) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+}
+
+// USER_CODE_PLACEHOLDER
+
+class HarnessMain {
+    public static void main(String[] args) throws IOException {
+        if (args.length != 3) {
+            System.err.println("Usage: java HarnessMain <class_name> <function_name> <input_json>");
+            System.exit(1);
+        }
+        
+        String className = args[0];
+        String functionName = args[1];
+        String inputJson = args[2];
+        
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(inputJson);
+        
+        int n = parseIntValue(rootNode.get("n"));
+        
+        Solution solution = new Solution();
+        boolean result = solution.isPowerOfTwo(n);
+        
+        System.out.println(result ? "true" : "false");
+    }
+    
+    private static int parseIntValue(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return 0;
+        }
+        return node.asInt();
+    }
+}

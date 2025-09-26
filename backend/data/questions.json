@@ -62,12 +62,6 @@
         "difficulty": "Easy"
       },
       {
-        "slug": "first-bad-version",
-        "id": 17,
-        "title": "First Bad Version",
-        "difficulty": "Easy"
-      },
-      {
         "slug": "climbing-stairs",
         "id": 18,
         "title": "Climbing Stairs",

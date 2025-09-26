@@ -20,7 +20,20 @@ class TestExecutionService:
 
     @staticmethod
     def load_test_cases(question_name: str) -> List[Dict[str, Any]]:
-        """Load test cases from JSON file based on question name."""
+        """Load test             elif request.language == "cpp":
+        # C++ uses batch execution for better caching performance
+        logger.info(
+            f"🐛 [DEBUG] Using C++ batch execution for sample tests ({len(test_cases)} test cases)"
+        )
+        test_results, total_passed, total_failed = (
+            TestExecutionService.run_cpp_batch_execution(
+                request.code,
+                test_cases,
+                request.timeout,
+                method_name,
+                request.question_name,
+            )
+        )file based on question name."""
         test_file_path = f"backend/data/tests/{question_name}.json"
         logger.info(f"🐛 [DEBUG] Looking for test file: {test_file_path}")
 
@@ -216,70 +229,297 @@ class TestExecutionService:
         timeout: int,
         function_name: str = "solution",
         signature: Dict[str, Any] = None,
+        question_name: str = None,
     ) -> Tuple[List[TestCaseResult], int, int]:
-        """Run test cases individually (for non-batch languages or fallback)."""
+        """Run test cases with compile-once-run-many approach for C++."""
+
+        # For C++, use compile-once-run-many approach
+        if language == "cpp":
+            return TestExecutionService._run_cpp_compile_once(
+                code, test_cases, timeout, function_name, question_name
+            )
+
+        # For other languages, fall back to the old individual approach
+        import uuid
+        from backend.code_testing.docker_runner import cleanup_submission_directory
+
         test_results = []
         total_passed = 0
         total_failed = 0
 
-        for i, test_case in enumerate(test_cases):
-            logger.info(f"🐛 [DEBUG] Running test case {i+1}/{len(test_cases)}")
-            try:
-                docker_start_time = time.time()
-                docker_result = run_code_in_docker(
-                    DockerRunRequest(
+        # Generate ONE submission ID for all test cases to enable caching
+        shared_submission_id = str(uuid.uuid4())[:8]
+        logger.info(
+            f"🐛 [DEBUG] Using shared submission ID: {shared_submission_id} for {len(test_cases)} test cases"
+        )
+
+        try:
+            for i, test_case in enumerate(test_cases):
+                logger.info(f"🐛 [DEBUG] Running test case {i+1}/{len(test_cases)}")
+                try:
+                    docker_start_time = time.time()
+                    # Use shared submission ID and disable cleanup except for last test case
+                    is_last_test = i == len(test_cases) - 1
+                    docker_result = run_code_in_docker(
+                        DockerRunRequest(
+                            code=code,
+                            language=language,
+                            test_input=test_case["input"],
+                            timeout=timeout,
+                            function_name=function_name,
+                            question_name=question_name,  # Pass question name if available
+                            signature=signature,
+                        ),
+                        submission_id=shared_submission_id,
+                        cleanup=False,  # Don't clean up until we're done with all tests
+                    )
+                    docker_time = (time.time() - docker_start_time) * 1000
+                    logger.info(
+                        f"🐛 [DEBUG] Docker execution took {docker_time:.0f}ms for test case {i+1}"
+                    )
+
+                    expected = test_case["expected"]
+                    actual_output = docker_result.get("output")
+
+                    if docker_result.get("success", False):
+                        passed = TestExecutionService.check_answer_in_expected(
+                            actual_output, expected
+                        )
+                    else:
+                        passed = False
+
+                    test_result = TestCaseResult(
+                        input=test_case["input"],
+                        expected_output=expected,
+                        actual_output=(
+                            str(actual_output) if actual_output is not None else None
+                        ),
+                        passed=passed,
+                        error=docker_result.get("error"),
+                        execution_time=docker_result.get("execution_time"),
+                    )
+
+                    test_results.append(test_result)
+
+                    if passed:
+                        total_passed += 1
+                    else:
+                        total_failed += 1
+
+                except Exception as e:
+                    test_result = TestCaseResult(
+                        input=test_case["input"],
+                        expected_output=test_case["expected"],
+                        actual_output=None,
+                        passed=False,
+                        error=str(e),
+                        execution_time=None,
+                    )
+                    test_results.append(test_result)
+                    total_failed += 1
+
+        finally:
+            # Clean up the shared submission directory after all tests are done
+            logger.info(
+                f"🐛 [DEBUG] Cleaning up shared submission directory: {shared_submission_id}"
+            )
+            cleanup_submission_directory(language, shared_submission_id)
+
+        return test_results, total_passed, total_failed
+
+    @staticmethod
+    def _run_cpp_compile_once(
+        code: str,
+        test_cases: List[Dict[str, Any]],
+        timeout: int,
+        function_name: str,
+        question_name: str,
+    ) -> Tuple[List[TestCaseResult], int, int]:
+        """C++ specific: compile once, run multiple test cases."""
+        import uuid
+        from backend.code_testing.docker_runner import get_persistent_container
+        from backend.code_testing.docker_runner import LANGUAGE_RUNNERS
+        from backend.models.questions import DockerRunRequest
+
+        test_results = []
+        total_passed = 0
+        total_failed = 0
+
+        logger.info(
+            f"🐛 [DEBUG] C++ compile-once-run-many for {len(test_cases)} test cases"
+        )
+
+        # Get container and runner
+        container = get_persistent_container("cpp")
+        runner_class = LANGUAGE_RUNNERS["cpp"]
+
+        # Generate ONE submission ID for all test cases
+        submission_id = str(uuid.uuid4())[:8]
+        submission_dir = None
+
+        try:
+            # Step 1: Create submission directory ONCE
+            submission_dir = runner_class.create_submission_directory(
+                container, submission_id
+            )
+            logger.info(
+                f"🐛 [DEBUG] Created shared submission directory: {submission_dir}"
+            )
+
+            # Step 2: Prepare and compile code ONCE
+            first_request = DockerRunRequest(
+                code=code,
+                language="cpp",
+                test_input=test_cases[0]["input"],
+                timeout=timeout,
+                function_name=function_name,
+                question_name=question_name,
+            )
+
+            wrapped_code = runner_class.prepare_code(first_request)
+            filename = runner_class.get_filename(first_request)
+            file_path = f"{submission_dir}/{filename}"
+
+            # Write code file ONCE
+            runner_class.write_code_file(container, file_path, wrapped_code)
+
+            # Compile ONCE
+            compilation_result = runner_class.compile(
+                container, first_request, file_path, wrapped_code
+            )
+
+            if not compilation_result["success"]:
+                # If compilation fails, all test cases fail
+                error_msg = compilation_result.get("error", "Compilation failed")
+                for test_case in test_cases:
+                    test_results.append(
+                        TestCaseResult(
+                            input=test_case["input"],
+                            expected_output=test_case["expected"],
+                            actual_output=None,
+                            passed=False,
+                            error=error_msg,
+                            execution_time=None,
+                        )
+                    )
+                    total_failed += 1
+                return test_results, total_passed, total_failed
+
+            logger.info(
+                f"🐛 [DEBUG] Compilation successful, running {len(test_cases)} test cases"
+            )
+            logger.info(f"🐛 [DEBUG] Compilation result: {compilation_result}")
+
+            # Step 3: Run each test case with the SAME compiled binary
+            for i, test_case in enumerate(test_cases):
+                try:
+                    test_request = DockerRunRequest(
                         code=code,
-                        language=language,
+                        language="cpp",
                         test_input=test_case["input"],
                         timeout=timeout,
                         function_name=function_name,
-                        signature=signature,
+                        question_name=question_name,
                     )
-                )
-                docker_time = (time.time() - docker_start_time) * 1000
-                logger.info(
-                    f"🐛 [DEBUG] Docker execution took {docker_time:.0f}ms for test case {i+1}"
-                )
 
-                expected = test_case["expected"]
-                actual_output = docker_result.get("output")
-
-                if docker_result.get("success", False):
-                    passed = TestExecutionService.check_answer_in_expected(
-                        actual_output, expected
+                    # Get run command and execute
+                    run_command = runner_class.get_run_command(
+                        test_request, file_path, compilation_result
                     )
-                else:
-                    passed = False
+                    logger.info(f"🐛 [DEBUG] Run command: {run_command}")
 
-                test_result = TestCaseResult(
-                    input=test_case["input"],
-                    expected_output=expected,
-                    actual_output=(
-                        str(actual_output) if actual_output is not None else None
-                    ),
-                    passed=passed,
-                    error=docker_result.get("error"),
-                    execution_time=docker_result.get("execution_time"),
-                )
+                    exec_result = container.exec_run(
+                        f"timeout {timeout} sh -c '{run_command}'", workdir="/tmp"
+                    )
+                    logger.info(f"🐛 [DEBUG] Exit code: {exec_result.exit_code}")
 
-                test_results.append(test_result)
+                    if exec_result.exit_code == 0:
+                        logs = exec_result.output.decode("utf-8")
+                        # Parse JSON output
+                        import json
 
-                if passed:
-                    total_passed += 1
-                else:
+                        for line in reversed(logs.strip().split("\n")):
+                            try:
+                                output_data = json.loads(line)
+                                if (
+                                    isinstance(output_data, dict)
+                                    and "result" in output_data
+                                ):
+                                    actual_output = output_data.get("result")
+                                    break
+                            except json.JSONDecodeError:
+                                continue
+                        else:
+                            actual_output = None
+
+                        expected = test_case["expected"]
+                        if actual_output is not None:
+                            passed = TestExecutionService.check_answer_in_expected(
+                                actual_output, expected
+                            )
+                        else:
+                            passed = False
+
+                        test_results.append(
+                            TestCaseResult(
+                                input=test_case["input"],
+                                expected_output=expected,
+                                actual_output=(
+                                    str(actual_output)
+                                    if actual_output is not None
+                                    else None
+                                ),
+                                passed=passed,
+                                error=None,
+                                execution_time=0.0,  # Harnesses return 0
+                            )
+                        )
+
+                        if passed:
+                            total_passed += 1
+                        else:
+                            total_failed += 1
+                    else:
+                        # Execution failed
+                        test_results.append(
+                            TestCaseResult(
+                                input=test_case["input"],
+                                expected_output=test_case["expected"],
+                                actual_output=None,
+                                passed=False,
+                                error=f"Execution failed with exit code {exec_result.exit_code}",
+                                execution_time=None,
+                            )
+                        )
+                        total_failed += 1
+
+                except Exception as e:
+                    test_results.append(
+                        TestCaseResult(
+                            input=test_case["input"],
+                            expected_output=test_case["expected"],
+                            actual_output=None,
+                            passed=False,
+                            error=str(e),
+                            execution_time=None,
+                        )
+                    )
                     total_failed += 1
 
-            except Exception as e:
-                test_result = TestCaseResult(
-                    input=test_case["input"],
-                    expected_output=test_case["expected"],
-                    actual_output=None,
-                    passed=False,
-                    error=str(e),
-                    execution_time=None,
-                )
-                test_results.append(test_result)
-                total_failed += 1
+        finally:
+            # Step 4: Clean up submission directory ONCE
+            if submission_dir:
+                try:
+                    cleanup_result = container.exec_run(
+                        f"rm -rf {submission_dir}", workdir="/tmp"
+                    )
+                    logger.info(
+                        f"🧹 [CLEANUP] Removed submission directory: {submission_dir}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"❌ [CLEANUP] Error cleaning up {submission_dir}: {e}"
+                    )
 
         return test_results, total_passed, total_failed
 
@@ -297,6 +537,89 @@ class TestExecutionService:
             f"🐛 [DEBUG] Bypassing Java batch runner, using simplified individual execution"
         )
         raise Exception("Bypassing Java batch runner to use simplified approach")
+
+    @staticmethod
+    def run_cpp_batch_execution(
+        code: str,
+        test_cases: List[Dict[str, Any]],
+        timeout: int,
+        function_name: str,
+        question_name: str = None,
+    ) -> Tuple[List[TestCaseResult], int, int]:
+        """C++ compile-once-run-many execution for optimal performance."""
+        logger.info("🔥 [OPTIMIZATION] Starting C++ compile-once-run-many approach!")
+        try:
+            result = TestExecutionService._run_cpp_compile_once(
+                code, test_cases, timeout, function_name, question_name
+            )
+            logger.info(
+                "🔥 [OPTIMIZATION] C++ compile-once approach completed successfully!"
+            )
+            return result
+        except Exception as e:
+            logger.error(f"❌ [OPTIMIZATION] C++ compile-once failed: {e}")
+            logger.info("🔄 [OPTIMIZATION] Falling back to old batch execution")
+            # Import the old batch function as backup
+            from backend.code_testing.docker_runner import run_cpp_batch_in_docker
+
+            test_results = []
+            total_passed = 0
+            total_failed = 0
+
+            if not test_cases:
+                return test_results, total_passed, total_failed
+
+            # Extract test inputs
+            test_inputs = [test_case["input"] for test_case in test_cases]
+
+            # Use old batch execution function as fallback
+            docker_results = run_cpp_batch_in_docker(
+                code=code,
+                test_inputs=test_inputs,
+                timeout=timeout,
+                function_name=function_name,
+                question_name=question_name,
+            )
+
+            # Process results
+            for i, (test_case, docker_result) in enumerate(
+                zip(test_cases, docker_results)
+            ):
+                expected = test_case["expected"]
+
+                if docker_result.get("success", False):
+                    passed = TestExecutionService.check_answer_in_expected(
+                        docker_result.get("output"), expected
+                    )
+                    if passed:
+                        total_passed += 1
+                    else:
+                        total_failed += 1
+
+                    test_results.append(
+                        TestCaseResult(
+                            input=test_case["input"],
+                            expected_output=expected,
+                            actual_output=docker_result.get("output"),
+                            passed=passed,
+                            execution_time=docker_result.get("execution_time", 0),
+                            error=docker_result.get("error"),
+                        )
+                    )
+                else:
+                    total_failed += 1
+                    test_results.append(
+                        TestCaseResult(
+                            input=test_case["input"],
+                            expected_output=expected,
+                            actual_output=None,
+                            passed=False,
+                            execution_time=docker_result.get("execution_time", 0),
+                            error=docker_result.get("error", "Execution failed"),
+                        )
+                    )
+
+            return test_results, total_passed, total_failed
 
     # C++ batch processing removed - now uses standard docker_runner execution like Java
 
@@ -374,19 +697,21 @@ class TestExecutionService:
                             request.timeout,
                             method_name,
                             signature,
+                            request.question_name,  # Pass question name
                         )
                     )
             elif request.language == "cpp":
-                # C++ now uses standard individual execution like Java (no batch processing)
-                logger.info(f"🐛 [DEBUG] Using standard individual execution for C++")
+                # C++ now uses batch execution - compile once, run multiple test cases
+                logger.info(
+                    f"🐛 [DEBUG] Using C++ batch execution for {len(test_cases)} test cases"
+                )
                 test_results, total_passed, total_failed = (
-                    TestExecutionService.run_individual_test_cases(
+                    TestExecutionService.run_cpp_batch_execution(
                         request.code,
-                        request.language,
                         test_cases,
                         request.timeout,
                         method_name,
-                        signature,
+                        request.question_name,
                     )
                 )
             else:
@@ -398,6 +723,8 @@ class TestExecutionService:
                         test_cases,
                         request.timeout,
                         method_name,
+                        signature,
+                        request.question_name,  # Pass question name
                     )
                 )
 
@@ -495,12 +822,13 @@ class TestExecutionService:
                             request.timeout,
                             method_name,
                             signature,
+                            request.question_name,  # Pass question name
                         )
                     )
             elif request.language == "cpp":
-                # C++ now uses standard individual execution like Java (no batch processing)
+                # C++ uses individual execution with improved caching
                 logger.info(
-                    f"🐛 [DEBUG] Using standard individual execution for C++ sample tests"
+                    f"🐛 [DEBUG] Using individual execution with caching for C++ sample tests"
                 )
                 test_results, total_passed, total_failed = (
                     TestExecutionService.run_individual_test_cases(
@@ -510,6 +838,7 @@ class TestExecutionService:
                         request.timeout,
                         method_name,
                         signature,
+                        request.question_name,
                     )
                 )
             else:
@@ -521,6 +850,8 @@ class TestExecutionService:
                         test_cases,
                         request.timeout,
                         method_name,
+                        signature,
+                        request.question_name,  # Pass question name
                     )
                 )
 

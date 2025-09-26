@@ -306,6 +306,32 @@ function arrayToTreeNode(arr) {
     return root;
 }
 
+function treeNodeToArray(root) {
+    if (!root) return [];
+    
+    const result = [];
+    const queue = [root];
+    
+    while (queue.length > 0) {
+        const node = queue.shift();
+        
+        if (node) {
+            result.push(node.val);
+            queue.push(node.left);
+            queue.push(node.right);
+        } else {
+            result.push(null);
+        }
+    }
+    
+    // Remove trailing nulls
+    while (result.length > 0 && result[result.length - 1] === null) {
+        result.pop();
+    }
+    
+    return result;
+}
+
 // User code starts here
 {code}
 // User code ends here
@@ -341,16 +367,34 @@ try {
             
             // Call firstBadVersion with only n parameter
             result = solutionInstance[functionName](n);
-        } else if (functionName === 'addTwoNumbers') {
+        } else if (functionName === 'addTwoNumbers' || functionName === 'mergeTwoLists') {
             // Special handling for ListNode methods
-            const l1Node = listToListNode(inputData.l1 || []);
-            const l2Node = listToListNode(inputData.l2 || []);
+            const list1Data = inputData.list1 || inputData.l1 || [];
+            const list2Data = inputData.list2 || inputData.l2 || [];
+            const l1Node = listToListNode(list1Data);
+            const l2Node = listToListNode(list2Data);
             
             // Call method with ListNode arguments
             const resultNode = solutionInstance[functionName](l1Node, l2Node);
             
             // Convert result back to array format
             result = listNodeToList(resultNode);
+        } else if (functionName === 'invertTree') {
+            // Special handling for invertTree - convert result back to array
+            const rootNode = arrayToTreeNode(inputData.root || []);
+            
+            // Call method with TreeNode argument
+            const resultNode = solutionInstance[functionName](rootNode);
+            
+            // Convert TreeNode result back to array format
+            result = treeNodeToArray(resultNode);
+        } else if (functionName === 'isSameTree') {
+            // Special handling for isSameTree - takes two TreeNode parameters
+            const pNode = arrayToTreeNode(inputData.p || []);
+            const qNode = arrayToTreeNode(inputData.q || []);
+            
+            // Call method with TreeNode arguments
+            result = solutionInstance[functionName](pNode, qNode);
         } else if (functionName === 'maxDepth' || inputData.root !== undefined) {
             // Special handling for TreeNode methods
             const rootNode = arrayToTreeNode(inputData.root || []);
@@ -401,10 +445,10 @@ console.log(JSON.stringify({
     "java": {
         "image": "openjdk:11-jdk-slim",
         "file_extension": ".java",
-        "compile_command": "javac -Xlint:none Solution.java",
-        "run_command": "java -Xms8m -Xmx64m -XX:+UseSerialGC Solution",
+        "compile_command": "javac -Xlint:none Main.java",
+        "run_command": "java -Xms8m -Xmx64m -XX:+UseSerialGC HarnessMain",
         "mem_limit": "512m",
         "startup_command": "sh -c 'javac /tmp/CompilationServer.java && java -cp /tmp CompilationServer'",
-        "wrapper_template": "JAVA_DYNAMIC_WRAPPER_INJECTION",
+        "wrapper_template": "JAVA_HARNESS_SYSTEM",
     },
 }

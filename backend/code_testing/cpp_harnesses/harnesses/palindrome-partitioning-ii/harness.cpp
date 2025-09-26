@@ -1,6 +1,49 @@
-#include "userfunc.h"
-#include <bits/stdc++.h>
+// Comprehensive standard library includes for portability
+#include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <unordered_set>
+#include <map>
+#include <set>
+#include <queue>
+#include <stack>
+#include <deque>
+#include <list>
+#include <algorithm>
+#include <numeric>
+#include <climits>
+#include <cmath>
+#include <sstream>
+#include <utility>
+#include <chrono>
+#include <functional>
+#include <iomanip>
+#include <bitset>
+#include <array>
+#include <memory>
+#include <iterator>
+#include <random>
 using namespace std;
+// Standard LeetCode data structures
+struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode() : val(0), next(nullptr) {}
+    ListNode(int x) : val(x), next(nullptr) {}
+    ListNode(int x, ListNode *next) : val(x), next(next) {}
+};
+
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode() : val(0), left(nullptr), right(nullptr) {}
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+};
+
+#include "userfunc.h"
 
 static inline string parseStringValue(const string& json, const string& key){
     string needle="\""+key+"\"";
