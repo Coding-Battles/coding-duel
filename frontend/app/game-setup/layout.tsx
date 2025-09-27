@@ -44,6 +44,7 @@ export default function QueueLayout({
   const [anonymousId, setAnonymousId] = useState<string>("");
   const [isAnonymous, setIsAnonymous] = useState<boolean>(true); // Default to anonymous until session is loaded
   const foundGame = useRef<boolean>(false);
+  const foundDifficulty = useRef<string>("");
 
   const [playerLp, setPlayerLp] = useState<number>(0); // Player LP for the current game
   
@@ -157,6 +158,8 @@ export default function QueueLayout({
       console.log("match found session: ", session);
 
       console.log("session.user: ", session?.user);
+
+      foundDifficulty.current = data.difficulty;
 
       switch (data.difficulty) {
         case "easy":
@@ -337,6 +340,7 @@ export default function QueueLayout({
   return (
     <GameContext.Provider
       value={{
+        difficulty: foundDifficulty.current,
         socket: socketRef.current,
         user: getContextUser(),
         loading: loadingState,

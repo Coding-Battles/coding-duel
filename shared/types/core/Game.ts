@@ -113,6 +113,7 @@ export interface DifficultyState {
 }
 
 export interface GameContextType {
+  difficulty?: string;
   socket: any;
   user: CustomUser | null;
   loading: boolean;

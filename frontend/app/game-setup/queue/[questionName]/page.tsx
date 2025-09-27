@@ -80,7 +80,11 @@ export default function InGamePage() {
 
   const userLpRef = useRef<number>(0);
   const opponentLpRef = useRef<number>(0);
-  
+
+  const easy_timer = 60;
+  const medium_timer = 180;
+  const hard_timer = 300;
+
   // All useCallback hooks
   const handleLeftMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -151,10 +155,15 @@ export default function InGamePage() {
       console.log("🔍 [OPPONENT DEBUG] Data:", data);
 
       if (data.success) {
+        console.log("difficulty: " + context.difficulty)
+        const timeLeft = context.difficulty === "easy" ? easy_timer :
+                         context.difficulty === "medium" ? medium_timer :
+                         context.difficulty === "hard" ? hard_timer :
+                         null;
         setOpponentStatus(
           `🎉 Opponent finished! All ${data.total_passed} tests passed (${
             data.complexity || "N/A"
-          } complexity) game will finish in 3 minutes`
+          } complexity) game will finish in ${timeLeft} seconds`
         );
       } else {
         setOpponentStatus(
