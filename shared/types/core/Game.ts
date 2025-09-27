@@ -123,6 +123,7 @@ export interface GameContextType {
   selectedDifficulties?: DifficultyState;
   playerLp?: number;
   setSelectedDifficulties?: React.Dispatch<React.SetStateAction<DifficultyState>>;
+  foundGame?: React.MutableRefObject<boolean>;
   handleFindGame?: () => void;
   clearGameData?: () => void;
 }

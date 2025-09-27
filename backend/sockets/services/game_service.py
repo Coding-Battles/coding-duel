@@ -183,6 +183,20 @@ class GameService:
         if len(self.game_updates[game_id]) > 100:
             self.game_updates[game_id] = self.game_updates[game_id][-100:]
 
+    def set_timer_until_end_of_game(self, game_id: str, seconds: int):
+        """Set a timer until the game ends."""
+        game = self.active_games.get(game_id)
+        if not game:
+            return False
+        
+        # The centralized GameState doesn't have a direct timer field
+        # Timer handling is done through socket events
+        
+        # Add timer event
+        self._add_game_update(game_id, "system", "timer_set", {"seconds": seconds})
+        
+        return True
+
 
 # Global instance
 game_service = GameService()

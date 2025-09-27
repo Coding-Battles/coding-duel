@@ -166,7 +166,19 @@ def set_game_end_timer(game_id: str):
     hard_timer = 300
     timer_duration = None
     game_state = game_states.get(game_id)
-    def delayed_task():
+
+    if game_state:
+        if game_state.difficulty == "easy":
+            timer_duration = easy_timer
+        elif game_state.difficulty == "medium":
+            timer_duration = medium_timer
+        elif game_state.difficulty == "hard":
+            timer_duration = hard_timer
+        else:
+            logger.warning(f"Unknown game difficulty: {game_state.difficulty}")
+    async def delayed_task():
+        await asyncio.sleep(timer_duration)
+
         if game_state and not game_state.all_players_finished():
             logger.info(f"Game {game_id} ended due to taking too much time")
             winner_id = game_state.get_finished_players().pop() if game_state.get_finished_players() else None
@@ -190,7 +202,7 @@ def set_game_end_timer(game_id: str):
                     final_time=0,
                 )
                 game_state.players[opponent_id].game_stats = test_result
-                save_game_to_history(list(game_state.players.values()), game_state.difficulty, game_state.question_name, game_state.winner_id)
+                await save_game_to_history(list(game_state.players.values()), game_state.difficulty, game_state.question_name, game_state.winner_id)
 
                 winner_name = game_state.get_player_name(game_state.winner_id)
                 loser_id = opponent_id
@@ -209,22 +221,9 @@ def set_game_end_timer(game_id: str):
                 "lp_gain": winner_lp_gain
                 }
                 
-                sio.emit("game_completed", game_end_data, room=game_id)
+                await sio.emit("game_completed", game_end_data, room=game_id)
 
-    if game_state:
-        if game_state.difficulty == "easy":
-            timer_duration = easy_timer
-        elif game_state.difficulty == "medium":
-            timer_duration = medium_timer
-        elif game_state.difficulty == "hard":
-            timer_duration = hard_timer
-        else:
-            logger.warning(f"Unknown game difficulty: {game_state.difficulty}")
-
-    if timer_duration:
-        timer = threading.Timer(timer_duration, delayed_task)
-        timer.start()
-
+    asyncio.create_task(delayed_task())
 
 @router.post("/{game_id}/send-emoji")
 async def send_emoji(game_id: str, data: EmojiRequest):
@@ -318,6 +317,31 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
 
         complexity = "N/A"
 
+        test_result = None
+
+        
+        test_results_as_dicts = []
+        try:
+            for result in test_results.test_results:
+                if hasattr(result, '__dict__'):
+                    test_results_as_dicts.append(result.__dict__)
+                elif hasattr(result, 'model_dump'):  # If it's a Pydantic model
+                    test_results_as_dicts.append(result.model_dump())
+                else:
+                    # Fallback: convert to dict manually
+                    test_results_as_dicts.append({
+                        'input': getattr(result, 'input', {}),
+                        'expected_output': getattr(result, 'expected_output', []),
+                        'actual_output': getattr(result, 'actual_output', ''),
+                        'passed': getattr(result, 'passed', False),
+                        'error': getattr(result, 'error', None),
+                        'execution_time': getattr(result, 'execution_time', 0)
+                    })
+        except Exception as e:
+            logger.error(f"Error converting test results to dicts: {e}")
+            raise
+
+
         if test_results.success:
             game_state.mark_player_finished(player_id)
 
@@ -344,24 +368,6 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                 test_result = None
 
                 try:
-                    # Convert TestCaseResult objects to dictionaries
-                    test_results_as_dicts = []
-                    for result in test_results.test_results:
-                        if hasattr(result, '__dict__'):
-                            test_results_as_dicts.append(result.__dict__)
-                        elif hasattr(result, 'model_dump'):  # If it's a Pydantic model
-                            test_results_as_dicts.append(result.model_dump())
-                        else:
-                            # Fallback: convert to dict manually
-                            test_results_as_dicts.append({
-                                'input': getattr(result, 'input', {}),
-                                'expected_output': getattr(result, 'expected_output', []),
-                                'actual_output': getattr(result, 'actual_output', ''),
-                                'passed': getattr(result, 'passed', False),
-                                'error': getattr(result, 'error', None),
-                                'execution_time': getattr(result, 'execution_time', 0)
-                            })
-
                     test_result = CodeTestResult(
                         message="Your opponent has finished their tests!",
                         code=request.code,
@@ -381,8 +387,8 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                         final_time=int(get_score(complexity, request.timer)),
                     )
                     logger.info("✅ CodeTestResult created successfully")
-                except ValueError as e:
-                    logger.error(f"❌ ValueError in CodeTestResult: {e}")
+                except Exception as e:
+                    logger.info(f"❌ Error in CodeTestResult: {e}")
                     raise
 
                 game_state.players[player_id].game_stats = test_result
@@ -409,6 +415,29 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             logger.warning(
                 f"{test_results.total_passed} out of {test_results.total_passed + test_results.total_failed} test cases passed."
             )
+            try:
+                test_result = CodeTestResult(
+                    message="Some test cases failed.",
+                    code=request.code,
+                    player_name=game_state.get_player_name(player_id),
+                    player_id=player_id,
+                    success=test_results.success,
+                    test_results=test_results_as_dicts,  # Use the converted dictionaries
+                    error=None,
+                    total_passed=test_results.total_passed,
+                    total_failed=(
+                        test_results.total_failed
+                        if hasattr(test_results, "total_failed")
+                        else 0
+                    ),
+                    complexity="N/A",
+                    implement_time=int(request.timer),
+                    final_time=int(get_score("N/A", request.timer)),
+                )
+            except Exception as e:
+                logger.info(f"❌ Error in CodeTestResult: {e}")
+                raise
+            
             # Emit to opponent only (don't expose full test results)
             if opponent_id:
                 opponent_player_info = game_state.players[opponent_id]
@@ -426,7 +455,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             test_results.message = "Opponent has finished their tests with partial success"
             await sio.emit(
                 "opponent_submitted",
-                test_results.model_dump(),
+                test_result.model_dump(),
                 room=opponent_sid,
             )
             logger.info(

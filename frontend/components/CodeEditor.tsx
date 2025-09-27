@@ -22,11 +22,12 @@ export default function CodeEditor({
   height = "100%",
   width = "100%",
   className = "",
-  disableCopyPaste = false,
+  disableCopyPaste = false, //set to true in production
 }: CodeEditorProps) {
   return (
     <div className={className} style={{ height, width }}>
       <Editor
+      
         height="100%"
         width="100%"
         language={language}

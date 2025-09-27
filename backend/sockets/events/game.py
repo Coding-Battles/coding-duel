@@ -568,6 +568,7 @@ def register_events(sio):
                     "error", {"message": "Failed to submit solution"}, room=sid
                 )
                 return
+            
 
             # Get updated game state
             game_state = game_service.get_game(game_id)

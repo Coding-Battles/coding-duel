@@ -17,55 +17,11 @@ import { useSession } from "@/lib/auth-client";
 import { StackableAlerts } from "@/components/ui/alert";
 // Removed useTheme import - now using dark mode only
 import FinishedPage from "@/components/FinishedPage";
+import { dummyUserWinsData } from "./debugDummyData";
 
 import DuelInfo from "@/components/DuelInfo";
 
 type AlertType = { id: string; message: string; variant?: string };
-
-// Dummy data - User wins scenario
-export const dummyUserWinsData = {
-  opponent: {
-    image_url:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    name: "Alex Thompson",
-  } as OpponentData,
-
-  user: {
-    id: "user123",
-    name: "John Doe",
-    email: "john@example.com",
-  } as CustomUser,
-
-  opponentStats: {
-    player_name: "Alex Thompson",
-    implement_time: 165, // Changed from "2:45" to a number (e.g., seconds)
-    complexity: "O(n²)",
-    final_time: 165.8,
-    success: true,
-    test_results: [],
-    total_passed: 0,
-    total_failed: 0,
-    error: "",
-    message: "",
-    code: "",
-    opponent_id: "opponent123",
-  } as TestResultsData,
-
-  userStats: {
-    player_name: "John Doe",
-    implement_time: 132, // Changed from "2:12" (string) to 132 (number, e.g., seconds)
-    complexity: "O(n log n)",
-    final_time: 132.5,
-    success: true,
-    test_results: [],
-    total_passed: 0,
-    total_failed: 0,
-    error: "",
-    message: "",
-    code: "",
-    opponent_id: "",
-  } as TestResultsData,
-};
 
 const debugFinishedPage = false; // Set to true to debug FinishedPage component
 
@@ -124,7 +80,7 @@ export default function InGamePage() {
 
   const userLpRef = useRef<number>(0);
   const opponentLpRef = useRef<number>(0);
-
+  
   // All useCallback hooks
   const handleLeftMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -198,7 +154,7 @@ export default function InGamePage() {
         setOpponentStatus(
           `🎉 Opponent finished! All ${data.total_passed} tests passed (${
             data.complexity || "N/A"
-          } complexity)`
+          } complexity) game will finish in 3 minutes`
         );
       } else {
         setOpponentStatus(
@@ -212,7 +168,7 @@ export default function InGamePage() {
         ...prev,
         {
           id: `opponent-${Date.now()}-${Math.random()}`,
-          message: `Opponent ${data.opponent_id} submitted code: ${data.message}`,
+          message: `Opponent ${data.player_name} submitted code: ${data.message}`,
           variant: "default",
         },
       ]);
@@ -240,7 +196,10 @@ export default function InGamePage() {
         },
       ]);
 
-      // Show finished page immediately (no 5 second delay)
+      
+      if (context.foundGame) {
+        context.foundGame.current = false; // Reset foundGame ref on game end
+      }
       setGameFinished(true);
     };
 
@@ -818,6 +777,7 @@ export default function InGamePage() {
       <FinishedPage
         opponent={dummyUserWinsData.opponent}
         user={dummyUserWinsData.user}
+        gameEndData={dummyUserWinsData.gameEndData}
         opponentStats={dummyUserWinsData.opponentStats}
         userStats={dummyUserWinsData.userStats}
         userLp={23}

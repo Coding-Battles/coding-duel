@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useSession, getAvatarUrl } from "@/lib/auth-client";
 import Image from "next/image";
 
+
 interface CustomUser {
   username?: string;
   name?: string;
@@ -27,6 +28,7 @@ export default function QueueLayout() {
 
   const router = useRouter();
 
+
   // Helper function to get user avatar with proper fallbacks
   const getUserAvatar = () => {
     // Try context user first, then session user
@@ -41,6 +43,7 @@ export default function QueueLayout() {
       </div>
     );
   }
+
 
   useEffect(() => {
     const interval = setInterval(() => {

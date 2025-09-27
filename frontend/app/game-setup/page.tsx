@@ -13,6 +13,7 @@ export default function GameSetupPage() {
   const router = useRouter();
   const [queueStatus, setQueueStatus] = useState<QueueStatus>("idle");
 
+
   const context = useGameContext();
 
   // Handle authentication redirect in useEffect to avoid render-time navigation

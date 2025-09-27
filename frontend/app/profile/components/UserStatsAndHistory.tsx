@@ -167,8 +167,8 @@ export const UserStatsAndHistory = ({userGameHistory, totalBattles, totalWins} :
         {userGameHistory.length > 0 && (
           <>
             {userGameHistory[selectedIndex].map((game, index) => (
-              <div key={game.game_id} className={`h-auto p-4 transition-colors rounded-lg hover:bg-foreground/5 ${getSubmissionOutlineColor(game.difficulty)}`}>
-                <div className='w-full absolute h-[70px] bg-transparent cursor-pointer' onClick={() => onClickExpand(index)} />
+              <div key={game.game_id} className={`h-auto p-4 transition-colors rounded-lg hover:bg-foreground/5 w-full ${getSubmissionOutlineColor(game.difficulty)}`}>
+                <div className='w-[90%] absolute h-[120px] bg-transparent cursor-pointer' onClick={() => onClickExpand(index)} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {getStatusIcon(game.result)}

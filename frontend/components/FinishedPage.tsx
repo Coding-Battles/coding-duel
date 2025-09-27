@@ -273,20 +273,11 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats, us
         {/* Action Buttons */}
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <button 
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/game-setup")}
             className="flex items-center gap-3 px-8 py-4 font-semibold transition-all duration-300 shadow-lg cursor-pointer group bg-gradient-to-r from-accent to-accent/80 text-background rounded-xl hover:shadow-xl hover:scale-105"
           >
             <Home className="w-5 h-5" />
             Back to Main Menu
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </button>
-          
-          <button 
-            onClick={() => window.location.reload()}
-            className="flex items-center gap-3 px-8 py-4 font-semibold transition-all duration-300 shadow-lg cursor-pointer group bg-gradient-to-r from-primary to-primary/80 text-background rounded-xl hover:shadow-xl hover:scale-105"
-          >
-            <Trophy className="w-5 h-5" />
-            Play Again
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </button>
         </div>

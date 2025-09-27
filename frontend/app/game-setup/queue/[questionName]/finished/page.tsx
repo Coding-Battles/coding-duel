@@ -1,7 +1,6 @@
 // This file was moved from in-game/finished/page.tsx to [questionId]/finished/page.tsx for dynamic routing.
 // You may want to update this file to use the questionId param if needed.
-
-import React from "react";
+import React, { useEffect } from "react";
 
 const page = () => {
   return (
@@ -44,7 +43,7 @@ const page = () => {
         </div>
       </div>
       <div className="mt-12">
-        <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        <button className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
           Go back to main menu
         </button>
       </div>

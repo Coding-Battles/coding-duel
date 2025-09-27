@@ -7,6 +7,8 @@ import { io, Socket } from "socket.io-client";
 import { User } from "better-auth";
 import { DifficultyState } from "@/components/DifficultySelector";
 import { CustomUser, OpponentData, GameContextType, MatchFoundResponse, QueueStatusResponse } from "@/shared/types";
+import { Alert } from "@/components/ui/alert";
+import { url } from "inspector";
 
 const GameContext = createContext<GameContextType | null>(null);
 
@@ -18,8 +20,6 @@ export default function QueueLayout({
   children: React.ReactNode;
 }>) {
   const socketRef = useRef<Socket | null>(null);
-
-
   const [loadingState, setLoadingState] = useState<boolean>(true);
 
   const { data: session } = useSession();
@@ -43,7 +43,8 @@ export default function QueueLayout({
   });
   const [anonymousId, setAnonymousId] = useState<string>("");
   const [isAnonymous, setIsAnonymous] = useState<boolean>(true); // Default to anonymous until session is loaded
-  const [gameDifficulty, setGameDifficulty] = useState<string>("easy"); // match found difficulty'
+  const foundGame = useRef<boolean>(false);
+
   const [playerLp, setPlayerLp] = useState<number>(0); // Player LP for the current game
   
   const [selectedDifficulties, setSelectedDifficulties] =
@@ -142,6 +143,7 @@ export default function QueueLayout({
 
     socket.on("match_found", (data: MatchFoundResponse) => {
       console.log("Match found!", data);
+      foundGame.current = true;
       
       // Set opponent data immediately so users can see the opponent avatar
       setOpponentDataPersistent({
@@ -151,8 +153,6 @@ export default function QueueLayout({
       });
 
       setGameIdPersistent(data.game_id);
-
-      setGameDifficulty(data.difficulty || "easy"); // Set match difficulty
 
       console.log("match found session: ", session);
 
@@ -174,7 +174,6 @@ export default function QueueLayout({
         default:
           setPlayerLp(0);
       }
-
       
       // Keep original 5-second delay for synchronized navigation
       setTimeout(() => {
@@ -184,20 +183,34 @@ export default function QueueLayout({
       }, 5000);
     });
 
+
+    //handles redirection when user refreshes in queue or in-game
     socket.on("error", (err) => {
-      console.error("Socket error:", err);
+      router.push('/game-setup');
     });
 
     // Cleanup only on component unmount
     return () => {
       console.log("Cleaning up socket connection");
-      socket.disconnect();
+      socket.disconnect();  
+      socketRef.current?.disconnect();
       socketRef.current = null;
     };
   }, [router]); // Only depend on router
 
   // Handle session changes and set authentication state
+
+
   useEffect(() => {
+      const inSubRoute = pathname.startsWith("/game-setup/") && pathname !== "/game-setup";
+      //player use navigate buttons when they should be in game
+      if(foundGame.current && !inSubRoute) {
+        console.log("Detected navigation while in game, redirecting to game page");
+        window.location.reload();
+      }
+    }, [pathname]);
+    useEffect(() => {
+
     console.log("=== HANDLING SESSION CHANGE ===");
     console.log("Session:", session);
     
@@ -222,13 +235,13 @@ export default function QueueLayout({
     // Check if socket is connected
     if (!socketRef.current) {
       console.error("Socket not connected");
-      // TODO: Show user-friendly error message
+      window.alert("Socket not connected. Please try again later.");
       return;
     }
 
     if (!socketRef.current.connected) {
       console.error("Socket not connected to server");
-      // TODO: Show user-friendly error message
+      window.alert("Socket not connected to server. Please check your internet connection and try again.");
       return;
     }
 
@@ -251,7 +264,7 @@ export default function QueueLayout({
     const hasSelectedDifficulty = Object.values(selectedDifficulties).some(Boolean);
     if (!hasSelectedDifficulty) {
       console.error("No difficulty selected");
-      // TODO: Show user-friendly error message
+      window.alert("Please select at least one difficulty level to find a game.");
       return;
     }
 
@@ -314,7 +327,7 @@ export default function QueueLayout({
           username: guestProfile.username,
           email: null,
           image: `/avatars/${guestProfile.selectedAvatar}.png`,
-        } as CustomUser;
+        } as unknown as CustomUser;
       }
     }
     
@@ -335,6 +348,7 @@ export default function QueueLayout({
         setSelectedDifficulties: setSelectedDifficulties,
         handleFindGame: handleFindGame,
         clearGameData: clearGameData,
+        foundGame: foundGame,
         playerLp: playerLp,
       }}
     >
