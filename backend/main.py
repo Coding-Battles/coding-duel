@@ -88,9 +88,9 @@ async def lifespan(_app: FastAPI):
 
     # Connect to database first
     try:
-        logger.info("📊 Connecting to database...")
+        logger.info("|main.py| Connecting to database...")
         await database.connect()
-        logger.info("✅ Database connected successfully")
+        logger.info("|main.py| Database connected successfully")
     except Exception as e:
         logger.error(f"❌ Failed to connect to database: {e}")
         raise
@@ -98,26 +98,26 @@ async def lifespan(_app: FastAPI):
     # Initialize username pool for instant generation
     try:
         await initialize_username_pool()
-        logger.info("✅ Username pool initialized")
+        logger.info("|main.py| Username pool initialized")
     except Exception as e:
         logger.error(f"❌ Failed to initialize username pool: {e}")
 
     # Initialize persistent containers for fast code execution
-    logger.info("🚀 Initializing persistent containers for fast code execution...")
+    logger.info("|main.py| Initializing persistent containers for fast code execution...")
     try:
         from backend.code_testing.startup import pull_all_images, warm_up_containers
 
         loop = asyncio.get_event_loop()
-        logger.info("📦 Pre-pulling Docker images...")
+        logger.info("|main.py| Pre-pulling Docker images...")
         await loop.run_in_executor(executor, pull_all_images)
-        logger.info("🔥 Warming up persistent containers...")
+        logger.info("|main.py| Warming up persistent containers...")
         await loop.run_in_executor(executor, warm_up_containers)
         logger.info(
-            "✅ Persistent containers ready! Code execution will now be sub-second."
+            "|main.py|✅ Persistent containers ready! Code execution will now be sub-second."
         )
     except Exception as e:
         logger.error(f"❌ Failed to initialize persistent containers: {e}")
-        logger.warning("⚠️ Falling back to traditional Docker execution (slower)")
+        logger.warning("|main.py| Falling back to traditional Docker execution (slower)")
 
     yield
 
@@ -127,13 +127,13 @@ async def lifespan(_app: FastAPI):
         from backend.code_testing.docker_runner import cleanup_persistent_containers
 
         cleanup_persistent_containers()
-        logger.info("✅ Containers cleaned up successfully")
+        logger.info("|main.py| Containers cleaned up successfully")
     except Exception as e:
         logger.error(f"❌ Error during container cleanup: {e}")
 
     try:
         await database.disconnect()
-        logger.info("✅ Database disconnected successfully")
+        logger.info("|main.py| Database disconnected successfully")
     except Exception as e:
         logger.error(f"❌ Error disconnecting database: {e}")
 
@@ -158,7 +158,7 @@ questions_router.set_database(database)
 
 # Set dependencies for socket events BEFORE creating socket app
 logger.info(
-    f"🔧 [SYNC DEBUG] Setting dependencies with game_states id: {id(game_states)}"
+    f"|main.py| [SYNC DEBUG] Setting dependencies with game_states id: {id(game_states)}"
 )
 matchmaking.set_dependencies(game_states)
 connection.set_dependencies(game_states)

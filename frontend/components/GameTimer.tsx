@@ -14,10 +14,10 @@ export default function GameTimer({
   const [milliseconds, setMilliseconds] = useState(0);
   
   useEffect(() => {
-    console.log("🚀 [TIMER DEBUG] GameTimer useEffect - isGameStarted:", isGameStarted, "gameStartTime:", gameStartTime);
+    console.log("|GAMETIMER.tsx|: [TIMER DEBUG] GameTimer useEffect - isGameStarted:", isGameStarted, "gameStartTime:", gameStartTime);
     if (!isGameStarted || !gameStartTime) {
       // Don't start timer until game has officially started
-      console.log("🚀 [TIMER DEBUG] Timer not starting - conditions not met");
+      console.log("|GAMETIMER.tsx|: [TIMER DEBUG] Timer not starting - conditions not met");
       setTime(0);
       setMilliseconds(0);
       timeRef.current = 0;
@@ -61,7 +61,7 @@ export default function GameTimer({
   };
 
   return (
-    <div className="text-2xl text-left text-foreground font-mono w-24 mx-auto">
+    <div className="w-24 mx-auto font-mono text-2xl text-left text-foreground">
       {formatTime(time, milliseconds)}
     </div>
   );

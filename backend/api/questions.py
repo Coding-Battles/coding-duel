@@ -161,12 +161,12 @@ executor = ThreadPoolExecutor(max_workers=5)
 
 async def startup_event():
     # Startup - database connection only (containers managed by main.py)
-    logger.info("🚀 Starting questions app...")
+    logger.info("|api/questions.py| Starting questions app...")
     
     try:
-        logger.info("📊 Connecting to database...")
+        logger.info("|api/questions.py| 📊 Connecting to database...")
         await database.connect()
-        logger.info("✅ Database connected successfully")
+        logger.info("|api/questions.py| ✅ Database connected successfully")
     except Exception as e:
         logger.error(f"❌ Failed to connect to database: {e}")
         raise
@@ -174,9 +174,9 @@ async def startup_event():
 async def shutdown_event():
     # Shutdown - database disconnection only (containers managed by main.py)
     try:
-        logger.info("📊 Disconnecting from database...")
+        logger.info("|api/questions.py| 📊 Disconnecting from database...")
         await database.disconnect()
-        logger.info("✅ Database disconnected successfully")
+        logger.info("|api/questions.py| ✅ Database disconnected successfully")
     except Exception as e:
         logger.error(f"❌ Error during database disconnect: {e}")
 
@@ -669,7 +669,7 @@ async def docker_run(request: DockerRunRequest = Body(...)):
 async def debug_run():
     import time
     start_time = time.time()
-    logger.info("🔋 [DEBUG] Starting debug-run test")
+    logger.info("|api/questions_router| [DEBUG] Starting debug-run test")
     try:
         test_request = DockerRunRequest(
             code="def solution(nums, target):\n    return [0, 1]",
@@ -679,7 +679,7 @@ async def debug_run():
         )
         result = run_code_in_docker(test_request)
         total_time = (time.time() - start_time) * 1000
-        logger.info(f"🔋 [DEBUG] debug-run completed in {total_time:.0f}ms")
+        logger.info(f"|api/questions_router| [DEBUG] debug-run completed in {total_time:.0f}ms")
         return {
             "success": result.get("success"),
             "output": result.get("output"),
@@ -689,7 +689,7 @@ async def debug_run():
         }
     except Exception as e:
         total_time = (time.time() - start_time) * 1000
-        logger.error(f"🔋 [DEBUG] debug-run failed after {total_time:.0f}ms: {str(e)}")
+        logger.error(f"|api/questions_router| [DEBUG] debug-run failed after {total_time:.0f}ms: {str(e)}")
         return {"success": False, "error": str(e), "total_time_ms": total_time}
 
 def get_file_name_from_slug(slug: str) -> str:

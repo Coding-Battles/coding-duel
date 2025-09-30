@@ -30,7 +30,7 @@ def run_java_batch(
     Returns:
         List of results, one per test case
     """
-    print(f"🐛 [JAVA BATCH] Starting persistent server execution for {len(test_cases)} test cases")
+    print(f"|java_batch_runner.py| [JAVA BATCH] Starting persistent server execution for {len(test_cases)} test cases")
 
     try:
         # Get persistent Java container with server
@@ -53,28 +53,28 @@ def run_java_batch(
         }
         request_json = json.dumps(request)
         request_time = (time.time() - request_start) * 1000
-        print(f"🐛 [JAVA BATCH] Request preparation took {request_time:.0f}ms")
-        print(f"🐛 [JAVA BATCH] Request JSON (first 300 chars): {request_json[:300]}")
+        print(f"|java_batch_runner.py| [JAVA BATCH] Request preparation took {request_time:.0f}ms")
+        print(f"|java_batch_runner.py| [JAVA BATCH] Request JSON (first 300 chars): {request_json[:300]}")
 
         # Send request to Java server - simplified approach for now  
         comm_start = time.time()
         
         # Check if persistent server is available and ready
         if hasattr(container, '_java_server_ready') and container._java_server_ready:
-            print(f"🐛 [JAVA BATCH] Using persistent server (PID: {container._java_server_pid})")
+            print(f"|java_batch_runner.py| [JAVA BATCH] Using persistent server (PID: {container._java_server_pid})")
             use_persistent = True
         else:
-            print(f"🐛 [JAVA BATCH] Persistent server not ready, falling back to direct execution")
+            print(f"|java_batch_runner.py| [JAVA BATCH] Persistent server not ready, falling back to direct execution")
             use_persistent = False
         
         if use_persistent:
             # Use TRUE persistent server via socket connection
-            print(f"🐛 [JAVA BATCH] Sending request to persistent server via socket...")
+            print(f"|java_batch_runner.py| [JAVA BATCH] Sending request to persistent server via socket...")
             
             try:
                 # Send JSON request via socket using bash TCP redirect 
                 # (since nc/netcat is not available in minimal containers)
-                print(f"🐛 [JAVA BATCH] Sending request via bash TCP redirect...")
+                print(f"|java_batch_runner.py| [JAVA BATCH] Sending request via bash TCP redirect...")
                 
                 # Create a temporary script to handle the socket communication
                 comm_script = f'''#!/bin/bash
@@ -103,24 +103,24 @@ exec 3>&-
                     )
                     
                     if socket_send.exit_code != 0 and socket_send.exit_code != 124:  # 124 = timeout
-                        print(f"🐛 [JAVA BATCH] Failed to send via socket: {socket_send.output.decode('utf-8')}")
+                        print(f"|java_batch_runner.py| [JAVA BATCH] Failed to send via socket: {socket_send.output.decode('utf-8')}")
                         use_persistent = False
                     else:
                         output = socket_send.output.decode("utf-8").strip()
                         if output and output != "timeout: failed to run command" and not output.startswith("bash:"):
-                            print(f"🐛 [JAVA BATCH] ✅ Got response from persistent server: {len(output)} chars")
+                            print(f"|java_batch_runner.py| [JAVA BATCH] Got response from persistent server: {len(output)} chars")
                         else:
-                            print(f"🐛 [JAVA BATCH] No valid response from persistent server, falling back")
-                            print(f"🐛 [JAVA BATCH] Output was: {output}")
+                            print(f"|java_batch_runner.py| [JAVA BATCH] No valid response from persistent server, falling back")
+                            print(f"|java_batch_runner.py| [JAVA BATCH] Output was: {output}")
                             use_persistent = False
                         
             except Exception as e:
-                print(f"🐛 [JAVA BATCH] Persistent server communication error: {str(e)}")
+                print(f"|java_batch_runner.py| [JAVA BATCH] Persistent server communication error: {str(e)}")
                 use_persistent = False
         
         if not use_persistent:
             # Fallback to single test case execution using the docker_runner
-            print(f"🐛 [JAVA BATCH] Using single test case fallback...")
+            print(f"|java_batch_runner.py| [JAVA BATCH] Using single test case fallback...")
             from backend.code_testing.docker_runner import run_code_in_docker
             from backend.models.questions import DockerRunRequest
             
@@ -146,9 +146,9 @@ exec 3>&-
         
         comm_time = (time.time() - comm_start) * 1000
         if use_persistent:
-            print(f"🐛 [JAVA BATCH] Persistent server communication took {comm_time:.0f}ms")
+            print(f"|java_batch_runner.py| [JAVA BATCH] Persistent server communication took {comm_time:.0f}ms")
         else:
-            print(f"🐛 [JAVA BATCH] Fallback communication took {comm_time:.0f}ms")
+            print(f"|java_batch_runner.py| [JAVA BATCH] Fallback communication took {comm_time:.0f}ms")
 
         # Parse server response
         parse_start = time.time()
@@ -168,16 +168,16 @@ exec 3>&-
                 results = json.loads(json_line)
                 if not isinstance(results, list):
                     results = [results]  # Single result case
-                print(f"🐛 [JAVA BATCH] Successfully parsed {len(results)} results")
+                print(f"|java_batch_runner.py| [JAVA BATCH] Successfully parsed {len(results)} results")
             except json.JSONDecodeError as e:
-                print(f"🐛 [JAVA BATCH] Failed to parse JSON line: {json_line}, error: {e}")
+                print(f"|java_batch_runner.py| [JAVA BATCH] Failed to parse JSON line: {json_line}, error: {e}")
                 results = [{"success": False, "output": None, "error": f"Invalid JSON: {json_line}", "execution_time": None}] * len(test_cases)
         else:
-            print(f"🐛 [JAVA BATCH] No JSON found in output: {output}")
+            print(f"|java_batch_runner.py| [JAVA BATCH] No JSON found in output: {output}")
             results = [{"success": False, "output": None, "error": f"No JSON response found", "execution_time": None}] * len(test_cases)
         
         parse_time = (time.time() - parse_start) * 1000
-        print(f"🐛 [JAVA BATCH] Response parsing took {parse_time:.0f}ms")
+        print(f"|java_batch_runner.py| [JAVA BATCH] Response parsing took {parse_time:.0f}ms")
         
         # Ensure we have the right number of results
         while len(results) < len(test_cases):
@@ -186,7 +186,7 @@ exec 3>&-
         return results[:len(test_cases)]
 
     except Exception as e:
-        print(f"🐛 [JAVA BATCH] Persistent server execution error: {str(e)}")
+        print(f"|java_batch_runner.py| [JAVA BATCH] Persistent server execution error: {str(e)}")
         return [{"success": False, "output": None, "error": str(e), "execution_time": None}] * len(test_cases)
 
 

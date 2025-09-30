@@ -17,10 +17,10 @@ public class PersistentJavaRunner {
         System.err.println("PersistentJavaRunner started - listening on port 8899");
         
         // Pre-warm the JIT compiler
-        System.err.println("⚡ [JIT WARMUP] Starting JIT pre-warming...");
+        System.err.println("|PersistentJavaRunner.java| [JIT WARMUP] Starting JIT pre-warming...");
         preWarmJITCompiler();
-        System.err.println("⚡ [JIT WARMUP] JIT pre-warming completed");
-        
+        System.err.println("|PersistentJavaRunner.java| [JIT WARMUP] JIT pre-warming completed");
+
         try (ServerSocket serverSocket = new ServerSocket(8899)) {
             // Set socket options for performance
             serverSocket.setReuseAddress(true);
@@ -96,22 +96,22 @@ public class PersistentJavaRunner {
                     String hash = String.valueOf(pattern.hashCode());
                     UserCodeClassLoader loader = new UserCodeClassLoader(hash, pattern);
                     loader.loadClass("Solution");
-                    System.err.println("⚡ [JIT WARMUP] Pre-compiled pattern: " + pattern.substring(0, 30) + "...");
+                    System.err.println("|PersistentJavaRunner.java| [JIT WARMUP] Pre-compiled pattern: " + pattern.substring(0, 30) + "...");
                 } catch (Exception e) {
                     // Ignore warming errors
                 }
             }
             
-            System.err.println("⚡ [JIT WARMUP] Basic operations and compilation cache warmed up");
+            System.err.println("|PersistentJavaRunner.java| [JIT WARMUP] Basic operations and compilation cache warmed up");
         } catch (Exception e) {
-            System.err.println("⚡ [JIT WARMUP] Warning: " + e.getMessage());
+            System.err.println("|PersistentJavaRunner.java| [JIT WARMUP] Warning: " + e.getMessage());
         }
     }
     
     private static String processRequestWithResponse(String requestJson) {
         long totalStart = System.nanoTime();
-        System.err.println("🚀 [SERVER] Processing new request");
-        System.err.println("🚀 [SERVER] Request JSON (first 500 chars): " + requestJson.substring(0, Math.min(500, requestJson.length())));
+        System.err.println("|PersistentJavaRunner.java| [SERVER] Processing new request");
+        System.err.println("|PersistentJavaRunner.java| [SERVER] Request JSON (first 500 chars): " + requestJson.substring(0, Math.min(500, requestJson.length())));
         
         try {
             // Parse request - expecting format: {"code":"...","test_cases":[...],"function_name":"...","method_signature":...}
@@ -122,10 +122,10 @@ public class PersistentJavaRunner {
             String functionName = (String) request.getOrDefault("function_name", "solution");
             Map<String, Object> methodSignature = (Map<String, Object>) request.get("method_signature");
             long parseTime = (System.nanoTime() - parseStart) / 1_000_000;
-            System.err.println("📝 [PARSE] Request parsing took " + parseTime + "ms");
-            System.err.println("📝 [PARSE] Parsed function_name: " + functionName);
-            System.err.println("📝 [PARSE] Parsed test_cases count: " + (testCases != null ? testCases.size() : "null"));
-            System.err.println("📝 [PARSE] Parsed method_signature: " + methodSignature);
+            System.err.println("|PersistentJavaRunner.java| [PARSE] Request parsing took " + parseTime + "ms");
+            System.err.println("|PersistentJavaRunner.java| [PARSE] Parsed function_name: " + functionName);
+            System.err.println("|PersistentJavaRunner.java| [PARSE] Parsed test_cases count: " + (testCases != null ? testCases.size() : "null"));
+            System.err.println("|PersistentJavaRunner.java| [PARSE] Parsed method_signature: " + methodSignature);
             
             // Create isolated class loader for user code
             long classLoaderStart = System.nanoTime();
@@ -139,7 +139,7 @@ public class PersistentJavaRunner {
             Class<?> solutionClass = classLoader.loadClass("Solution");
             Object solutionInstance = solutionClass.newInstance();
             long loadTime = (System.nanoTime() - loadStart) / 1_000_000;
-            System.err.println("⚡ [LOAD] Class loading + instantiation took " + loadTime + "ms");
+            System.err.println("|PersistentJavaRunner.java| [LOAD] Class loading + instantiation took " + loadTime + "ms");
             
             // Execute all test cases
             long execStart = System.nanoTime();
@@ -148,13 +148,13 @@ public class PersistentJavaRunner {
                 Map<String, Object> testCase = testCases.get(i);
                 Map<String, Object> result = executeTestCase(solutionInstance, testCase, functionName, methodSignature);
                 results.add(result);
-                System.err.println("✅ [TEST] Test case " + (i+1) + " completed");
+                System.err.println("|PersistentJavaRunner.java| [TEST] Test case " + (i+1) + " completed");
             }
             long execTime = (System.nanoTime() - execStart) / 1_000_000;
-            System.err.println("🧪 [EXEC] All test execution took " + execTime + "ms");
+            System.err.println("|PersistentJavaRunner.java| [EXEC] All test execution took " + execTime + "ms");
             
             long totalTime = (System.nanoTime() - totalStart) / 1_000_000;
-            System.err.println("🏁 [TOTAL] Complete request processing took " + totalTime + "ms");
+            System.err.println("|PersistentJavaRunner.java| [TOTAL] Complete request processing took " + totalTime + "ms");
             
             return toJson(results);
             
@@ -198,7 +198,7 @@ public class PersistentJavaRunner {
     }
     
     private static Object callSolutionMethodUniversal(Object solutionInstance, String functionName, Map<String, Object> input, Map<String, Object> methodSignature) throws Exception {
-        System.err.println("🐍 [PYTHON-STYLE] Calling method: " + functionName + " with input: " + input);
+        System.err.println("|PersistentJavaRunner.java| [PYTHON-STYLE] Calling method: " + functionName + " with input: " + input);
         
         // Python-style approach: Extract ALL parameters from JSON generically
         // No signatures needed! No hardcoded parameter names! Just like Python!
@@ -217,7 +217,7 @@ public class PersistentJavaRunner {
         for (java.lang.reflect.Method method : clazz.getMethods()) {
             if (method.getName().equals(methodName) && method.getParameterCount() == values.length) {
                 try {
-                    System.err.println("🐍 [PYTHON-STYLE] Trying method: " + method + " with args: " + java.util.Arrays.toString(values));
+                    System.err.println("|PersistentJavaRunner.java| [PYTHON-STYLE] Trying method: " + method + " with args: " + java.util.Arrays.toString(values));
                     return method.invoke(instance, values);
                 } catch (Exception e) {
                     // Try next method signature
@@ -232,37 +232,37 @@ public class PersistentJavaRunner {
     // Simple converter: JSON input → Java method arguments
     // Works for ANY method, just like Python's **kwargs!
     private static Object[] convertInputToArgs(Map<String, Object> input) {
-        System.err.println("🐍 [DEBUG] Converting input to args: " + input);
+        System.err.println("|PersistentJavaRunner.java| [DEBUG] Converting input to args: " + input);
         List<Object> args = new ArrayList<>();
         
         for (Map.Entry<String, Object> entry : input.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            System.err.println("🐍 [DEBUG] Processing key=" + key + ", value=" + value + ", type=" + value.getClass().getSimpleName());
+            System.err.println("|PersistentJavaRunner.java| [DEBUG] Processing key=" + key + ", value=" + value + ", type=" + value.getClass().getSimpleName());
             
             if (value instanceof List) {
                 // Convert List<Number> to int[] (most common case)
                 List<?> list = (List<?>) value;
                 if (!list.isEmpty() && list.get(0) instanceof Number) {
                     int[] array = list.stream().mapToInt(n -> ((Number) n).intValue()).toArray();
-                    System.err.println("🐍 [DEBUG] Converted list to int[]: " + java.util.Arrays.toString(array));
+                    System.err.println("|PersistentJavaRunner.java| [DEBUG] Converted list to int[]: " + java.util.Arrays.toString(array));
                     args.add(array);
                 } else {
-                    System.err.println("🐍 [DEBUG] Keeping list as-is: " + list);
+                    System.err.println("|PersistentJavaRunner.java| [DEBUG] Keeping list as-is: " + list);
                     args.add(value); // Keep as-is for other types
                 }
             } else if (value instanceof Number) {
                 int intValue = ((Number) value).intValue();
-                System.err.println("🐍 [DEBUG] Converted number to int: " + intValue);
+                System.err.println("|PersistentJavaRunner.java| [DEBUG] Converted number to int: " + intValue);
                 args.add(intValue); // Convert to int
             } else {
-                System.err.println("🐍 [DEBUG] Keeping value as-is: " + value);
+                System.err.println("|PersistentJavaRunner.java| [DEBUG] Keeping value as-is: " + value);
                 args.add(value); // String, boolean, etc.
             }
         }
         
         Object[] result = args.toArray();
-        System.err.println("🐍 [DEBUG] Final args array: " + java.util.Arrays.toString(result));
+        System.err.println("|PersistentJavaRunner.java| [DEBUG] Final args array: " + java.util.Arrays.toString(result));
         return result;
     }
     
@@ -367,7 +367,7 @@ public class PersistentJavaRunner {
     }
     
     private static List<Map<String, Object>> parseTestCases(String testCasesStr) {
-        System.err.println("📋 [TEST CASES] Parsing test cases from: " + testCasesStr.substring(0, Math.min(200, testCasesStr.length())));
+        System.err.println("|PersistentJavaRunner.java| [TEST CASES] Parsing test cases from: " + testCasesStr.substring(0, Math.min(200, testCasesStr.length())));
         
         // Simple JSON parsing for test cases array
         List<Map<String, Object>> testCases = new ArrayList<>();
@@ -382,7 +382,7 @@ public class PersistentJavaRunner {
             int arrayEnd = findMatchingBracket(testCasesStr, arrayStart - 1);
             
             if (arrayEnd == -1) {
-                System.err.println("📋 [TEST CASES] Could not parse test cases array from full JSON");
+                System.err.println("|PersistentJavaRunner.java| [TEST CASES] Could not parse test cases array from full JSON");
                 return createDefaultTestCase();
             }
             
@@ -392,11 +392,11 @@ public class PersistentJavaRunner {
             String trimmed = testCasesStr.trim();
             arrayContent = trimmed.substring(1, trimmed.length() - 1);
         } else {
-            System.err.println("📋 [TEST CASES] Unrecognized format, creating default");
+            System.err.println("|PersistentJavaRunner.java| [TEST CASES] Unrecognized format, creating default");
             return createDefaultTestCase();
         }
         
-        System.err.println("📋 [TEST CASES] Array content: " + arrayContent.substring(0, Math.min(100, arrayContent.length())) + "...");
+        System.err.println("|PersistentJavaRunner.java| [TEST CASES] Array content: " + arrayContent.substring(0, Math.min(100, arrayContent.length())) + "...");
         
         // Split by test case objects - look for {"input":
         String[] parts = arrayContent.split("\\{\"input\":");
@@ -416,7 +416,7 @@ public class PersistentJavaRunner {
             testCases.add(testCase);
         }
         
-        System.err.println("📋 [TEST CASES] Parsed " + testCases.size() + " test cases");
+        System.err.println("|PersistentJavaRunner.java| [TEST CASES] Parsed " + testCases.size() + " test cases");
         return testCases;
     }
     
@@ -427,7 +427,7 @@ public class PersistentJavaRunner {
         input.put("nums", Arrays.asList(3, 0, 1));
         testCase.put("input", input);
         testCases.add(testCase);
-        System.err.println("📋 [TEST CASES] Created default test case");
+        System.err.println("|PersistentJavaRunner.java| [TEST CASES] Created default test case");
         return testCases;
     }
     
@@ -462,7 +462,7 @@ public class PersistentJavaRunner {
     private static Map<String, Object> parseInputObject(String inputStr) {
         Map<String, Object> input = new HashMap<>();
         
-        System.err.println("🐍 [SIMPLE PARSE] Parsing input: " + inputStr);
+        System.err.println("|PersistentJavaRunner.java| [SIMPLE PARSE] Parsing input: " + inputStr);
         
         // Generic key-value extraction using regex patterns
         // This works for {"x": 121}, {"nums": [1,2], "target": 3}, etc.
@@ -485,7 +485,7 @@ public class PersistentJavaRunner {
             }
         }
         
-        System.err.println("🐍 [SIMPLE PARSE] Result: " + input);
+        System.err.println("|PersistentJavaRunner.java| [SIMPLE PARSE] Result: " + input);
         return input;
     }
     
@@ -558,7 +558,7 @@ public class PersistentJavaRunner {
     
     // Cache management methods
     private static void logCacheStats() {
-        System.err.println("📊 [CACHE STATS] Size: " + COMPILED_CLASS_CACHE.size() + " classes cached");
+        System.err.println("|PersistentJavaRunner.java| [CACHE STATS] Size: " + COMPILED_CLASS_CACHE.size() + " classes cached");
     }
     
     private static void evictOldestIfNeeded() {
@@ -567,7 +567,7 @@ public class PersistentJavaRunner {
             String oldestKey = COMPILED_CLASS_CACHE.keySet().iterator().next();
             COMPILED_CLASS_CACHE.remove(oldestKey);
             BYTECODE_CACHE.remove(oldestKey);
-            System.err.println("🗑️ [CACHE EVICT] Removed oldest entry: " + oldestKey);
+            System.err.println("|PersistentJavaRunner.java| [CACHE EVICT] Removed oldest entry: " + oldestKey);
         }
     }
     
@@ -627,7 +627,7 @@ public class PersistentJavaRunner {
             if ("Solution".equals(name)) {
                 // Check cache first using the codeHash
                 if (COMPILED_CLASS_CACHE.containsKey(codeHash)) {
-                    System.err.println("🚀 [CACHE HIT] Using cached class for hash: " + codeHash);
+                    System.err.println("|PersistentJavaRunner.java| [CACHE HIT] Using cached class for hash: " + codeHash);
                     logCacheStats();
                     // Return cached bytecode to defineClass
                     byte[] cachedBytes = BYTECODE_CACHE.get(codeHash);
@@ -635,7 +635,7 @@ public class PersistentJavaRunner {
                 }
                 
                 // Cache miss - compile and cache
-                System.err.println("❄️ [CACHE MISS] Compiling new class for hash: " + codeHash);
+                System.err.println("|PersistentJavaRunner.java| [CACHE MISS] Compiling new class for hash: " + codeHash);
                 try {
                     // Compile user code - fix escaped newlines from JSON
                     String cleanUserCode = userCode.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"");
@@ -651,7 +651,7 @@ public class PersistentJavaRunner {
                     BYTECODE_CACHE.put(codeHash, classBytes);
                     COMPILED_CLASS_CACHE.put(codeHash, compiledClass);
                     
-                    System.err.println("✅ [CACHED] Stored compiled class for hash: " + codeHash);
+                    System.err.println("|PersistentJavaRunner.java| [CACHED] Stored compiled class for hash: " + codeHash);
                     logCacheStats();
                     return compiledClass;
                 } catch (Exception e) {
@@ -663,7 +663,7 @@ public class PersistentJavaRunner {
         
         private byte[] compileCode(String className, String code) throws Exception {
             long compileStart = System.nanoTime();
-            System.err.println("🔥 [COMPILE] Starting optimized in-memory compilation for " + className);
+            System.err.println("|PersistentJavaRunner.java| [COMPILE] Starting optimized in-memory compilation for " + className);
             
             // Get the Java compiler
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -708,7 +708,7 @@ public class PersistentJavaRunner {
             }
             
             long compileTime = (System.nanoTime() - compileStart) / 1_000_000;
-            System.err.println("🔥 [COMPILE] Optimized compilation completed in " + compileTime + "ms");
+            System.err.println("|PersistentJavaRunner.java| [COMPILE] Optimized compilation completed in " + compileTime + "ms");
             
             return classBytes;
         }

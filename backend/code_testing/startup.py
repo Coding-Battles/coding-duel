@@ -26,7 +26,7 @@ def pull_all_images():
             start_time = time.time()
             client.images.pull(image)
             pull_time = time.time() - start_time
-            logger.info(f"✅ Pulled {image} in {pull_time:.1f}s")
+            logger.info(f"|startup.py| Pulled {image} in {pull_time:.1f}s")
         except Exception as e:
             logger.error(f"❌ Failed to pull {image}: {e}")
 
@@ -46,9 +46,9 @@ def warm_up_containers():
             # Test container is responsive
             result = container.exec_run("echo 'warmup test'")
             if result.exit_code == 0:
-                logger.info(f"✅ {language} container ready in {warmup_time:.1f}s")
+                logger.info(f"|startup.py| {language} container ready in {warmup_time:.1f}s")
             else:
-                logger.warning(f"⚠️ {language} container unresponsive")
+                logger.warning(f"|startup.py| {language} container unresponsive")
 
         except Exception as e:
             logger.error(f"❌ Failed to warm up {language} container: {e}")
@@ -94,9 +94,9 @@ def test_execution():
             execution_time = time.time() - start_time
 
             if result.get("success"):
-                logger.info(f"✅ {language} test passed in {execution_time:.3f}s")
+                logger.info(f"|startup.py| {language} test passed in {execution_time:.3f}s")
             else:
-                logger.warning(f"⚠️ {language} test failed: {result.get('error')}")
+                logger.warning(f"|startup.py| {language} test failed: {result.get('error')}")
 
         except Exception as e:
             logger.error(f"❌ {language} test error: {e}")
@@ -104,7 +104,7 @@ def test_execution():
 
 def main():
     """Main startup sequence."""
-    logger.info("🚀 Starting code execution system initialization...")
+    logger.info("|startup.py| Starting code execution system initialization...")
 
     start_time = time.time()
 
@@ -118,7 +118,7 @@ def main():
     test_execution()
 
     total_time = time.time() - start_time
-    logger.info(f"🎉 Initialization complete in {total_time:.1f}s")
+    logger.info(f"|startup.py| Initialization complete in {total_time:.1f}s")
     logger.info("System ready for sub-second code execution!")
 
 

@@ -23,7 +23,7 @@ class TestExecutionService:
         """Load test             elif request.language == "cpp":
         # C++ uses batch execution for better caching performance
         logger.info(
-            f"🐛 [DEBUG] Using C++ batch execution for sample tests ({len(test_cases)} test cases)"
+            f"|test_execution_service.py| [DEBUG] Using C++ batch execution for sample tests ({len(test_cases)} test cases)"
         )
         test_results, total_passed, total_failed = (
             TestExecutionService.run_cpp_batch_execution(
@@ -35,17 +35,17 @@ class TestExecutionService:
             )
         )file based on question name."""
         test_file_path = f"backend/data/tests/{question_name}.json"
-        logger.info(f"🐛 [DEBUG] Looking for test file: {test_file_path}")
+        logger.info(f"|test_execution_service.py| [DEBUG] Looking for test file: {test_file_path}")
 
         try:
             with open(test_file_path, "r") as f:
                 test_cases = json.load(f)
             logger.info(
-                f"🐛 [DEBUG] Test file loaded, found {len(test_cases)} test cases"
+                f"|test_execution_service.py| [DEBUG] Test file loaded, found {len(test_cases)} test cases"
             )
             return test_cases
         except FileNotFoundError:
-            logger.error(f"🐛 [DEBUG] Test file not found: {test_file_path}")
+            logger.error(f"|test_execution_service.py| [DEBUG] Test file not found: {test_file_path}")
             raise FileNotFoundError(
                 f"Test file not found for question: {question_name}"
             )
@@ -54,7 +54,7 @@ class TestExecutionService:
     def load_method_name(question_name: str) -> str:
         """Load method name from question data file."""
         question_file_path = f"backend/data/question-data/{question_name}.json"
-        logger.info(f"🐛 [DEBUG] Looking for question file: {question_file_path}")
+        logger.info(f"|test_execution_service.py| [DEBUG] Looking for question file: {question_file_path}")
 
         try:
             with open(question_file_path, "r") as f:
@@ -62,16 +62,16 @@ class TestExecutionService:
             method_name = question_data.get(
                 "methodName", question_name
             )  # Fallback to question_name
-            logger.info(f"🐛 [DEBUG] Method name loaded: {method_name}")
+            logger.info(f"|test_execution_service.py| [DEBUG] Method name loaded: {method_name}")
             return method_name
         except FileNotFoundError:
             logger.warning(
-                f"🐛 [DEBUG] Question file not found: {question_file_path}, using question_name as method_name"
+                f"|test_execution_service.py| [DEBUG] Question file not found: {question_file_path}, using question_name as method_name"
             )
             return question_name  # Fallback to question_name
         except Exception as e:
             logger.warning(
-                f"🐛 [DEBUG] Error loading method name: {str(e)}, using question_name as fallback"
+                f"|test_execution_service.py| [DEBUG] Error loading method name: {str(e)}, using question_name as fallback"
             )
             return question_name  # Fallback to question_name
 
@@ -80,7 +80,7 @@ class TestExecutionService:
         """Load signature metadata from question data file."""
         question_file_path = f"backend/data/question-data/{question_name}.json"
         logger.info(
-            f"🐛 [DEBUG] Looking for signature in question file: {question_file_path}"
+            f"|test_execution_service.py| [DEBUG] Looking for signature in question file: {question_file_path}"
         )
 
         try:
@@ -88,18 +88,18 @@ class TestExecutionService:
                 question_data = json.load(f)
             signature = question_data.get("signature")
             if signature:
-                logger.info(f"🐛 [DEBUG] Signature loaded: {signature}")
+                logger.info(f"|test_execution_service.py| [DEBUG] Signature loaded: {signature}")
                 return signature
             else:
                 logger.warning(
-                    f"🐛 [DEBUG] No signature found in question file: {question_file_path}"
+                    f"|test_execution_service.py| [DEBUG] No signature found in question file: {question_file_path}"
                 )
                 return None
         except FileNotFoundError:
-            logger.warning(f"🐛 [DEBUG] Question file not found: {question_file_path}")
+            logger.warning(f"|test_execution_service.py| [DEBUG] Question file not found: {question_file_path}")
             return None
         except Exception as e:
-            logger.warning(f"🐛 [DEBUG] Error loading signature: {str(e)}")
+            logger.warning(f"|test_execution_service.py| [DEBUG] Error loading signature: {str(e)}")
             return None
 
     @staticmethod
@@ -250,12 +250,12 @@ class TestExecutionService:
         # Generate ONE submission ID for all test cases to enable caching
         shared_submission_id = str(uuid.uuid4())[:8]
         logger.info(
-            f"🐛 [DEBUG] Using shared submission ID: {shared_submission_id} for {len(test_cases)} test cases"
+            f"|test_execution_service.py| [DEBUG] Using shared submission ID: {shared_submission_id} for {len(test_cases)} test cases"
         )
 
         try:
             for i, test_case in enumerate(test_cases):
-                logger.info(f"🐛 [DEBUG] Running test case {i+1}/{len(test_cases)}")
+                logger.info(f"|test_execution_service.py| [DEBUG] Running test case {i+1}/{len(test_cases)}")
                 try:
                     docker_start_time = time.time()
                     # Use shared submission ID and disable cleanup except for last test case
@@ -275,7 +275,7 @@ class TestExecutionService:
                     )
                     docker_time = (time.time() - docker_start_time) * 1000
                     logger.info(
-                        f"🐛 [DEBUG] Docker execution took {docker_time:.0f}ms for test case {i+1}"
+                        f"|test_execution_service.py| [DEBUG] Docker execution took {docker_time:.0f}ms for test case {i+1}"
                     )
 
                     expected = test_case["expected"]
@@ -321,7 +321,7 @@ class TestExecutionService:
         finally:
             # Clean up the shared submission directory after all tests are done
             logger.info(
-                f"🐛 [DEBUG] Cleaning up shared submission directory: {shared_submission_id}"
+                f"|test_execution_service.py| [DEBUG] Cleaning up shared submission directory: {shared_submission_id}"
             )
             cleanup_submission_directory(language, shared_submission_id)
 
@@ -346,7 +346,7 @@ class TestExecutionService:
         total_failed = 0
 
         logger.info(
-            f"🐛 [DEBUG] C++ compile-once-run-many for {len(test_cases)} test cases"
+            f"|test_execution_service.py| [DEBUG] C++ compile-once-run-many for {len(test_cases)} test cases"
         )
 
         # Get container and runner
@@ -363,7 +363,7 @@ class TestExecutionService:
                 container, submission_id
             )
             logger.info(
-                f"🐛 [DEBUG] Created shared submission directory: {submission_dir}"
+                f"|test_execution_service.py| [DEBUG] Created shared submission directory: {submission_dir}"
             )
 
             # Step 2: Prepare and compile code ONCE
@@ -406,9 +406,9 @@ class TestExecutionService:
                 return test_results, total_passed, total_failed
 
             logger.info(
-                f"🐛 [DEBUG] Compilation successful, running {len(test_cases)} test cases"
+                f"|test_execution_service.py| [DEBUG] Compilation successful, running {len(test_cases)} test cases"
             )
-            logger.info(f"🐛 [DEBUG] Compilation result: {compilation_result}")
+            logger.info(f"|test_execution_service.py| [DEBUG] Compilation result: {compilation_result}")
 
             # Step 3: Run each test case with the SAME compiled binary
             for i, test_case in enumerate(test_cases):
@@ -426,12 +426,12 @@ class TestExecutionService:
                     run_command = runner_class.get_run_command(
                         test_request, file_path, compilation_result
                     )
-                    logger.info(f"🐛 [DEBUG] Run command: {run_command}")
+                    logger.info(f"|test_execution_service.py| [DEBUG] Run command: {run_command}")
 
                     exec_result = container.exec_run(
                         f"timeout {timeout} sh -c '{run_command}'", workdir="/tmp"
                     )
-                    logger.info(f"🐛 [DEBUG] Exit code: {exec_result.exit_code}")
+                    logger.info(f"|test_execution_service.py| [DEBUG] Exit code: {exec_result.exit_code}")
 
                     if exec_result.exit_code == 0:
                         logs = exec_result.output.decode("utf-8")
@@ -514,7 +514,7 @@ class TestExecutionService:
                         f"rm -rf {submission_dir}", workdir="/tmp"
                     )
                     logger.info(
-                        f"🧹 [CLEANUP] Removed submission directory: {submission_dir}"
+                        f"|test_execution_service.py| [CLEANUP] Removed submission directory: {submission_dir}"
                     )
                 except Exception as e:
                     logger.error(
@@ -534,7 +534,7 @@ class TestExecutionService:
         """Execute Java code using batch runner."""
         # Bypass old batch runner - force fallback to individual execution using simplified approach
         logger.info(
-            f"🐛 [DEBUG] Bypassing Java batch runner, using simplified individual execution"
+            f"|test_execution_service.py| [DEBUG] Bypassing Java batch runner, using simplified individual execution"
         )
         raise Exception("Bypassing Java batch runner to use simplified approach")
 
@@ -547,18 +547,18 @@ class TestExecutionService:
         question_name: str = None,
     ) -> Tuple[List[TestCaseResult], int, int]:
         """C++ compile-once-run-many execution for optimal performance."""
-        logger.info("🔥 [OPTIMIZATION] Starting C++ compile-once-run-many approach!")
+        logger.info("|test_execution_service.py| [OPTIMIZATION] Starting C++ compile-once-run-many approach!")
         try:
             result = TestExecutionService._run_cpp_compile_once(
                 code, test_cases, timeout, function_name, question_name
             )
             logger.info(
-                "🔥 [OPTIMIZATION] C++ compile-once approach completed successfully!"
+                "|test_execution_service.py| [OPTIMIZATION] C++ compile-once approach completed successfully!"
             )
             return result
         except Exception as e:
             logger.error(f"❌ [OPTIMIZATION] C++ compile-once failed: {e}")
-            logger.info("🔄 [OPTIMIZATION] Falling back to old batch execution")
+            logger.info("|test_execution_service.py| [OPTIMIZATION] Falling back to old batch execution")
             # Import the old batch function as backup
             from backend.code_testing.docker_runner import run_cpp_batch_in_docker
 
@@ -634,7 +634,7 @@ class TestExecutionService:
         """Main method to execute test cases with proper strategy selection."""
         start_time = time.time()
         logger.info(
-            f"🐛 [DEBUG] Starting test execution for {request.language} - {request.question_name}"
+            f"|test_execution_service.py| [DEBUG] Starting test execution for {request.language} - {request.question_name}"
         )
 
         try:
@@ -642,21 +642,21 @@ class TestExecutionService:
             step_time = time.time()
             TestExecutionService.validate_language(request.language)
             logger.info(
-                f"🐛 [DEBUG] Language validation took {(time.time() - step_time)*1000:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Language validation took {(time.time() - step_time)*1000:.0f}ms"
             )
 
             # Load test cases
             step_time = time.time()
             test_cases = TestExecutionService.load_test_cases(request.question_name)
             logger.info(
-                f"🐛 [DEBUG] Test file loading took {(time.time() - step_time)*1000:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Test file loading took {(time.time() - step_time)*1000:.0f}ms"
             )
 
             # Load method name from question data
             step_time = time.time()
             method_name = TestExecutionService.load_method_name(request.question_name)
             logger.info(
-                f"🐛 [DEBUG] Method name loading took {(time.time() - step_time)*1000:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Method name loading took {(time.time() - step_time)*1000:.0f}ms"
             )
 
             # Load signature metadata from question data
@@ -665,12 +665,12 @@ class TestExecutionService:
                 request.question_name
             )
             logger.info(
-                f"🐛 [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
             )
-            logger.info(f"🐛 [DEBUG] Signature: {signature}")
+            logger.info(f"|test_execution_service.py| [DEBUG] Signature: {signature}")
 
             logger.info(
-                f"🐛 [DEBUG] Starting execution of {len(test_cases)} test cases"
+                f"|test_execution_service.py| [DEBUG] Starting execution of {len(test_cases)} test cases"
             )
 
             # Choose execution strategy based on language
@@ -687,7 +687,7 @@ class TestExecutionService:
                     )
                 except Exception:
                     logger.info(
-                        f"🐛 [DEBUG] Falling back to individual test case execution"
+                        f"|test_execution_service.py| [DEBUG] Falling back to individual test case execution"
                     )
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_individual_test_cases(
@@ -703,7 +703,7 @@ class TestExecutionService:
             elif request.language == "cpp":
                 # C++ now uses batch execution - compile once, run multiple test cases
                 logger.info(
-                    f"🐛 [DEBUG] Using C++ batch execution for {len(test_cases)} test cases"
+                    f"|test_execution_service.py| [DEBUG] Using C++ batch execution for {len(test_cases)} test cases"
                 )
                 test_results, total_passed, total_failed = (
                     TestExecutionService.run_cpp_batch_execution(
@@ -729,7 +729,7 @@ class TestExecutionService:
                 )
 
             total_time = (time.time() - start_time) * 1000
-            logger.info(f"🐛 [DEBUG] Total test execution time: {total_time:.0f}ms")
+            logger.info(f"|test_execution_service.py| [DEBUG] Total test execution time: {total_time:.0f}ms")
 
             return RunTestCasesResponse(
                 success=total_failed == 0,
@@ -742,7 +742,7 @@ class TestExecutionService:
         except Exception as e:
             total_time = (time.time() - start_time) * 1000
             logger.error(
-                f"🐛 [DEBUG] Exception in test execution after {total_time:.0f}ms: {str(e)}"
+                f"|test_execution_service.py| [DEBUG] Exception in test execution after {total_time:.0f}ms: {str(e)}"
             )
             return RunTestCasesResponse(
                 success=False,
@@ -757,7 +757,7 @@ class TestExecutionService:
         """Execute only the first 3 test cases for quick feedback during development."""
         start_time = time.time()
         logger.info(
-            f"🐛 [DEBUG] Starting SAMPLE test execution (first 3 tests) for {request.language} - {request.question_name}"
+            f"|test_execution_service.py| [DEBUG] Starting SAMPLE test execution (first 3 tests) for {request.language} - {request.question_name}"
         )
 
         try:
@@ -765,7 +765,7 @@ class TestExecutionService:
             step_time = time.time()
             TestExecutionService.validate_language(request.language)
             logger.info(
-                f"🐛 [DEBUG] Language validation took {(time.time() - step_time)*1000:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Language validation took {(time.time() - step_time)*1000:.0f}ms"
             )
 
             # Load test cases
@@ -774,7 +774,7 @@ class TestExecutionService:
             # Limit to first 3 test cases for sample execution
             test_cases = all_test_cases[:3]
             logger.info(
-                f"🐛 [DEBUG] Test file loading took {(time.time() - step_time)*1000:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Test file loading took {(time.time() - step_time)*1000:.0f}ms"
             )
 
             # Load method name from question data
@@ -790,12 +790,12 @@ class TestExecutionService:
                 request.question_name
             )
             logger.info(
-                f"🐛 [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Signature loading took {(time.time() - step_time)*1000:.0f}ms"
             )
-            logger.info(f"🐛 [DEBUG] Signature: {signature}")
+            logger.info(f"|test_execution_service.py| [DEBUG] Signature: {signature}")
 
             logger.info(
-                f"🐛 [DEBUG] Running SAMPLE execution with {len(test_cases)} test cases (out of {len(all_test_cases)} total)"
+                f"|test_execution_service.py| [DEBUG] Running SAMPLE execution with {len(test_cases)} test cases (out of {len(all_test_cases)} total)"
             )
 
             # Choose execution strategy based on language (same logic as full execution)
@@ -812,7 +812,7 @@ class TestExecutionService:
                     )
                 except Exception:
                     logger.info(
-                        f"🐛 [DEBUG] Falling back to individual test case execution for sample tests"
+                        f"|test_execution_service.py| [DEBUG] Falling back to individual test case execution for sample tests"
                     )
                     test_results, total_passed, total_failed = (
                         TestExecutionService.run_individual_test_cases(
@@ -828,7 +828,7 @@ class TestExecutionService:
             elif request.language == "cpp":
                 # C++ uses individual execution with improved caching
                 logger.info(
-                    f"🐛 [DEBUG] Using individual execution with caching for C++ sample tests"
+                    f"|test_execution_service.py| [DEBUG] Using individual execution with caching for C++ sample tests"
                 )
                 test_results, total_passed, total_failed = (
                     TestExecutionService.run_individual_test_cases(
@@ -857,7 +857,7 @@ class TestExecutionService:
 
             total_time = (time.time() - start_time) * 1000
             logger.info(
-                f"🐛 [DEBUG] Total SAMPLE test execution time: {total_time:.0f}ms"
+                f"|test_execution_service.py| [DEBUG] Total SAMPLE test execution time: {total_time:.0f}ms"
             )
 
             return RunTestCasesResponse(
@@ -871,7 +871,7 @@ class TestExecutionService:
         except Exception as e:
             total_time = (time.time() - start_time) * 1000
             logger.error(
-                f"🐛 [DEBUG] Exception in SAMPLE test execution after {total_time:.0f}ms: {str(e)}"
+                f"|test_execution_service.py| [DEBUG] Exception in SAMPLE test execution after {total_time:.0f}ms: {str(e)}"
             )
             return RunTestCasesResponse(
                 success=False,

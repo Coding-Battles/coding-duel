@@ -281,10 +281,10 @@ async def initialize_username_pool():
 # Test functions - for development/testing purposes
 async def test_all_functions():
     """Test all username functions"""
-    print("🧪 Testing Username Functions\n")
+    print("|user_service.py| Testing Username Functions\n")
 
     # Test 1: Get all usernames
-    print("1. Getting all existing usernames...")
+    print("|user_service.py| 1. Getting all existing usernames...")
     usernames = await get_all_usernames()
     print(f"   Found {len(usernames)} usernames: {usernames}\n")
 
@@ -309,7 +309,7 @@ async def test_all_functions():
     ai_usernames = await generate_ai_username(3)
     print(f"   Generated: {ai_usernames}\n")
 
-    print("✅ All tests completed!")
+    print("|user_service.py| All tests completed!")
 
 
 if __name__ == "__main__":

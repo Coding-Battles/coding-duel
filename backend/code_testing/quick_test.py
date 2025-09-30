@@ -40,12 +40,12 @@ class Solution {
         function_name="twoSum"
     )
 
-    print("🧪 Testing Java execution speed...")
+    print("|quick_test.py| Testing Java execution speed...")
 
     # Test multiple runs to show persistent container benefit
     times = []
     for i in range(3):
-        print(f"Run {i+1}...")
+        print(f"|quick_test.py| Run {i+1}...")
         start_time = time.time()
         result = run_code_in_docker(request)
         execution_time = time.time() - start_time
@@ -61,14 +61,14 @@ class Solution {
         print()
 
     avg_time = sum(times) / len(times)
-    print(f"📊 Average execution time: {avg_time:.3f}s")
+    print(f"|quick_test.py| Average execution time: {avg_time:.3f}s")
 
     if avg_time < 1.0:
-        print("🎉 SUCCESS: Sub-second execution achieved!")
+        print("|quick_test.py| SUCCESS: Sub-second execution achieved!")
     elif avg_time < 5.0:
-        print("✅ GOOD: Much faster than before")
+        print("|quick_test.py| GOOD: Much faster than before")
     else:
-        print("⚠️ SLOW: Still needs optimization")
+        print("|quick_test.py| SLOW: Still needs optimization")
 
 
 if __name__ == "__main__":

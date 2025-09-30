@@ -224,10 +224,10 @@ export default function QueueLayout({
     if (currentlyAnonymous) {
       // Generate anonymous ID only once per session
       const newAnonymousId = "Guest-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now();
-      console.log("🔴 Setting anonymous ID:", newAnonymousId);
+      console.log("|GAMESETUP|: Setting anonymous ID:", newAnonymousId);
       setAnonymousId(newAnonymousId);
     } else {
-      console.log("✅ User authenticated:", session?.user?.name);
+      console.log("|GAMESETUP|: ✅ User authenticated:", session?.user?.name);
       setAnonymousId(""); // Clear anonymous ID when user is authenticated
     }
 

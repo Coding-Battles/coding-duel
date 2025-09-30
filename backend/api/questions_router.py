@@ -176,7 +176,7 @@ async def docker_run(request: DockerRunRequest = Body(...)):
 async def debug_run():
     import time
     start_time = time.time()
-    logger.info("🔋 [DEBUG] Starting debug-run test")
+    logger.info("|api/questions_router| [DEBUG] Starting debug-run test")
     try:
         test_request = DockerRunRequest(
             code="def solution(nums, target):\n    return [0, 1]",
@@ -186,7 +186,7 @@ async def debug_run():
         )
         result = run_code_in_docker(test_request)
         total_time = (time.time() - start_time) * 1000
-        logger.info(f"🔋 [DEBUG] debug-run completed in {total_time:.0f}ms")
+        logger.info(f"|api/questions_router| [DEBUG] debug-run completed in {total_time:.0f}ms")
         return {
             "success": result.get("success"),
             "output": result.get("output"),
@@ -196,7 +196,7 @@ async def debug_run():
         }
     except Exception as e:
         total_time = (time.time() - start_time) * 1000
-        logger.error(f"🔋 [DEBUG] debug-run failed after {total_time:.0f}ms: {str(e)}")
+        logger.error(f"|api/questions_router| [DEBUG] debug-run failed after {total_time:.0f}ms: {str(e)}")
         return {"success": False, "error": str(e), "total_time_ms": total_time}
 
 

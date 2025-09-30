@@ -54,17 +54,17 @@ def get_persistent_container(language: str):
                 container.reload()
                 if container.status == "running":
                     print(
-                        f"🐛 [DOCKER DEBUG] Reusing existing {language} container: {container.id[:12]}"
+                        f"|docker_runner.py| [DOCKER DEBUG] Reusing existing {language} container: {container.id[:12]}"
                     )
                     return container
             except Exception as e:
-                print(f"🐛 [DOCKER DEBUG] Container {container_name} is dead: {e}")
+                print(f"|docker_runner.py| [DOCKER DEBUG] Container {container_name} is dead: {e}")
                 # Container is dead, remove from cache
                 del _persistent_containers[container_name]
 
         # Create new persistent container
         print(
-            f"🐛 [DOCKER DEBUG] Creating NEW {language} container - this should only happen at startup!"
+            f"|docker_runner.py| [DOCKER DEBUG] Creating NEW {language} container - this should only happen at startup!"
         )
         config = LANGUAGE_CONFIG.get(language)
         if not config:
@@ -76,16 +76,16 @@ def get_persistent_container(language: str):
         try:
             old_container = docker_client.containers.get(container_name)
             old_container.remove(force=True)
-            print(f"🐛 [DOCKER DEBUG] Removed old {container_name} container")
+            print(f"|docker_runner.py| [DOCKER DEBUG] Removed old {container_name} container")
         except:
             pass
 
         # Create new container with appropriate startup command
         startup_cmd = config.get("startup_command", "sleep infinity")
         print(
-            f"🐛 [DOCKER DEBUG] Starting new {language} container with image {config['image']}"
+            f"|docker_runner.py| [DOCKER DEBUG] Starting new {language} container with image {config['image']}"
         )
-        print(f"🐛 [DOCKER DEBUG] Startup command: {startup_cmd}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Startup command: {startup_cmd}")
 
         # Allocate more resources for Java containers due to compilation overhead
         cpu_allocation = (
@@ -106,7 +106,7 @@ def get_persistent_container(language: str):
         )
 
         print(
-            f"🐛 [DOCKER DEBUG] Created new {language} container: {container.id[:12]}"
+            f"|docker_runner.py| [DOCKER DEBUG] Created new {language} container: {container.id[:12]}"
         )
 
         # For Java containers, copy CompilationServer.java and wait for server to start
@@ -138,11 +138,11 @@ def get_persistent_container(language: str):
                     )
                 else:
                     print(
-                        f"🐛 [DOCKER DEBUG] CompilationServer.java copied to container"
+                        f"|docker_runner.py| [DOCKER DEBUG] CompilationServer.java copied to container"
                     )
 
                     # Check if CompilationServer compiles
-                    print(f"🔧 [DOCKER DEBUG] Testing CompilationServer compilation...")
+                    print(f"|docker_runner.py| [DOCKER DEBUG] Testing CompilationServer compilation...")
                     compile_test = container.exec_run(
                         f"timeout {SETUP_TIMEOUT} javac -cp /tmp CompilationServer.java",
                         workdir="/tmp",
@@ -153,14 +153,14 @@ def get_persistent_container(language: str):
                         )
                     else:
                         print(
-                            f"✅ [DOCKER DEBUG] CompilationServer.java compiled successfully"
+                            f"|docker_runner.py| [DOCKER DEBUG] CompilationServer.java compiled successfully"
                         )
 
                     # Note: Skip execution test to avoid port conflicts since container already runs the server
 
                     # Wait for compilation server to start (up to 2 minutes)
                     print(
-                        f"🔧 [DOCKER DEBUG] Waiting for CompilationServer to start..."
+                        f"|docker_runner.py| [DOCKER DEBUG] Waiting for CompilationServer to start..."
                     )
                     for i in range(240):  # 240 * 0.5s = 120s timeout (2 minutes)
                         try:
@@ -168,7 +168,7 @@ def get_persistent_container(language: str):
                             if i % 20 == 0:
                                 elapsed = i * 0.5
                                 print(
-                                    f"🔧 [DOCKER DEBUG] Detection progress: {elapsed:.1f}s elapsed, still searching..."
+                                    f"|docker_runner.py| [DOCKER DEBUG] Detection progress: {elapsed:.1f}s elapsed, still searching..."
                                 )
 
                             # Method 1: Try TCP connection test (simpler and more reliable)
@@ -178,7 +178,7 @@ def get_persistent_container(language: str):
                             )
                             if tcp_test.exit_code == 0:
                                 print(
-                                    f"🔥 [DOCKER DEBUG] TCP connection to port 8901 successful!"
+                                    f"|docker_runner.py| [DOCKER DEBUG] TCP connection to port 8901 successful!"
                                 )
 
                                 # Verify server is ready via logs
@@ -191,7 +191,7 @@ def get_persistent_container(language: str):
                                     break
                                 else:
                                     print(
-                                        f"🔧 [DOCKER DEBUG] TCP works but server not ready yet"
+                                        f"|docker_runner.py| [DOCKER DEBUG] TCP works but server not ready yet"
                                     )
 
                             # Method 2: Use /proc filesystem as fallback
@@ -205,7 +205,7 @@ def get_persistent_container(language: str):
 
                                 if i % 40 == 0:  # Every 20 seconds
                                     print(
-                                        f"🔧 [DOCKER DEBUG] Found {len(proc_ids)} processes to check"
+                                        f"|docker_runner.py| [DOCKER DEBUG] Found {len(proc_ids)} processes to check"
                                     )
 
                                 for proc_id in proc_ids:
@@ -216,7 +216,7 @@ def get_persistent_container(language: str):
                                         cmdline = cmdline_check.output.decode()
                                         if "CompilationServer" in cmdline:
                                             print(
-                                                f"🔥 [DOCKER DEBUG] Found CompilationServer process {proc_id} with cmdline: {cmdline}"
+                                                f"|docker_runner.py| [DOCKER DEBUG] Found CompilationServer process {proc_id} with cmdline: {cmdline}"
                                             )
 
                                             # Verify server is ready via logs
@@ -225,7 +225,7 @@ def get_persistent_container(language: str):
                                             )
                                             if "Server listening on port 8901" in logs:
                                                 print(
-                                                    f"✅ [DOCKER DEBUG] CompilationServer is ready!"
+                                                    f"|docker_runner.py| [DOCKER DEBUG] CompilationServer is ready!"
                                                 )
                                                 container._java_compilation_server_ready = (
                                                     True
@@ -233,7 +233,7 @@ def get_persistent_container(language: str):
                                                 break
                                             else:
                                                 print(
-                                                    f"🔧 [DOCKER DEBUG] Process found but server not ready yet, logs: {logs[-200:]}"
+                                                    f"|docker_runner.py| [DOCKER DEBUG] Process found but server not ready yet, logs: {logs[-200:]}"
                                                 )
 
                                 if (
@@ -244,7 +244,7 @@ def get_persistent_container(language: str):
                         except Exception as e:
                             if i % 40 == 0:  # Every 20 seconds
                                 print(
-                                    f"🔧 [DOCKER DEBUG] Detection attempt {i} failed: {e}"
+                                    f"|docker_runner.py| [DOCKER DEBUG] Detection attempt {i} failed: {e}"
                                 )
                         time.sleep(0.5)
                     else:
@@ -254,10 +254,10 @@ def get_persistent_container(language: str):
                         # Print recent container logs for debugging
                         try:
                             logs = container.logs(tail=20).decode("utf-8")
-                            print(f"🔧 [DOCKER DEBUG] Recent container logs:\n{logs}")
+                            print(f"|docker_runner.py| [DOCKER DEBUG] Recent container logs:\n{logs}")
                         except:
                             print(
-                                f"🔧 [DOCKER DEBUG] Could not retrieve container logs"
+                                f"|docker_runner.py| [DOCKER DEBUG] Could not retrieve container logs"
                             )
 
             except Exception as e:
@@ -274,10 +274,10 @@ def run_code_in_docker(
 ):
     """Run code using persistent containers and modular language runners."""
     start_time = time.time()
-    print(f"🐛 [DOCKER DEBUG] Starting {request.language} execution")
-    print(f"🐛 [DOCKER DEBUG] Function name: {request.function_name}")
+    print(f"|docker_runner.py| [DOCKER DEBUG] Starting {request.language} execution")
+    print(f"|docker_runner.py| [DOCKER DEBUG] Function name: {request.function_name}")
     if submission_id:
-        print(f"🐛 [DOCKER DEBUG] Using provided submission ID: {submission_id}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Using provided submission ID: {submission_id}")
 
     submission_dir = None  # Track submission directory for cleanup
     try:
@@ -289,7 +289,7 @@ def run_code_in_docker(
         container_start = time.time()
         container = get_persistent_container(request.language)
         container_time = (time.time() - container_start) * 1000
-        print(f"🐛 [DOCKER DEBUG] Getting container took {container_time:.0f}ms")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Getting container took {container_time:.0f}ms")
 
         # Get language-specific runner class
         if request.language not in LANGUAGE_RUNNERS:
@@ -306,26 +306,26 @@ def run_code_in_docker(
         
         # Prepare code with language-specific wrapper/harness
         wrapped_code = runner_class.prepare_code(request)
-        print(f"� [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
         
         # Get unique filename
         filename = runner_class.get_filename(request)
         file_path = f"{submission_dir}/{filename}"
         
-        print(f"🐛 [DOCKER DEBUG] Using submission directory: {submission_dir}")
-        print(f"🐛 [DOCKER DEBUG] Using filename: {filename}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Using submission directory: {submission_dir}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Using filename: {filename}")
 
         # Write code to container
         file_start = time.time()
         runner_class.write_code_file(container, file_path, wrapped_code)
         file_time = (time.time() - file_start) * 1000
-        print(f"🐛 [DOCKER DEBUG] File creation took {file_time:.0f}ms")
+        print(f"|docker_runner.py| [DOCKER DEBUG] File creation took {file_time:.0f}ms")
 
         # Compile if needed
         compile_start = time.time()
         compilation_result = runner_class.compile(container, request, file_path, wrapped_code)
         compile_time = (time.time() - compile_start) * 1000
-        print(f"🐛 [DOCKER DEBUG] Compilation took {compile_time:.0f}ms")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Compilation took {compile_time:.0f}ms")
         
         if not compilation_result["success"]:
             return {
@@ -337,7 +337,7 @@ def run_code_in_docker(
 
         # Get run command
         run_command = runner_class.get_run_command(request, file_path, compilation_result)
-        print(f"🐛 [DOCKER DEBUG] Run command: {run_command}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Run command: {run_command}")
 
         # Execute the command
         exec_start = time.time()
@@ -347,7 +347,7 @@ def run_code_in_docker(
 
         exec_time = (time.time() - exec_start) * 1000
         execution_time = (time.time() - start_time) * 1000
-        print(f"🐛 [DOCKER DEBUG] Command execution took {exec_time:.0f}ms, total time {execution_time:.0f}ms")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Command execution took {exec_time:.0f}ms, total time {execution_time:.0f}ms")
 
         # Handle timeout error (exit code 124 from shell timeout command)
         if exec_result.exit_code == 124:
@@ -363,7 +363,7 @@ def run_code_in_docker(
                 logs = exec_result.output.decode("utf-8")
 
                 # Find JSON output line
-                print(f"🐛 [DOCKER DEBUG] Raw logs: {logs}")
+                print(f"|docker_runner.py| [DOCKER DEBUG] Raw logs: {logs}")
                 output_lines = [
                     line.strip() for line in logs.strip().split("\n") if line.strip()
                 ]
@@ -371,7 +371,7 @@ def run_code_in_docker(
                 for line in reversed(output_lines):
                     try:
                         output_data = json.loads(line)
-                        print(f"🐛 [DOCKER DEBUG] Parsed JSON: {output_data}")
+                        print(f"|docker_runner.py| [DOCKER DEBUG] Parsed JSON: {output_data}")
                         if isinstance(output_data, dict) and "result" in output_data:
                             return {
                                 "success": True,
@@ -409,10 +409,10 @@ def run_code_in_docker(
 
     except Exception as e:
         execution_time = (time.time() - start_time) * 1000
-        print(f"🐛 [DOCKER DEBUG] MAIN EXCEPTION CAUGHT: {str(e)}")
-        print(f"🐛 [DOCKER DEBUG] Exception type: {type(e)}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] MAIN EXCEPTION CAUGHT: {str(e)}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Exception type: {type(e)}")
         import traceback
-        print(f"🐛 [DOCKER DEBUG] Traceback: {traceback.format_exc()}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Traceback: {traceback.format_exc()}")
         return {
             "success": False,
             "output": None,
@@ -428,9 +428,9 @@ def run_code_in_docker(
                     workdir="/tmp"
                 )
                 if cleanup_result.exit_code == 0:
-                    print(f"🧹 [CLEANUP] Removed submission directory: {submission_dir}")
+                    print(f"|docker_runner.py| [CLEANUP] Removed submission directory: {submission_dir}")
                 else:
-                    print(f"⚠️ [CLEANUP] Failed to remove {submission_dir}: {cleanup_result.output.decode()}")
+                    print(f"|docker_runner.py| [CLEANUP] Failed to remove {submission_dir}: {cleanup_result.output.decode()}")
             except Exception as cleanup_error:
                 print(f"❌ [CLEANUP] Error cleaning up {submission_dir}: {cleanup_error}")
 
@@ -446,10 +446,10 @@ def cleanup_submission_directory(language: str, submission_id: str):
             workdir="/tmp"
         )
         if cleanup_result.exit_code == 0:
-            print(f"🧹 [CLEANUP] Manually removed submission directory: {submission_dir}")
+            print(f"|docker_runner.py| [CLEANUP] Manually removed submission directory: {submission_dir}")
             return True
         else:
-            print(f"⚠️ [CLEANUP] Failed to remove {submission_dir}: {cleanup_result.output.decode()}")
+            print(f"|docker_runner.py| [CLEANUP] Failed to remove {submission_dir}: {cleanup_result.output.decode()}")
             return False
     except Exception as cleanup_error:
         print(f"❌ [CLEANUP] Error cleaning up {submission_dir}: {cleanup_error}")
@@ -461,8 +461,8 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
     from backend.models.questions import DockerRunRequest
     
     start_time = time.time()
-    print(f"🐛 [DOCKER DEBUG] Starting C++ batch execution for {len(test_inputs)} test cases")
-    print(f"🐛 [DOCKER DEBUG] Function name: {function_name}")
+    print(f"|docker_runner.py| [DOCKER DEBUG] Starting C++ batch execution for {len(test_inputs)} test cases")
+    print(f"|docker_runner.py| [DOCKER DEBUG] Function name: {function_name}")
 
     submission_dir = None
     container = None
@@ -477,7 +477,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
         container_start = time.time()
         container = get_persistent_container("cpp")
         container_time = (time.time() - container_start) * 1000
-        print(f"🐛 [DOCKER DEBUG] Getting container took {container_time:.0f}ms")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Getting container took {container_time:.0f}ms")
 
         # Get language-specific runner class
         runner_class = LANGUAGE_RUNNERS["cpp"]
@@ -487,7 +487,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
         
         # Create unique submission directory (only once for the entire batch)
         submission_dir = runner_class.create_submission_directory(container, submission_id)
-        print(f"🐛 [DOCKER DEBUG] Created batch submission directory: {submission_dir}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Created batch submission directory: {submission_dir}")
         
         # Use first test case to prepare and compile the code
         if not test_inputs:
@@ -504,7 +504,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
         
         # Prepare code with language-specific wrapper/harness (only once)
         wrapped_code = runner_class.prepare_code(first_request)
-        print(f"🐛 [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Wrapped code length: {len(wrapped_code)}")
         
         # Get unique filename
         filename = runner_class.get_filename(first_request)
@@ -514,13 +514,13 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
         file_start = time.time()
         runner_class.write_code_file(container, file_path, wrapped_code)
         file_time = (time.time() - file_start) * 1000
-        print(f"🐛 [DOCKER DEBUG] File creation took {file_time:.0f}ms")
+        print(f"|docker_runner.py| [DOCKER DEBUG] File creation took {file_time:.0f}ms")
 
         # Compile the code (only once)
         compile_start = time.time()
         compilation_result = runner_class.compile(container, first_request, file_path, wrapped_code)
         compile_time = (time.time() - compile_start) * 1000
-        print(f"🐛 [DOCKER DEBUG] One-time compilation took {compile_time:.0f}ms")
+        print(f"|docker_runner.py| [DOCKER DEBUG] One-time compilation took {compile_time:.0f}ms")
         
         if not compilation_result["success"]:
             # If compilation fails, return failure for all test cases
@@ -537,7 +537,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
         # Now run each test case using the compiled binary
         for i, test_input in enumerate(test_inputs):
             test_start = time.time()
-            print(f"🐛 [DOCKER DEBUG] Running test case {i+1}/{len(test_inputs)}")
+            print(f"|docker_runner.py| [DOCKER DEBUG] Running test case {i+1}/{len(test_inputs)}")
             
             # Create a temporary request for this test case
             test_request = DockerRunRequest(
@@ -551,7 +551,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
             
             # Get run command for this specific test case
             run_command = runner_class.get_run_command(test_request, file_path, compilation_result)
-            print(f"🐛 [DOCKER DEBUG] Test {i+1} run command: {run_command}")
+            print(f"|docker_runner.py| [DOCKER DEBUG] Test {i+1} run command: {run_command}")
 
             # Execute the command
             exec_start = time.time()
@@ -561,7 +561,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
 
             exec_time = (time.time() - exec_start) * 1000
             test_total_time = (time.time() - test_start) * 1000
-            print(f"🐛 [DOCKER DEBUG] Test {i+1} execution took {exec_time:.0f}ms, total test time {test_total_time:.0f}ms")
+            print(f"|docker_runner.py| [DOCKER DEBUG] Test {i+1} execution took {exec_time:.0f}ms, total test time {test_total_time:.0f}ms")
 
             # Handle timeout error (exit code 124 from shell timeout command)
             if exec_result.exit_code == 124:
@@ -578,7 +578,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
                     logs = exec_result.output.decode("utf-8")
 
                     # Find JSON output line
-                    print(f"🐛 [DOCKER DEBUG] Test {i+1} raw logs: {logs}")
+                    print(f"|docker_runner.py| [DOCKER DEBUG] Test {i+1} raw logs: {logs}")
                     output_lines = [
                         line.strip() for line in logs.strip().split("\n") if line.strip()
                     ]
@@ -587,7 +587,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
                     for line in reversed(output_lines):
                         try:
                             output_data = json.loads(line)
-                            print(f"🐛 [DOCKER DEBUG] Test {i+1} parsed JSON: {output_data}")
+                            print(f"|docker_runner.py| [DOCKER DEBUG] Test {i+1} parsed JSON: {output_data}")
                             if isinstance(output_data, dict) and "result" in output_data:
                                 results.append({
                                     "success": True,
@@ -627,7 +627,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
                 })
 
         batch_total_time = (time.time() - start_time) * 1000
-        print(f"🐛 [DOCKER DEBUG] Batch execution completed in {batch_total_time:.0f}ms for {len(test_inputs)} test cases")
+        print(f"|docker_runner.py| [DOCKER DEBUG] Batch execution completed in {batch_total_time:.0f}ms for {len(test_inputs)} test cases")
         return results
 
     except Exception as e:
@@ -650,7 +650,7 @@ def run_cpp_batch_in_docker(code: str, test_inputs: list, timeout: int, function
                 cleanup_start = time.time()
                 container.exec_run(f"rm -rf {submission_dir}", workdir="/tmp")
                 cleanup_time = (time.time() - cleanup_start) * 1000
-                print(f"🐛 [DOCKER DEBUG] Cleanup took {cleanup_time:.0f}ms")
+                print(f"|docker_runner.py| [DOCKER DEBUG] Cleanup took {cleanup_time:.0f}ms")
             except Exception as e:
                 print(f"❌ [CLEANUP] Error removing submission directory {submission_dir}: {e}")
 
@@ -688,7 +688,7 @@ def cleanup_old_submissions():
                     directories = [d for d in directories if d.strip()]
                     
                     if directories:
-                        print(f"🧹 [CLEANUP] Found {len(directories)} old submission directories in {container_name}")
+                        print(f"|docker_runner.py| [CLEANUP] Found {len(directories)} old submission directories in {container_name}")
                         
                         # Remove all old submission directories
                         cleanup_result = container.exec_run(
@@ -697,11 +697,11 @@ def cleanup_old_submissions():
                         )
                         
                         if cleanup_result.exit_code == 0:
-                            print(f"✅ [CLEANUP] Cleaned up all old submissions in {container_name}")
+                            print(f"|docker_runner.py| [CLEANUP] Cleaned up all old submissions in {container_name}")
                         else:
                             print(f"❌ [CLEANUP] Failed to clean up {container_name}: {cleanup_result.output.decode()}")
                     else:
-                        print(f"✅ [CLEANUP] No old submissions found in {container_name}")
+                        print(f"|docker_runner.py| [CLEANUP] No old submissions found in {container_name}")
                         
             except Exception as e:
                 print(f"❌ [CLEANUP] Error cleaning up {container_name}: {e}")

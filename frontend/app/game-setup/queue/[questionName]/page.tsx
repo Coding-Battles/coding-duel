@@ -150,9 +150,9 @@ export default function InGamePage() {
 
     const handleOpponentSubmitted = (data: TestResultsData) => {
       console.log(
-        "🔍 [OPPONENT DEBUG] Frontend received opponent_submitted event"
+        "|questionName/page.tsx event|: [OPPONENT DEBUG] Frontend received opponent_submitted event"
       );
-      console.log("🔍 [OPPONENT DEBUG] Data:", data);
+      console.log("|questionName/page.tsx event|: [OPPONENT DEBUG] Data:", data);
 
       if (data.success) {
         console.log("difficulty: " + context.difficulty)
@@ -161,13 +161,13 @@ export default function InGamePage() {
                          context.difficulty === "hard" ? hard_timer :
                          null;
         setOpponentStatus(
-          `🎉 Opponent finished! All ${data.total_passed} tests passed (${
+          `|questionName/page.tsx| Opponent finished! All ${data.total_passed} tests passed (${
             data.complexity || "N/A"
           } complexity) game will finish in ${timeLeft} seconds`
         );
       } else {
         setOpponentStatus(
-          `⚠️ Opponent submitted: ${data.total_passed}/${
+          `|questionName/page.tsx| Opponent submitted: ${data.total_passed}/${
             data.total_passed + data.total_failed
           } tests passed`
         );
@@ -186,7 +186,7 @@ export default function InGamePage() {
     };
 
     const handleGameCompleted = (data: any) => {
-      console.log("🏆 [GAME END DEBUG] Game completed data:", data);
+      console.log("|questionName/page.tsx| [GAME END DEBUG] Game completed data:", data);
 
       // Store complete game end data for FinishedPage
       setGameEndData(data);
@@ -241,7 +241,7 @@ export default function InGamePage() {
     const fetchQuestion = async () => {
       try {
         console.log(
-          "🚀 [QUESTION DEBUG] Starting to fetch question:",
+          "|questionName/page.tsx| [QUESTION DEBUG] Starting to fetch question:",
           questionName
         );
         setLoading(true);
@@ -259,7 +259,7 @@ export default function InGamePage() {
 
         const data = await response.json();
         console.log(
-          "🚀 [QUESTION DEBUG] Question data loaded successfully:",
+          "|questionName/page.tsx| [QUESTION DEBUG] Question data loaded successfully:",
           !!data,
           "starter_code keys:",
           Object.keys(data?.starter_code || {})
@@ -267,7 +267,7 @@ export default function InGamePage() {
         setQuestionData(data);
         questionDataRef.current = data;
       } catch (err) {
-        console.error("🚀 [QUESTION DEBUG] Failed to fetch question:", err);
+        console.error("|questionName/page.tsx| [QUESTION DEBUG] Failed to fetch question:", err);
         setError(
           err instanceof Error ? err.message : "Failed to load question"
         );
@@ -279,13 +279,13 @@ export default function InGamePage() {
     if (questionName) {
       fetchQuestion();
     } else {
-      console.warn("🚀 [QUESTION DEBUG] No question name in params:", params);
+      console.warn("|questionName/page.tsx| [QUESTION DEBUG] No question name in params:", params);
     }
   }, [params?.questionName]);
 
   useEffect(() => {
     console.log(
-      "🚀 [USERCODE DEBUG] useEffect triggered - questionData:",
+      "|questionName/page.tsx| [USERCODE DEBUG] useEffect triggered - questionData:",
       !!questionData,
       "selectedLanguage:",
       selectedLanguage
@@ -293,7 +293,7 @@ export default function InGamePage() {
     if (questionData && questionData.starter_code) {
       const starterCode = questionData.starter_code[selectedLanguage];
       console.log(
-        "🚀 [USERCODE DEBUG] Found starter code for",
+        "|questionName/page.tsx| [USERCODE DEBUG] Found starter code for",
         selectedLanguage,
         ":",
         !!starterCode,
@@ -303,11 +303,11 @@ export default function InGamePage() {
       if (starterCode) {
         setUserCode(starterCode);
         userCodeRef.current = starterCode;
-        console.log("🚀 [USERCODE DEBUG] Set userCode to starter code");
+        console.log("|questionName/page.tsx| [USERCODE DEBUG] Set userCode to starter code");
       }
     } else {
       console.warn(
-        "🚀 [USERCODE DEBUG] Missing questionData or starter_code:",
+        "|questionName/page.tsx| [USERCODE DEBUG] Missing questionData or starter_code:",
         {
           questionData: !!questionData,
           starter_code: !!questionData?.starter_code,
@@ -329,10 +329,10 @@ export default function InGamePage() {
       context.socket.on(
         "game_joined",
         (data: { game_id: string; start_time?: number | null }) => {
-          console.log("🚀 [TIMER DEBUG] Received game_joined event:", data);
+          console.log("|questionName/page.tsx| [TIMER DEBUG] Received game_joined event:", data);
           if (data.start_time) {
             console.log(
-              "🚀 [TIMER DEBUG] Game already started, setting start time:",
+              "|questionName/page.tsx| [TIMER DEBUG] Game already started, setting start time:",
               data.start_time
             );
             setGameStartTime(data.start_time);
@@ -344,9 +344,9 @@ export default function InGamePage() {
       context.socket.on(
         "game_start",
         (data: { game_id: string; start_time: number }) => {
-          console.log("🚀 [TIMER DEBUG] Received game_start event:", data);
+          console.log("|questionName/page.tsx| [TIMER DEBUG] Received game_start event:", data);
           console.log(
-            "🚀 [TIMER DEBUG] Setting gameStartTime to:",
+            "|questionName/page.tsx| [TIMER DEBUG] Setting gameStartTime to:",
             data.start_time,
             "and isGameStarted to: true"
           );
@@ -370,23 +370,23 @@ export default function InGamePage() {
               currentQuestionData
             ) {
               console.log(
-                "🚀 [INSTANT DEBUG] Emitting instant code update on timer start (attempt",
+                "|questionName/page.tsx| [INSTANT DEBUG] Emitting instant code update on timer start (attempt",
                 attempt,
                 "), code length:",
                 codeToSend.length
               );
               console.log(
-                "🚀 [INSTANT DEBUG] Current userCode from ref:",
+                "|questionName/page.tsx| [INSTANT DEBUG] Current userCode from ref:",
                 currentUserCode?.substring(0, 50) + "..."
               );
               console.log(
-                "🚀 [INSTANT DEBUG] Selected language:",
+                "|questionName/page.tsx| [INSTANT DEBUG] Selected language:",
                 selectedLanguage
               );
               emitInstantCodeUpdateRef.current(codeToSend, "timer_start");
             } else if (attempt < maxAttempts) {
               console.warn(
-                "🚀 [INSTANT DEBUG] Attempt",
+                "|questionName/page.tsx| [INSTANT DEBUG] Attempt",
                 attempt,
                 "failed - userCodeRef:",
                 !!currentUserCode,
@@ -402,7 +402,7 @@ export default function InGamePage() {
               );
             } else {
               console.error(
-                "🚀 [INSTANT DEBUG] Failed to send instant update after",
+                "|questionName/page.tsx| [INSTANT DEBUG] Failed to send instant update after",
                 maxAttempts,
                 "attempts - userCodeRef:",
                 !!currentUserCode,
@@ -419,7 +419,7 @@ export default function InGamePage() {
       );
 
       // Join the game room first
-      console.log("🚀 [JOIN DEBUG] Emitting join_game event with:", {
+      console.log("|questionName/page.tsx| [JOIN DEBUG] Emitting join_game event with:", {
         game_id: context.gameId,
         player_id: playerId,
       });
@@ -528,7 +528,7 @@ export default function InGamePage() {
 
           if (gameElapsedSeconds < 30 && emitInstantCodeUpdateRef.current) {
             console.log(
-              "🚀 [INSTANT DEBUG] Emitting instant code update on language switch in first 30s"
+              "|questionName/page.tsx| [INSTANT DEBUG] Emitting instant code update on language switch in first 30s"
             );
             emitInstantCodeUpdateRef.current(
               starterCode,

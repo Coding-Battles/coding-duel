@@ -228,13 +228,13 @@ def set_game_end_timer(game_id: str):
 @router.post("/{game_id}/send-emoji")
 async def send_emoji(game_id: str, data: EmojiRequest):
     logger.info(
-        f"🚀 [ENTRY DEBUG] /send-emoji called for game {game_id} by player {data.player1} with emoji {data.emoji}"
+        f"|api/game.py| [ENTRY DEBUG] /send-emoji called for game {game_id} by player {data.player1} with emoji {data.emoji}"
     )
     player1 = data.player1  # id
     emoji = data.emoji
     """Endpoint to send emoji from player to opponent."""
     logger.info(
-        f"🚀 [ENTRY DEBUG] /send-emoji called for game {game_id} by player {player1} with emoji {emoji}"
+        f"|api/game.py| [ENTRY DEBUG] /send-emoji called for game {game_id} by player {player1} with emoji {emoji}"
     )
     if game_id not in game_states:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -264,35 +264,35 @@ async def send_emoji(game_id: str, data: EmojiRequest):
 @router.post("/{game_id}/run-all-tests", response_model=CodeTestResult)
 async def run_all_tests(game_id: str, request: RunTestCasesRequest):
     print(f"gameStates: {game_states}")
-    print(f"🚀 [ENTRY DEBUG] /run-all-tests called for game {game_id}")
-    print(f"🚀 [ENTRY DEBUG] Player ID: {request.player_id}")
-    print(f"🚀 [ENTRY DEBUG] Available games: {list(game_states.keys())}")
-    logger.info(f"🚀 [ENTRY DEBUG] /run-all-tests called for game {game_id}")
-    logger.info(f"🚀 [ENTRY DEBUG] Player ID: {request.player_id}")
-    logger.info(f"🚀 [ENTRY DEBUG] Available games: {list(game_states.keys())}")
+    print(f"|api/game.py| [ENTRY DEBUG] /run-all-tests called for game {game_id}")
+    print(f"|api/game.py| [ENTRY DEBUG] Player ID: {request.player_id}")
+    print(f"|api/game.py| [ENTRY DEBUG] Available games: {list(game_states.keys())}")
+    logger.info(f"|api/game.py| [ENTRY DEBUG] /run-all-tests called for game {game_id}")
+    logger.info(f"|api/game.py| [ENTRY DEBUG] Player ID: {request.player_id}")
+    logger.info(f"|api/game.py| [ENTRY DEBUG] Available games: {list(game_states.keys())}")
 
     # Check if game exists
     if game_id not in game_states:
-        logger.error(f"🚀 [ENTRY DEBUG] Game {game_id} not found in game_states")
+        logger.error(f"|api/game.py| [ENTRY DEBUG] Game {game_id} not found in game_states")
         raise HTTPException(status_code=404, detail="Game not found")
 
     game_state = game_states[game_id]
     player_id = request.player_id
 
     logger.info(
-        f"🚀 [ENTRY DEBUG] Game found, players in game {game_id}: {game_state.players}"
+        f"|api/game.py| [ENTRY DEBUG] Game found, players in game {game_id}: {game_state.players}"
     )
     logger.info(
-        f"🚀 [ENTRY DEBUG] difficulty {game_state.difficulty} question-name {game_state.question_name}"
+        f"|api/game.py| [ENTRY DEBUG] difficulty {game_state.difficulty} question-name {game_state.question_name}"
     )
 
     # Verify player is in this game
     if player_id not in game_state.players:
-        logger.error(f"🚀 [ENTRY DEBUG] Player {player_id} not in game {game_id}")
+        logger.error(f"|api/game.py| [ENTRY DEBUG] Player {player_id} not in game {game_id}")
         raise HTTPException(status_code=403, detail="Player not in this game")
 
     logger.info(
-        f"🚀 [ENTRY DEBUG] Player verified, starting test execution"
+        f"|api/game.py| [ENTRY DEBUG] Player verified, starting test execution"
     )  # need to replace opponent_id with array of ids for multiple players
     try:
         test_results = TestExecutionService.execute_test_cases(request)
@@ -303,16 +303,16 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
         opponent_sid = None
 
         print(
-            f"🔍 [OPPONENT DEBUG] Player {player_id} finished tests. Opponent ID: {opponent_id}"
+            f"|api/game.py| Player {player_id} finished tests. Opponent ID: {opponent_id}"
         )
         print(
-            f"🔍 [OPPONENT DEBUG] Game state players: {list(game_state.players.keys())}"
+            f"|api/game.py| Game state players: {list(game_state.players.keys())}"
         )
         logger.info(
-            f"🔍 [OPPONENT DEBUG] Player {player_id} finished tests. Opponent ID: {opponent_id}"
+            f"|api/game.py| Player {player_id} finished tests. Opponent ID: {opponent_id}"
         )
         logger.info(
-            f"🔍 [OPPONENT DEBUG] Game state players: {list(game_state.players.keys())}"
+            f"|api/game.py| Game state players: {list(game_state.players.keys())}"
         )
 
         complexity = "N/A"
@@ -353,16 +353,16 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                 player_name = game_state.get_player_name(player_id)
                 opponent_sid = game_state.players[opponent_id].sid
                 logger.info(
-                    f"🔍 [OPPONENT DEBUG] SUCCESS: Player {player_name} (ID: {player_id}) passed all tests"
+                    f"|api/game.py| [OPPONENT DEBUG] SUCCESS: Player {player_name} (ID: {player_id}) passed all tests"
                 )
                 logger.info(
-                    f"🔍 [OPPONENT DEBUG] SUCCESS: Opponent SID: {opponent_sid}"
+                    f"|api/game.py| [OPPONENT DEBUG] SUCCESS: Opponent SID: {opponent_sid}"
                 )
 
                 complexity_response = analyze_time_complexity_ai(request.code)
                 complexity = complexity_response if complexity_response else "N/A"
                 logger.info(
-                    f"🔍 [OPPONENT DEBUG] SUCCESS: Complexity analysis: {complexity}"
+                    f"|api/game.py| [OPPONENT DEBUG] SUCCESS: Complexity analysis: {complexity}"
                 )
 
                 test_result = None
@@ -386,34 +386,34 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                         implement_time=int(request.timer),
                         final_time=int(get_score(complexity, request.timer)),
                     )
-                    logger.info("✅ CodeTestResult created successfully")
+                    logger.info("|api/game.py| CodeTestResult created successfully")
                 except Exception as e:
                     logger.info(f"❌ Error in CodeTestResult: {e}")
                     raise
 
                 game_state.players[player_id].game_stats = test_result
                 print(
-                    f"🔍 [OPPONENT DEBUG] SUCCESS: About to emit 'opponent_submitted' to room {opponent_sid}"
+                    f"|api/game.py| [OPPONENT DEBUG] SUCCESS: About to emit 'opponent_submitted' to room {opponent_sid}"
                 )
                 logger.info(
-                    f"🔍 [OPPONENT DEBUG] SUCCESS: About to emit 'opponent_submitted' to room {opponent_sid}"
+                    f"|api/game.py| [OPPONENT DEBUG] SUCCESS: About to emit 'opponent_submitted' to room {opponent_sid}"
                 )
                 await sio.emit(
                     "opponent_submitted", test_result.model_dump(), room=opponent_sid
                 )
                 print(
-                    f"🔍 [OPPONENT DEBUG] SUCCESS: Successfully emitted 'opponent_submitted' event"
+                    f"|api/game.py| [OPPONENT DEBUG] SUCCESS: Successfully emitted 'opponent_submitted' event"
                 )
                 logger.info(
-                    f"🔍 [OPPONENT DEBUG] SUCCESS: Successfully emitted 'opponent_submitted' event"
+                    f"|api/game.py| [OPPONENT DEBUG] SUCCESS: Successfully emitted 'opponent_submitted' event"
                 )
 
                 logger.info(
-                    f"✅ Notified opponent {opponent_id} that {player_id} finished with success"
+                    f"|api/game.py| Notified opponent {opponent_id} that {player_id} finished with success"
                 )
         else:
             logger.warning(
-                f"{test_results.total_passed} out of {test_results.total_passed + test_results.total_failed} test cases passed."
+                f"|api/game.py| {test_results.total_passed} out of {test_results.total_passed + test_results.total_failed} test cases passed."
             )
             try:
                 test_result = CodeTestResult(
@@ -443,14 +443,14 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                 opponent_player_info = game_state.players[opponent_id]
                 opponent_sid = opponent_player_info.sid
                 logger.info(
-                    f"🔍 [OPPONENT DEBUG] PARTIAL: Player {player_id} passed {test_results.total_passed}/{test_results.total_passed + test_results.total_failed} tests"
+                    f"|api/game.py| PARTIAL: Player {player_id} passed {test_results.total_passed}/{test_results.total_passed + test_results.total_failed} tests"
                 )
                 logger.info(
-                    f"🔍 [OPPONENT DEBUG] PARTIAL: Opponent SID: {opponent_sid}"
+                    f"|api/game.py| [OPPONENT DEBUG] PARTIAL: Opponent SID: {opponent_sid}"
                 )
 
             logger.info(
-                f"🔍 [OPPONENT DEBUG] PARTIAL: About to emit 'opponent_submitted' to room {opponent_sid}"
+                f"|api/game.py| [OPPONENT DEBUG] PARTIAL: About to emit 'opponent_submitted' to room {opponent_sid}"
             )
             test_results.message = "Opponent has finished their tests with partial success"
             await sio.emit(
@@ -459,11 +459,11 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
                 room=opponent_sid,
             )
             logger.info(
-                f"🔍 [OPPONENT DEBUG] PARTIAL: Successfully emitted 'opponent_submitted' event"
+                f"|api/game.py| [OPPONENT DEBUG] PARTIAL: Successfully emitted 'opponent_submitted' event"
             )
 
             logger.info(
-                f"⚠️ Notified opponent {opponent_id} that {player_id} finished with partial success"
+                f"|api/game.py| [OPPONENT DEBUG] PARTIAL: Notified opponent {opponent_id} that {player_id} finished with partial success"
             )
 
         # If game has ended (first player won), emit game completion immediately
@@ -500,7 +500,7 @@ async def run_all_tests(game_id: str, request: RunTestCasesRequest):
             }
             
             await sio.emit("game_completed", game_end_data, room=game_id)
-            logger.info(f"🏆 Game {game_id} completed - {winner_name} won!")
+            logger.info(f"|questionName/page.tsx| Game {game_id} completed - {winner_name} won!")
 
         if test_results.success:
             logger.info(

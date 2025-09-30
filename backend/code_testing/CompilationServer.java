@@ -14,7 +14,7 @@ public class CompilationServer {
     private static final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
     
     public static void main(String[] args) {
-        System.out.println("🔥 [COMPILATION SERVER] Starting Java compilation server on port " + PORT);
+        System.out.println("[COMPILATION SERVER] Starting Java compilation server on port " + PORT);
         
         if (compiler == null) {
             System.err.println("❌ [COMPILATION SERVER] No Java compiler available!");
@@ -22,7 +22,7 @@ public class CompilationServer {
         }
         
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("✅ [COMPILATION SERVER] Server listening on port " + PORT);
+            System.out.println("[COMPILATION SERVER] Server listening on port " + PORT);
             
             while (true) {
                 try (Socket clientSocket = serverSocket.accept()) {
@@ -52,8 +52,8 @@ public class CompilationServer {
             }
             
             int length = Integer.parseInt(lengthStr.trim());
-            System.out.println("📝 [COMPILATION SERVER] Receiving " + length + " characters of source code");
-            
+            System.out.println("[COMPILATION SERVER] Receiving " + length + " characters of source code");
+
             // Read source code
             char[] buffer = new char[length];
             int totalRead = 0;
@@ -66,13 +66,13 @@ public class CompilationServer {
             }
             
             String sourceCode = new String(buffer);
-            System.out.println("🔧 [COMPILATION SERVER] Compiling source code...");
+            System.out.println("[COMPILATION SERVER] Compiling source code...");
             
             // Compile the source code
             CompilationResult result = compileSource(sourceCode);
             
             if (result.success) {
-                System.out.println("✅ [COMPILATION SERVER] Compilation successful");
+                System.out.println(" [COMPILATION SERVER] Compilation successful");
                 out.println("SUCCESS");
                 out.println(result.outputPath);
             } else {
