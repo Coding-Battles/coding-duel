@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Suspense } from "react";
+import ThemeWrapper from "@/components/ThereWrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,15 +31,7 @@ export default function RootLayout({
         className={`${inter.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
         <Suspense fallback={<div>Loading...</div>}>
-          <ThemeProvider 
-            attribute="class" 
-            defaultTheme="dark"
-            forcedTheme="dark"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          <ThemeWrapper>{children}</ThemeWrapper>
         </Suspense>
       </body>
     </html>
