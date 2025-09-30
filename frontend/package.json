@@ -10,6 +10,7 @@
     "validate:types": "npx ts-node scripts/validate-alignment.ts"
   },
   "dependencies": {
+    "zod": "^4.0.5",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-collapsible": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.14",
