@@ -26,6 +26,7 @@ export interface QuestionMetadata {
 }
 
 export interface QuestionData {
+  description_html: string | TrustedHTML;
   id: string;
   title: string;
   difficulty: string;

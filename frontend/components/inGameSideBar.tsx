@@ -31,9 +31,9 @@ export function InGameSideBar({ questionData }: InGameSideBarProps) {
         <SidebarGroup>
           <SidebarGroupLabel>{questionData.title}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="space-y-4 p-4">
+            <div className="p-4 space-y-4">
               <div
-                className="prose prose-sm max-w-none text-sm"
+                className="text-sm prose-sm prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: questionData.description_html }}
               />
             </div>

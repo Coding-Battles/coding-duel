@@ -1,11 +1,16 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { Auth } from 'better-auth';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AuthCallback() {
-  const session = await auth.api.getSession({
+
+  const session = await auth!.api.getSession({
     headers: await headers()
   });
+
   
   if (!session?.user) {
     // No session found, redirect back to home page
@@ -14,7 +19,7 @@ export default async function AuthCallback() {
   }
   
   // Check if user has completed their profile
-  const { username, selectedPfp } = session.user;
+  const { name: username, image: selectedPfp } = session.user;
   
   console.log('OAuth callback - user profile check:', { username, selectedPfp });
   

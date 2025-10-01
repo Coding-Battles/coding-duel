@@ -9,6 +9,19 @@ export interface BaseUser {
   email?: string;
 }
 
+export interface GameParticipant {
+  id?: number;
+  question_name: string;
+  difficulty: string;
+  game_id: number;
+  player_name: string;
+  player_code: string;
+  implement_time: number;
+  time_complexity: string;
+  final_time: number;
+  user_id: string;
+}
+
 export interface CustomUser extends BaseUser {
   username?: string;
   image?: string;
@@ -81,7 +94,7 @@ export interface TestResultsData {
   error?: string;
   message: string;
   code: string;
-  player_name?: string;
+  player_name: string;
   opponent_id: string;
   complexity?: string;
   implement_time?: number;

@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { PlayerInfo, CustomUser, OpponentData, TestResultsData } from './User';
+import { PlayerInfo, CustomUser, OpponentData, TestResultsData, GameParticipant } from './User';
 
 // GameHistoryItem (from profile page)
 export interface GameHistoryItem {
@@ -14,16 +14,6 @@ export interface GameHistoryItem {
   result: "won" | "lost" | "tie";
   user_time: number;
   opponent_best_time: number;
-}
-
-export interface GameParticipant {
-  game_id: number;
-  player_name: string;
-  player_code: string;
-  implement_time: string;
-  time_complexity: string;
-  final_time: string;
-  user_id: string;
 }
 
 export interface GameState {
@@ -100,12 +90,6 @@ export interface QueueStatus {
   queue_position?: number;
 }
 
-export interface QueueStatusResponse {
-  in_queue: boolean;
-  position: number;
-  estimated_wait_time: number;
-}
-
 export interface DifficultyState {
   easy: boolean;
   medium: boolean;
@@ -136,10 +120,4 @@ export enum GameStatus {
   IN_PROGRESS = "in_progress", 
   FINISHED = "finished",
   CANCELLED = "cancelled"
-}
-
-export enum DifficultyLevel {
-  EASY = "easy",
-  MEDIUM = "medium", 
-  HARD = "hard"
 }

@@ -743,13 +743,8 @@ export default function InGamePage() {
                       </p>
                     </div>
                   )}
-                  {/* Add timer state logging */}
-                  {console.log(
-                    "🚀 [TIMER DEBUG] Passing to DuelInfo - gameStartTime:",
-                    gameStartTime,
-                    "isGameStarted:",
-                    isGameStarted
-                  )}
+
+                  {/* 🚀 [TIMER DEBUG] Passing to DuelInfo - gameStartTime: {gameStartTime}, isGameStarted: {isGameStarted} */}
                   <DuelInfo
                     timeRef={timeRef}
                     opponentData={context.opponent}

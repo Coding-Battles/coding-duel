@@ -2,7 +2,7 @@
 import { User } from "better-auth";
 import React, { useEffect, useState } from "react";
 import { TestResultsData } from "./TestResults";
-import { CustomUser, OpponentData } from "@/app/game-setup/layout";
+import { CustomUser, OpponentData } from "@/shared/types";
 import { useRouter } from "next/navigation";
 import { getAvatarUrl } from "@/lib/auth-client";
 import { Trophy, Clock, Zap, Target, Home, ArrowRight } from "lucide-react";
