@@ -97,7 +97,7 @@ export default function QueueLayout() {
             {!playerFound ? (
               <TypeIt
                 key={key} // use key to reset TypeIt instance
-                getBeforeInit={(instance) => {
+                getBeforeInit={(instance : any) => {
                   instance
                     .type('<span style="color: orange;" className="text-orange">loading...</span>')
                     .pause(750)
@@ -113,7 +113,7 @@ export default function QueueLayout() {
               />
             ) : (
               <TypeIt
-                getBeforeInit={(instance) => {
+                getBeforeInit={(instance : any) => {
                   instance
                     .type('<span style="color: orange;" className="text-orange">Player Found!</span>')
                     .pause(2000)

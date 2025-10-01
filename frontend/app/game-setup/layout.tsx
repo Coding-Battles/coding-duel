@@ -205,7 +205,7 @@ export default function QueueLayout({
 
 
   useEffect(() => {
-      const inSubRoute = pathname.startsWith("/game-setup/") && pathname !== "/game-setup";
+      const inSubRoute = pathname && pathname.startsWith("/game-setup/") && pathname !== "/game-setup";
       //player use navigate buttons when they should be in game
       if(foundGame.current && !inSubRoute) {
         console.log("Detected navigation while in game, redirecting to game page");
