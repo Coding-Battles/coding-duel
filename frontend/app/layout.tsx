@@ -4,6 +4,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import ThemeWrapper from "@/components/ThereWrapper";
 
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -24,6 +25,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  console.log("asd: " + process.env.NEXT_PUBLIC_API_HOSTNAME);
   return (
     <html lang="en" suppressHydrationWarning>
       <body

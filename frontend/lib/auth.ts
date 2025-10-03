@@ -4,6 +4,8 @@ import { Pool } from "pg";
 
 let authInstance;
 
+console.log("secret: ", process.env.BETTER_AUTH_SECRET);
+
 try {
   authInstance = betterAuth({
     secret: process.env.BETTER_AUTH_SECRET,
