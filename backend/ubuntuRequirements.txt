@@ -23,8 +23,6 @@ distro==1.9.0
 Django==5.0.6
 djangorestframework==3.15.2
 docker==7.1.0
-en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl#sha256=293e9547a655b25499198ab15a525b05b9407a75f10255e405e8c3854329ab63
-en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85
 environs==11.0.0
 fastapi==0.115.13
 ffmpeg-python==0.2.0
@@ -40,8 +38,6 @@ h11==0.14.0
 httpcore==1.0.7
 httpx==0.28.1
 idna==3.10
-intel-cmplr-lib-ur==2025.0.5
-intel-openmp==2025.0.5
 itsdangerous==2.2.0
 Jinja2==3.1.6
 jiter==0.9.0
@@ -54,8 +50,6 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 marshmallow==3.21.3
 mdurl==0.1.2
-mkl==2025.0.1
-mkl_fft @ file:///C:/Users/andre/Desktop/mkl_fft-1.3.11-cp312-cp312-win_amd64.whl#sha256=431372595f7f08b8de50f3f56d664a9cda85d281dd77822ab6f2be0bac0f88d0
 more-itertools==10.6.0
 mpmath==1.3.0
 multidict==6.5.0
@@ -77,7 +71,6 @@ python-dotenv==1.0.1
 python-engineio==4.12.2
 python-multipart==0.0.20
 python-socketio==5.13.0
-pywin32==310
 regex==2024.11.6
 requests==2.32.3
 rich==14.0.0
