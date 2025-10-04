@@ -1,7 +1,22 @@
 import { createAuthClient } from "better-auth/react";
 
+const getBaseUrl = () => {
+  if (process.env.VERCEL_ENV === "production") {
+    // If you have a custom domain, hardcode it here
+    return "https://yourdomain.com";
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // Local fallback
+  return process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
+};
+
+
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "https://main.d3almdd454hmml.amplifyapp.com",
+  baseURL: getBaseUrl() || "https://main.d3almdd454hmml.amplifyapp.com",
 });
 
 export const signInWithGoogle = async () => {
