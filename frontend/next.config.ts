@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "http",
-        hostname: process.env.NEXT_PUBLIC_API_HOSTNAME || "localhost",
+        hostname: process.env.NEXT_PUBLIC_API_HOSTNAME as string,
         port: "8000",
         pathname: "/uploads/**",
       },

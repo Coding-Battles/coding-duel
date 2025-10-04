@@ -22,7 +22,7 @@ const features = [
     ),
     title: "Real-time coding battles",
     description: "Face off against other developers in live coding challenges",
-    image: "/images/InGameExample1.PNG", // Replace with actual image path
+    image: "/images/RealTimeCodingExample.PNG", // Replace with actual image path
     size: "large",
   },
   {
@@ -43,7 +43,7 @@ const features = [
     ),
     title: "Multiple difficulty levels",
     description: "Choose from easy, medium, or hard coding challenges",
-    image: "/images/difficulty-levels.png",
+    image: "/images/PickYouPoisonExample.png",
     size: "medium",
   },
   {
@@ -64,7 +64,7 @@ const features = [
     ),
     title: "Track your coding progress",
     description: "Monitor your wins, losses, and skill improvement over time",
-    image: "/images/progress-tracking.png",
+    image: "/images/TrackHistoryExample.png",
     size: "medium",
   },
   {
@@ -141,9 +141,13 @@ export default function HomePage() {
                 Coding Duels
               </h1>
 
-              <div className="mb-8 text-lg italic font-semibold tracking-wide md:text-xl text-foreground/80 animate-pulse">
+              <div className="mb-6 text-lg italic font-semibold tracking-wide md:text-xl text-foreground/80 animate-pulse">
                 Touch grass later 🌿💻
               </div>
+
+              <p className="mb-8 font-bold text-md md:text-md text-foreground/90">
+                Compete with developers worldwide in real-time coding battles where speed and efficiency will determine the victor.
+              </p>
 
               {/* Sign In Section - Client Island */}
               <div className="grid items-center max-w-md grid-cols-2 gap-4 mx-auto lg:mx-0">
@@ -219,14 +223,14 @@ export default function HomePage() {
                 index={2}
               />
             </div>
-            <FeatureBoxes
+            {/* <FeatureBoxes
               icon={features[3].icon}
               title={features[3].title}
               description={features[3].description}
               image={features[3].image}
               size={features[3].size}
               index={3}
-            />
+            /> */}
           </div>
         </div>
       </section>

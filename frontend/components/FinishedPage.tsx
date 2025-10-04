@@ -86,25 +86,25 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats, us
   }, [userWon, gameEndData, winnerData, loserData])
   
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen p-8 overflow-hidden ">
-      {/* Decorative background elements */}
+     <div className="relative flex flex-col items-center justify-center w-full h-full min-h-screen overflow-y-auto">
+      {/* Decorative background elements
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute w-32 h-32 rounded-full top-20 left-20 bg-accent/5 blur-3xl"></div>
         <div className="absolute w-40 h-40 rounded-full bottom-20 right-20 bg-success/5 blur-3xl"></div>
         <div className="absolute w-24 h-24 rounded-full top-1/2 left-1/4 bg-primary/5 blur-2xl"></div>
-      </div>
+      </div> */}
 
       {/* Main content */}
-      <div className={`relative z-10 w-full max-w-4xl transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <div className={`relative h-[100%] flex flex-col px-10 z-10 max-w-4xl justify-center transition-all duration-1000 overflow-x-hidden ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         
         {/* Header */}
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <Trophy className="w-8 h-8 text-accent" />
-            <h1 className="text-4xl font-bold text-transparent bg-gradient-to-r from-accent to-success bg-clip-text">
+        <div className="pb-8 text-center">
+          <div className="inline-flex items-center gap-3 pb-4">
+            <Trophy className="w-6 h-6 text-accent" />
+            <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-accent to-success bg-clip-text">
               Game Complete
             </h1>
-            <Trophy className="w-8 h-8 text-accent" />
+            <Trophy className="w-6 h-6 text-accent" />
           </div>
           <p className="text-lg text-foreground/70">
             {userWon ? "Congratulations! You won!" : "Great effort! Better luck next time!"}
@@ -112,7 +112,7 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats, us
         </div>
 
         {/* Winner/Loser Cards */}
-        <div className="grid gap-8 mb-12 md:grid-cols-2">
+        <div className="grid gap-8 mb-6 md:grid-cols-2">
           {/* Winner Card */}
           <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-success/20 to-success/5 border-2 border-success/30 p-8 shadow-2xl transition-all duration-700 hover:scale-105 ${mounted ? 'animate-pulse' : ''}`}>
             <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-success/10 blur-2xl"></div>
@@ -153,7 +153,7 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats, us
                     <Zap className="w-4 h-4 text-success" />
                     <span className="text-sm font-medium">Complexity</span>
                   </div>
-                  <span className="font-bold text-success">
+                  <span className="overflow-y-auto max-h-[60px] max-w-[150px] font-bold text-success ">
                     {winnerData.stats?.complexity || "N/A"}
                   </span>
                 </div>
@@ -236,7 +236,7 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats, us
         </div>
 
         {/* Stats Comparison */}
-        <div className="p-8 mb-8 border shadow-xl bg-background/80 backdrop-blur-sm rounded-2xl border-foreground/10">
+        <div className="p-6 mb-4 border shadow-xl bg-background/80 backdrop-blur-sm rounded-2xl border-foreground/10">
           <h3 className="flex items-center justify-center gap-2 mb-6 text-xl font-bold text-center">
             <div className="w-2 h-2 rounded-full bg-accent"></div>
             Match Statistics
@@ -245,25 +245,25 @@ const FinishedPage = ({opponent, user, gameEndData, opponentStats, userStats, us
           
           <div className="grid gap-6 md:grid-cols-3">
             <div className="p-4 text-center border bg-accent/5 rounded-xl border-accent/20">
-              <Trophy className="w-8 h-8 mx-auto mb-2 text-accent" />
-              <p className="mb-1 text-sm text-foreground/70">Game Result</p>
-              <p className="text-lg font-bold text-accent">
+              <Trophy className="w-6 h-6 mx-auto mb-2 text-accent" />
+              <p className="mb-1 text-xs text-foreground/70">Game Result</p>
+              <p className="font-bold text-md text-accent">
                 {gameEndData?.game_end_reason}
               </p>
             </div>
             
             <div className="p-4 text-center border bg-primary/5 rounded-xl border-primary/20">
-              <Zap className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <p className="mb-1 text-sm text-foreground/70">Winner's Complexity</p>
-              <p className="text-2xl font-bold text-primary">
+              <Zap className="w-6 h-6 mx-auto mb-2 text-primary" />
+              <p className="mb-1 text-xs text-foreground/70">Winner's Complexity</p>
+              <p className="font-bold text-md text-primary max-h-[60px]">
                 {winnerData.stats?.complexity || "N/A"}
               </p>
             </div>
             
             <div className="p-4 text-center border bg-success/5 rounded-xl border-success/20">
-              <Target className="w-8 h-8 mx-auto mb-2 text-success" />
-              <p className="mb-1 text-sm text-foreground/70">Winner's Time</p>
-              <p className="text-2xl font-bold text-success">
+              <Target className="w-6 h-6 mx-auto mb-2 text-success" />
+              <p className="mb-1 text-xs text-foreground/70">Winner's Time</p>
+              <p className="font-bold text-md text-success">
                 {winnerData.stats?.final_time ? `${winnerData.stats.final_time}s` : "N/A"}
               </p>
             </div>

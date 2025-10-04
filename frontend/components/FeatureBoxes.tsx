@@ -31,11 +31,11 @@ export const FeatureBoxes = ({index, icon, title, description, image, size} : Fe
         
         {/* Image on the right */}
         <div className="relative p-3 overflow-hidden shadow-inner rounded-xl bg-gradient-to-br from-accent/5 to-accent/10">
-          <div className="relative w-full aspect-video">
+          <div className="relative w-full">
             <img 
               src={image} 
               alt={title}
-              className="w-full h-full object-cover rounded-lg shadow-md transition-transform duration-300 hover:scale-[1.02] border border-border/20"
+              className="w-full h-full object-fit rounded-lg shadow-md transition-transform duration-300 hover:scale-[1.02] border border-border/20"
             />
             {/* Enhanced placeholder when image fails to load */}
             <div className="absolute inset-0 flex items-center justify-center hidden w-full h-full text-sm font-medium border rounded-lg bg-gradient-to-br from-accent/10 to-accent/20 text-accent/60 border-border/20">

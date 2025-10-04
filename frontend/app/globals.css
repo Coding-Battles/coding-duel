@@ -37,7 +37,6 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
-
 html {
   height: 100%;
 }
